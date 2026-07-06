@@ -1,6 +1,6 @@
 #requires -version 5
 # omp portable setup - Windows (PowerShell 5.1+)
-# Deploy order: 1) role-based models  2) global rules (AGENTS.md)  3) OKF bundle  4) agents
+# Deploy order: 1) role-based models  2) global rules (AGENTS.md)  3) OKF bundle  4) extensions  5) agents
 # Idempotent: safe to re-run. Honors PI_CODING_AGENT_DIR via `omp config path`.
 $ErrorActionPreference = 'Stop'
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -39,7 +39,7 @@ function Set-OkfPath($path) {
 }
 
 # --- 1) role-based models ---
-Write-Host "[1/4] applying model settings..."
+Write-Host "[1/5] applying model settings..."
 $settings = Join-Path $ScriptDir 'config\settings.conf'
 foreach ($line in Get-Content -LiteralPath $settings) {
   $t = $line.Trim()
@@ -54,14 +54,14 @@ foreach ($line in Get-Content -LiteralPath $settings) {
 }
 
 # --- 2) global rules ---
-Write-Host "[2/4] deploying global rules (AGENTS.md)..."
+Write-Host "[2/5] deploying global rules (AGENTS.md)..."
 $agentsMd = Join-Path $ConfigDir 'AGENTS.md'
 if ((Test-Path $agentsMd) -and -not (Test-Path "$agentsMd.bak")) { Copy-Item $agentsMd "$agentsMd.bak" -Force }
 Copy-Item (Join-Path $ScriptDir 'rules\AGENTS.md') $agentsMd -Force
 Set-OkfPath $agentsMd
 
 # --- 3) OKF bundle (clean redeploy of the managed bundle) ---
-Write-Host "[3/4] deploying OKF bundle..."
+Write-Host "[3/5] deploying OKF bundle..."
 $okfDst = Join-Path $ConfigDir 'okf'
 if (Test-Path $okfDst) { Remove-Item $okfDst -Recurse -Force }
 Copy-Item (Join-Path $ScriptDir 'okf') $okfDst -Recurse -Force
@@ -72,8 +72,27 @@ Get-ChildItem $okfDst -Recurse -Filter *.md | Where-Object { $_.Name -notin 'ind
 }
 if ($bad -eq 0) { Write-Host "  OKF conformance OK" }
 
-# --- 4) custom agents (optional; built-in agents are used as-is, models via roles) ---
-Write-Host "[4/4] deploying custom agents (if any)..."
+# --- 4) extensions (auto-discovered from user agent dir) ---
+Write-Host "[4/5] deploying extensions (if any)..."
+$extensionsDir = Join-Path $ScriptDir 'extensions'
+$srcExtensions = @()
+if (Test-Path $extensionsDir) {
+  $srcExtensions = @(Get-ChildItem -Path $extensionsDir -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -in '.js', '.ts' })
+}
+if ($srcExtensions.Count -gt 0) {
+  $extensionsDst = Join-Path $ConfigDir 'extensions'
+  New-Item -ItemType Directory -Force $extensionsDst | Out-Null
+  $srcExtensions | ForEach-Object {
+    Copy-Item $_.FullName (Join-Path $extensionsDst $_.Name) -Force
+  }
+  Write-Host "  deployed $($srcExtensions.Count) extension(s)"
+} else {
+  Write-Host "  none"
+}
+
+
+# --- 5) agent overrides/custom agents (optional; built-in agents are default) ---
+Write-Host "[5/5] deploying agent overrides/custom agents (if any)..."
 $srcAgents = @(Get-ChildItem (Join-Path $ScriptDir 'agents') -Filter *.md -ErrorAction SilentlyContinue)
 if ($srcAgents.Count -gt 0) {
   $agentsDst = Join-Path $ConfigDir 'agents'
@@ -83,7 +102,7 @@ if ($srcAgents.Count -gt 0) {
     Copy-Item $_.FullName $dst -Force
     Set-OkfPath $dst
   }
-  Write-Host "  deployed $($srcAgents.Count) custom agent(s)"
+  Write-Host "  deployed $($srcAgents.Count) agent file(s)"
 } else {
   Write-Host "  none - using omp built-in agents (models via roles)"
 }

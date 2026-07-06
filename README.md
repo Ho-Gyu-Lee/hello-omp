@@ -7,10 +7,11 @@
 ```
 omp/
   setup.sh / setup.ps1     OS별 부트스트랩 (얇음)
-  config/settings.conf     공유 소스: omp config set 키/값 (모델 역할·폴백·advisor)
+  config/settings.conf     공유 소스: omp config set 키/값 (모델 역할·폴백·approval·advisor)
   rules/AGENTS.md          글로벌 룰 (기본 룰 + OKF/도구 정책)
   okf/                     OKF 지식 번들 (상세 룰·도메인 지식·도구 정책·축적 지식의 소스)
-  agents/                  (선택) 진짜 커스텀 에이전트만 — 빌트인은 그대로 사용
+  extensions/              런타임 확장(예: dangerous-tool-guard)
+  agents/                  (선택) 에이전트 override/custom — 기본은 빌트인, 현재 reviewer/plan만 thinkingLevel override
 ```
 
 ## 사용
@@ -26,10 +27,11 @@ sh setup.sh
 ```
 
 ## 배포 순서 (스크립트가 수행)
-1. 롤별 모델 설정 — `config/settings.conf`를 `omp config set`으로 적용.
+1. 롤별 모델·도구 설정 — `config/settings.conf`를 `omp config set`으로 적용.
 2. 글로벌 룰 — `rules/AGENTS.md` → `<configdir>/AGENTS.md` (기존은 최초 1회 .bak 백업).
 3. OKF 번들 — `okf/` → `<configdir>/okf/` (클린 재배포). `AGENTS.md`에는 배포본 경로와 이 레포의 소스 `okf/` 경로를 함께 주입한다.
-4. 커스텀 에이전트(있을 때만) — `agents/*.md` → `<configdir>/agents/`. 빌트인 에이전트는 그대로 쓰고 모델은 역할로 라우팅된다(중복 오버라이드 없음).
+4. 확장 — `extensions/*.{js,ts}` → `<configdir>/extensions/` (OMP native extension auto-discovery 대상).
+5. 에이전트 override/custom(있을 때만) — `agents/*.md` → `<configdir>/agents/`. 기본은 빌트인을 쓰되, 현재 `reviewer`/`plan`은 bundled `thinkingLevel` 고정값을 올리는 동명 override로 둔다.
 
 `<configdir>`는 `omp config path`로 해석한다(OS 공통 `~/.omp/agent`, `PI_CODING_AGENT_DIR`로 재지정 가능).
 

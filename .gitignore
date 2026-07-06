@@ -7,3 +7,4 @@
 
 # omp state if PI_CODING_AGENT_DIR is accidentally pointed at the repo
 agent.db*
+.DS_Store

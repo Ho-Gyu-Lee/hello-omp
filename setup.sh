@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # omp portable setup — macOS / Linux
-# Deploy order: 1) role-based models  2) global rules (AGENTS.md)  3) OKF bundle  4) agents
+# Deploy order: 1) role-based models  2) global rules (AGENTS.md)  3) OKF bundle  4) extensions  5) agents
 # Idempotent: safe to re-run. Honors PI_CODING_AGENT_DIR via `omp config path`.
 set -eu
 
@@ -49,7 +49,7 @@ OKF_ABS=$(printf '%s' "${CONFIG_DIR}/okf" | sed 's|\\|/|g')
 OKF_SOURCE_ABS=$(printf '%s' "${SCRIPT_DIR}/okf" | sed 's|\\|/|g')
 
 # --- 1) role-based models ---
-echo "[1/4] applying model settings..."
+echo "[1/5] applying model settings..."
 SETTINGS="${SCRIPT_DIR}/config/settings.conf"
 while IFS= read -r line || [ -n "${line}" ]; do
   case "${line}" in
@@ -62,7 +62,7 @@ while IFS= read -r line || [ -n "${line}" ]; do
 done < "${SETTINGS}"
 
 # --- 2) global rules ---
-echo "[2/4] deploying global rules (AGENTS.md)..."
+echo "[2/5] deploying global rules (AGENTS.md)..."
 if [ -f "${CONFIG_DIR}/AGENTS.md" ] && [ ! -f "${CONFIG_DIR}/AGENTS.md.bak" ]; then
   cp "${CONFIG_DIR}/AGENTS.md" "${CONFIG_DIR}/AGENTS.md.bak"
 fi
@@ -70,7 +70,7 @@ cp "${SCRIPT_DIR}/rules/AGENTS.md" "${CONFIG_DIR}/AGENTS.md"
 sed -e "s|__OKF_DIR__|${OKF_ABS}|g" -e "s|__OKF_SOURCE_DIR__|${OKF_SOURCE_ABS}|g" "${CONFIG_DIR}/AGENTS.md" > "${CONFIG_DIR}/AGENTS.md.tmp" && mv "${CONFIG_DIR}/AGENTS.md.tmp" "${CONFIG_DIR}/AGENTS.md"
 
 # --- 3) OKF bundle (clean redeploy of the managed bundle) ---
-echo "[3/4] deploying OKF bundle..."
+echo "[3/5] deploying OKF bundle..."
 rm -rf "${CONFIG_DIR}/okf"
 mkdir -p "${CONFIG_DIR}/okf"
 cp -R "${SCRIPT_DIR}/okf/." "${CONFIG_DIR}/okf/"
@@ -90,8 +90,25 @@ done < "${okf_list}"
 rm -f "${okf_list}"
 if [ "$bad" -eq 0 ]; then echo "  OKF conformance OK"; fi
 
-# --- 4) custom agents (optional; built-in agents are used as-is, models via roles) ---
-echo "[4/4] deploying custom agents (if any)..."
+# --- 4) extensions (auto-discovered from user agent dir) ---
+echo "[4/5] deploying extensions (if any)..."
+n=0
+for ext in "${SCRIPT_DIR}/extensions/"*.js "${SCRIPT_DIR}/extensions/"*.ts; do
+  [ -f "$ext" ] || continue
+  if [ "$n" -eq 0 ]; then mkdir -p "${CONFIG_DIR}/extensions"; fi
+  base=$(basename "$ext")
+  cp "$ext" "${CONFIG_DIR}/extensions/${base}"
+  n=$((n+1))
+done
+if [ "$n" -gt 0 ]; then
+  echo "  deployed ${n} extension(s)"
+else
+  echo "  none"
+fi
+
+
+# --- 5) agent overrides/custom agents (optional; built-in agents are default) ---
+echo "[5/5] deploying agent overrides/custom agents (if any)..."
 if ls "${SCRIPT_DIR}/agents/"*.md >/dev/null 2>&1; then
   mkdir -p "${CONFIG_DIR}/agents"
   n=0
@@ -100,7 +117,7 @@ if ls "${SCRIPT_DIR}/agents/"*.md >/dev/null 2>&1; then
     sed -e "s|__OKF_DIR__|${OKF_ABS}|g" -e "s|__OKF_SOURCE_DIR__|${OKF_SOURCE_ABS}|g" "$a" > "${CONFIG_DIR}/agents/${base}"
     n=$((n+1))
   done
-  echo "  deployed ${n} custom agent(s)"
+  echo "  deployed ${n} agent file(s)"
 else
   echo "  none — using omp built-in agents (models via roles)"
 fi
