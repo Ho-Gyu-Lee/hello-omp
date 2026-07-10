@@ -1,5 +1,9 @@
 # Change Log
 
+## 2026-07-10
+* **Update**: GPT-5.6 Sol/Terra를 고빈도 `default`·`task`·`designer`·`smol`·`commit` 주 모델로 배치하고, Claude Opus 4.8을 `slow`(reviewer), Claude Fable 5를 `plan`·`advisor`·`vision` 주 모델로 배치. 모든 역할의 quota/429 fallback chain은 GPT↔Claude 교차 백업으로 재정렬하고, 각 역할의 primary 모델은 자기 fallback에서 제거.
+* **Fix**: 현 OMP 번들 `reviewer`·`plan` frontmatter가 `thinkingLevel`을 고정하지 않으므로 동명 override 파일을 제거하고, setup 재실행 시 이 레포가 관리하던 이전 override를 배포본 config dir에서도 정리하도록 유지.
+
 ## 2026-07-06
 * **Sync**: 로컬 OMP 모델 역할의 `designer`·`advisor` xhigh 설정과 Opus 4.8 우선 quota/429 fallback chain을 소스 설정으로 승격하고, setup 배포본과 재동기화.
 

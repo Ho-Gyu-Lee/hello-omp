@@ -93,9 +93,22 @@ if ($srcExtensions.Count -gt 0) {
 
 # --- 5) agent overrides/custom agents (optional; built-in agents are default) ---
 Write-Host "[5/5] deploying agent overrides/custom agents (if any)..."
+$agentsDst = Join-Path $ConfigDir 'agents'
+$managedAgents = @('reviewer.md', 'plan.md')
+foreach ($managed in $managedAgents) {
+  $managedRole = [System.IO.Path]::GetFileNameWithoutExtension($managed)
+  $managedMarker = "# source: omp v16.3.8 bundled ${managedRole}; only thinkingLevel changed high -> xhigh."
+  $srcManaged = Join-Path (Join-Path $ScriptDir 'agents') $managed
+  $dstManaged = Join-Path $agentsDst $managed
+  if (-not (Test-Path -LiteralPath $srcManaged) -and (Test-Path -LiteralPath $dstManaged)) {
+    $managedLines = Get-Content -LiteralPath $dstManaged -Encoding UTF8
+    if ($managedLines -ccontains $managedMarker) {
+      Remove-Item -LiteralPath $dstManaged -Force
+    }
+  }
+}
 $srcAgents = @(Get-ChildItem (Join-Path $ScriptDir 'agents') -Filter *.md -ErrorAction SilentlyContinue)
 if ($srcAgents.Count -gt 0) {
-  $agentsDst = Join-Path $ConfigDir 'agents'
   New-Item -ItemType Directory -Force $agentsDst | Out-Null
   $srcAgents | ForEach-Object {
     $dst = Join-Path $agentsDst $_.Name

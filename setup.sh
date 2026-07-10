@@ -109,6 +109,15 @@ fi
 
 # --- 5) agent overrides/custom agents (optional; built-in agents are default) ---
 echo "[5/5] deploying agent overrides/custom agents (if any)..."
+for managed in reviewer.md plan.md; do
+  managed_role=${managed%.md}
+  managed_marker="# source: omp v16.3.8 bundled ${managed_role}; only thinkingLevel changed high -> xhigh."
+  if [ ! -f "${SCRIPT_DIR}/agents/${managed}" ] \
+    && [ -f "${CONFIG_DIR}/agents/${managed}" ] \
+    && grep -Fqx "${managed_marker}" "${CONFIG_DIR}/agents/${managed}"; then
+    rm -f "${CONFIG_DIR}/agents/${managed}"
+  fi
+done
 if ls "${SCRIPT_DIR}/agents/"*.md >/dev/null 2>&1; then
   mkdir -p "${CONFIG_DIR}/agents"
   n=0

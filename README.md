@@ -11,7 +11,7 @@ omp/
   rules/AGENTS.md          글로벌 룰 (기본 룰 + OKF/도구 정책)
   okf/                     OKF 지식 번들 (상세 룰·도메인 지식·도구 정책·축적 지식의 소스)
   extensions/              런타임 확장(예: dangerous-tool-guard)
-  agents/                  (선택) 에이전트 override/custom — 기본은 빌트인, 현재 reviewer/plan만 thinkingLevel override
+  agents/                  (선택) 에이전트 override/custom — 기본은 빌트인, 현재 override 없음
 ```
 
 ## 사용
@@ -31,7 +31,7 @@ sh setup.sh
 2. 글로벌 룰 — `rules/AGENTS.md` → `<configdir>/AGENTS.md` (기존은 최초 1회 .bak 백업).
 3. OKF 번들 — `okf/` → `<configdir>/okf/` (클린 재배포). `AGENTS.md`에는 배포본 경로와 이 레포의 소스 `okf/` 경로를 함께 주입한다.
 4. 확장 — `extensions/*.{js,ts}` → `<configdir>/extensions/` (OMP native extension auto-discovery 대상).
-5. 에이전트 override/custom(있을 때만) — `agents/*.md` → `<configdir>/agents/`. 기본은 빌트인을 쓰되, 현재 `reviewer`/`plan`은 bundled `thinkingLevel` 고정값을 올리는 동명 override로 둔다.
+5. 에이전트 override/custom(있을 때만) — `agents/*.md` → `<configdir>/agents/`. 없으면 빌트인을 쓰고, 이전에 이 레포가 관리하던 `reviewer`/`plan` override는 제거한다.
 
 `<configdir>`는 `omp config path`로 해석한다(OS 공통 `~/.omp/agent`, `PI_CODING_AGENT_DIR`로 재지정 가능).
 
