@@ -1,9 +1,9 @@
 ---
 type: Rule
 title: OKF 학습 축적 루프
-description: 반복 사용 가치가 있는 규칙·결정·도메인 지식을 OKF에 누적하는 기준과 절차.
-tags: [learning, okf, workflow, memory]
-timestamp: 2026-06-30T00:00:00Z
+description: 반복 사용 지식의 기록 기준·절차와 변경 후 무결성 검사.
+tags: [learning, okf, workflow, memory, integrity]
+timestamp: 2026-07-13T00:00:00Z
 ---
 
 # 목적
@@ -42,6 +42,15 @@ OKF에 기록하지 않는다:
 4. 소스 OKF에 반영한다. 소스 레포 경로를 확인할 수 없으면 메모리에 임시로 남기고, 설정 정비 세션에서 OKF로 승격해야 한다고 사용자에게 알린다.
 5. 관련 `index.md`와 `/log.md`를 갱신한다.
 6. Google OKF v0.1 규칙을 확인한다: 비예약 concept은 YAML frontmatter와 non-empty `type` 필드가 있어야 하고, `index.md`·`log.md`는 예약 파일이다.
+
+# 변경 후 무결성 검사
+
+배치 반영·분할·병합·이름 변경·규칙 교체 후 다음을 확인한다:
+- 관련 문서끼리 모순되거나 폐기된 주장이 정본처럼 남지 않았는가.
+- 기존 concept에 병합할 내용을 새 파일로 중복하거나 둘 이상의 문서가 같은 주제의 소스 오브 트루스를 주장하지 않는가.
+- 모든 concept이 루트 또는 하위 `index.md`에서 도달 가능하고 내부 링크와 이름 변경 전 참조가 깨지지 않았는가.
+- 제목·description·본문·frontmatter·index 요약이 같은 범위와 현재 상태를 설명하는가.
+- 대체된 규칙은 제거하거나 대체 관계를 명시하고, 구조 변경은 `log.md`에 기록했는가.
 
 # 판단 기준
 

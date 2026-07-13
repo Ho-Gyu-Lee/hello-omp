@@ -30,6 +30,10 @@ if ! command -v omp >/dev/null 2>&1; then
   echo "ERROR: omp not found on PATH. Install: curl -fsSL https://omp.sh/install | sh" >&2
   exit 1
 fi
+if ! command -v bun >/dev/null 2>&1; then
+  echo "ERROR: bun not found on PATH; Bun is required for OKF validation" >&2
+  exit 1
+fi
 
 CONFIG_DIR="$(omp config path)"
 if [ -z "${CONFIG_DIR}" ]; then
@@ -69,26 +73,15 @@ fi
 cp "${SCRIPT_DIR}/rules/AGENTS.md" "${CONFIG_DIR}/AGENTS.md"
 sed -e "s|__OKF_DIR__|${OKF_ABS}|g" -e "s|__OKF_SOURCE_DIR__|${OKF_SOURCE_ABS}|g" "${CONFIG_DIR}/AGENTS.md" > "${CONFIG_DIR}/AGENTS.md.tmp" && mv "${CONFIG_DIR}/AGENTS.md.tmp" "${CONFIG_DIR}/AGENTS.md"
 
-# --- 3) OKF bundle (clean redeploy of the managed bundle) ---
-echo "[3/5] deploying OKF bundle..."
+# --- 3) OKF bundle (validate source, then clean redeploy) ---
+echo "[3/5] validating and deploying OKF bundle..."
+if ! bun "${SCRIPT_DIR}/scripts/validate-okf.ts" "${SCRIPT_DIR}/okf"; then
+  echo "ERROR: OKF conformance validation failed" >&2
+  exit 1
+fi
 rm -rf "${CONFIG_DIR}/okf"
 mkdir -p "${CONFIG_DIR}/okf"
 cp -R "${SCRIPT_DIR}/okf/." "${CONFIG_DIR}/okf/"
-# conformance: every non-reserved .md must start with YAML frontmatter
-bad=0
-okf_list="${CONFIG_DIR}/.okf-md-files.$$"
-find_bin=find
-if [ -x /usr/bin/find ]; then find_bin=/usr/bin/find; fi
-if ! "${find_bin}" "${CONFIG_DIR}/okf" -name '*.md' -print > "${okf_list}"; then
-  rm -f "${okf_list}"
-  exit 1
-fi
-while IFS= read -r c; do
-  case "$(basename "$c")" in index.md|log.md) continue ;; esac
-  if [ "$(head -n 1 "$c")" != "---" ]; then echo "  WARN: OKF concept missing frontmatter: $c"; bad=$((bad+1)); fi
-done < "${okf_list}"
-rm -f "${okf_list}"
-if [ "$bad" -eq 0 ]; then echo "  OKF conformance OK"; fi
 
 # --- 4) extensions (auto-discovered from user agent dir) ---
 echo "[4/5] deploying extensions (if any)..."

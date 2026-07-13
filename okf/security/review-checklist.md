@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 코드 리뷰 보안 체크리스트
-description: 공통·게임 클라이언트·게임 서버 보안 리뷰 항목.
-tags: [security, review, checklist, game]
-timestamp: 2026-06-29T00:00:00Z
+description: 공통 서버·애플리케이션 및 게임 클라이언트·서버 보안 리뷰 항목.
+tags: [security, review, checklist, server, game]
+timestamp: 2026-07-13T00:00:00Z
 ---
 
 # 코드 리뷰 보안 체크리스트
@@ -17,6 +17,9 @@ timestamp: 2026-06-29T00:00:00Z
 - [ ] 민감정보 로깅 여부
 - [ ] HTTPS 강제 여부
 - [ ] 에러 메시지 정보 노출
+- [ ] 외부 입력을 수락하기 전에 baseline·캐시·통계·저장 상태를 갱신하지 않는가
+- [ ] 부분 갱신의 각 필드를 독립 검증한 뒤 필드 조합과 기존 상태의 교차 불변조건을 검증하는가
+- [ ] 보정·정규화·재계산된 최종 accepted 값이 저장·캐시·이벤트·응답 전체에 사용되는가
 
 ## 게임 클라이언트
 - [ ] 로컬 세이브·설정·패킷 등 클라 데이터를 무검증 신뢰하지 않는가
@@ -30,4 +33,4 @@ timestamp: 2026-06-29T00:00:00Z
 - [ ] 커맨드 rate limiting이 적용되었는가
 - [ ] 패킷 시퀀스/타임스탬프 검증이 있는가
 
-상세 원칙: [게임 보안](/security/game.md), [보안 개요](/security/overview.md).
+상세 원칙: [코딩 스타일의 서버 특화 규칙](/coding-style.md), [게임 보안](/security/game.md), [보안 개요](/security/overview.md).

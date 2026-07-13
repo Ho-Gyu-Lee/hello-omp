@@ -20,6 +20,10 @@ if (-not (Get-Command omp -ErrorAction SilentlyContinue)) {
   Write-Error "omp not found on PATH. Install: irm https://omp.sh/install.ps1 | iex"
   exit 1
 }
+if (-not (Get-Command bun -ErrorAction SilentlyContinue)) {
+  Write-Error "bun not found on PATH; Bun is required for OKF validation"
+  exit 1
+}
 $ConfigDir = (omp config path).Trim()
 if ([string]::IsNullOrWhiteSpace($ConfigDir)) { Write-Error "could not resolve omp config dir"; exit 1 }
 $configFull = [System.IO.Path]::GetFullPath($ConfigDir).TrimEnd($trimChars)
@@ -60,17 +64,15 @@ if ((Test-Path $agentsMd) -and -not (Test-Path "$agentsMd.bak")) { Copy-Item $ag
 Copy-Item (Join-Path $ScriptDir 'rules\AGENTS.md') $agentsMd -Force
 Set-OkfPath $agentsMd
 
-# --- 3) OKF bundle (clean redeploy of the managed bundle) ---
-Write-Host "[3/5] deploying OKF bundle..."
+# --- 3) OKF bundle (validate source, then clean redeploy) ---
+Write-Host "[3/5] validating and deploying OKF bundle..."
+$okfSrc = Join-Path $ScriptDir 'okf'
+$okfValidator = Join-Path $ScriptDir 'scripts\validate-okf.ts'
+& bun $okfValidator $okfSrc
+if ($LASTEXITCODE -ne 0) { Write-Error "OKF conformance validation failed"; exit $LASTEXITCODE }
 $okfDst = Join-Path $ConfigDir 'okf'
 if (Test-Path $okfDst) { Remove-Item $okfDst -Recurse -Force }
-Copy-Item (Join-Path $ScriptDir 'okf') $okfDst -Recurse -Force
-# conformance: every non-reserved .md must start with YAML frontmatter
-$bad = 0
-Get-ChildItem $okfDst -Recurse -Filter *.md | Where-Object { $_.Name -notin 'index.md', 'log.md' } | ForEach-Object {
-  if ((Get-Content -Encoding UTF8 -TotalCount 1 $_.FullName) -ne '---') { Write-Host "  WARN: OKF concept missing frontmatter: $($_.FullName)"; $bad++ }
-}
-if ($bad -eq 0) { Write-Host "  OKF conformance OK" }
+Copy-Item $okfSrc $okfDst -Recurse -Force
 
 # --- 4) extensions (auto-discovered from user agent dir) ---
 Write-Host "[4/5] deploying extensions (if any)..."
