@@ -25,6 +25,7 @@ timestamp: 2026-07-13T00:00:00Z
 - [ ] 로컬 세이브·설정·패킷 등 클라 데이터를 무검증 신뢰하지 않는가
 - [ ] 재화·전투 결과·확률 등 민감 판정을 클라에서 확정하지 않는가(서버 권위)
 - [ ] 클라 데이터 위변조·메모리 변조 탐지가 있는가
+- [ ] fog of war·비공개 상태를 클라이언트에 전송한 뒤 표시만 숨기고 있지 않은가
 
 ## 게임 서버
 - [ ] 클라이언트 입력을 서버에서 검증하는가
@@ -32,5 +33,11 @@ timestamp: 2026-07-13T00:00:00Z
 - [ ] 자원 변동에 레이스 컨디션이 없는가
 - [ ] 커맨드 rate limiting이 적용되었는가
 - [ ] 패킷 시퀀스/타임스탬프 검증이 있는가
+- [ ] 거부된 입력이 권위 상태·통계·baseline·replay window를 갱신하지 않는가
+- [ ] 최종 accepted 값이 저장·시뮬레이션·송신자 보정·모든 허용 observer에게 전파되는가
+- [ ] 비가역 커맨드가 command/transaction ID로 멱등 처리되는가
+- [ ] 재접속·authority handoff 후 이전 session/entity generation의 패킷을 거부하는가
+- [ ] host/listen-server/local fast path가 원격 경로와 같은 권한·검증 불변조건을 지키는가
+- [ ] interest management가 플레이어별 정보 인가를 서버에서 강제하는가
 
 상세 원칙: [코딩 스타일의 서버 특화 규칙](/coding-style.md), [게임 보안](/security/game.md), [보안 개요](/security/overview.md).
