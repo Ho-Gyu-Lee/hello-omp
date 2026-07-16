@@ -1,5 +1,11 @@
 # Change Log
 
+
+## 2026-07-16
+* **Creation**: 버그 수정 시 증상이 아니라 결함 클래스를 고치고, 수정 전 코드 이력을 확인해 새 엣지 케이스 때문에 이전 수정을 롤백하지 않으며, 고친 케이스마다 회귀 테스트를 남기도록 요구하는 `/bugfix.md` concept을 추가. 수정→롤백→수정 루프 차단이 목적.
+* **Update**: 글로벌 AGENTS와 코딩 스타일의 YAGNI를 기능 범위 한정으로 명확화(버그 수정 깊이엔 미적용)하고, AGENTS OKF 라우팅에 버그 수정·디버깅 → `bugfix.md` 경로를 추가.
+* **Update**: `bugfix.md`를 전방 영향 범위 분석(주, `lsp references`·데이터 흐름·계약 경계 bounding)과 후방 의도 복구(보조, Chesterton's Fence)로 재구성하고, 이력 확인을 조건부(이유가 코드에 안 드러나는 방어 코드)로 완화. AGENTS·index 요약 동기화.
+
 ## 2026-07-14
 * **Fix**: OMP TUI가 제목·목록·표·코드 블록을 렌더링하는 동작에 맞춰 터미널 응답의 마크다운 금지를 제거하고, 필요한 구조화와 Mermaid 시각화를 적극 활용하도록 글로벌·상세 응답 규칙을 명확화.
 * **Update**: OMP TUI에서 thinking block은 기본 숨김, 추론 요약은 보존, 표시 시 prose-only로 제한하고 Mermaid ASCII 렌더링을 활성화하도록 공유 설정을 고정.
