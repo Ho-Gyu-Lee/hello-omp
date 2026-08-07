@@ -7,11 +7,13 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 * [응답 원칙](/response-principles.md) - 앵커·범위 제한·함축성·옵션 제시·구조화
 * [코딩 스타일](/coding-style.md) - YAGNI·결정 사다리·네이밍·공개 API·아키텍처·서버 상태 처리
 * [버그 수정 원칙](/bugfix.md) - 결함 클래스 수정·전방 영향 범위 분석·후방 의도 복구(롤백 차단)·회귀 방지·YAGNI 경계
-* [워크플로](/workflow.md) - 개발 흐름·검증·advisor 시점
+* [워크플로](/workflow.md) - 개발 흐름·검증 산출물 보존·정리 보고·advisor 시점
 * [OKF 학습 축적 루프](/learning/accumulation.md) - 영속 학습의 기준·절차·변경 후 무결성 검사
 
 ## 축적 지식
 * [축적 지식](/learned/) - 소스 OKF에 누적해 setup으로 배포하는 개인별·환경별 영속 지식
+* [DynamoDB ConsumedCapacity 필드 채움 규칙](/learned/dynamodb-consumed-capacity.md) - TOTAL 응답은 `CapacityUnits`만 채움, 방향별 필드 폴백·RCU/WCU 환산 기준
+* [커밋 준비 보고 규칙](/learned/commit-prep-reporting.md) - 명시 요청 시에만 커밋, 무관 변경 포함 전체 스테이징 목록 보고
 
 ## 보안
 * [보안 개요](/security/overview.md) - 즉시 경고·취약점 설명 원칙·MCP 공급망
