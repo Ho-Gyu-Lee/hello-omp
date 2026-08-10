@@ -1,5 +1,8 @@
 # Change Log
 
+## 2026-08-10
+* **Update**: 고빈도 역할은 GPT 5.6 Sol/Terra, 전문 역할은 Claude Opus/Fable 5로 통일하고 모든 quota/429 fallback에서 GPT 5.5·Claude Opus 4.8을 제거. `reviewer`는 `slow = claude-opus-5:high`를 직접 따르도록 에이전트별 pin을 비웠고, 매 턴 advisor도 Fable 5 high로 낮춰 장시간 `xhigh` 사고 턴을 제한. Opus 4.8로 향하는 Anthropic 암묵적 서버 fallback은 비활성화.
+
 ## 2026-08-07
 * **Update**: 테스트·스모크 테스트·버그 재현에서 만든 사용자 검증용 산출물을 자동 삭제·원복하지 않고, 완료 보고에 정확한 위치·상태·확인 방법과 정리 대상·영향을 남기도록 글로벌 AGENTS와 워크플로 규칙을 변경. 검증 산출물 보존은 일반적인 마지막 cleanup보다 우선하고 정리는 사용자 명시 요청 시 별도 수행하며, 러너 자체 캐시와 즉시 차단할 위험 상태의 경계를 명시.
 

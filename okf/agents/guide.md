@@ -1,28 +1,28 @@
 ---
 type: Reference
 title: 에이전트 가이드
-description: omp 빌트인 에이전트를 기본 사용하고 고빈도 역할은 GPT, 전문 고가치 역할은 Claude로 라우팅한다. OKF/도구 정책은 AGENTS.md 상속으로 적용.
+description: omp 빌트인 에이전트를 기본 사용하고 고빈도 역할은 GPT 5.6, 전문 역할은 Claude 5 모델군으로 라우팅한다. OKF/도구 정책은 AGENTS.md 상속으로 적용.
 tags: [agents, subagents, routing]
-timestamp: 2026-07-10T00:00:00Z
+timestamp: 2026-08-10T00:00:00Z
 ---
 
 # 에이전트 가이드
 
 기본 원칙은 omp 빌트인 에이전트 8종을 그대로 사용하는 것이다 — 같은 이름으로 복제·오버라이드하지 않는다(번들 프롬프트 stale·빌트인 컨텍스트 상속 손실 방지).
 
-- `reviewer`와 `plan`은 현 OMP 번들 frontmatter에 `thinkingLevel` 고정값이 없으므로 동명 override를 두지 않는다. `model: pi/slow`·`model: pi/plan`이 `modelRoles`의 suffix를 그대로 적용한다.
-- 모델은 각 에이전트의 `model: pi/<role>` → `modelRoles`로 라우팅된다(아래 표). 별도 설정 불필요.
+- `reviewer`와 `plan`은 현 OMP 번들 frontmatter에 `thinkingLevel` 고정값이 없으므로 동명 override 파일을 두지 않는다. 각각 `model: pi/slow`·`model: pi/plan`에서 현재 역할 모델과 추론 강도를 적용한다.
+- 모델은 각 에이전트의 `model: pi/<role>` → `modelRoles`로 라우팅한다. fallback chain도 GPT 5.6·Claude 5 모델군으로만 구성해 구버전 자동 전환을 막는다.
 - OKF 확인·도구 정책은 빌트인이 기본 상속하는 글로벌 `AGENTS.md`로 적용된다.
 - 특정 에이전트만 모델을 바꾸려면 파일 복사 대신 `task.agentModelOverrides`(에이전트→모델 문자열)를 쓴다. thinkingLevel 조정은 우선 `modelRoles` suffix로 처리하고, 불가능할 때만 소스 override를 검토한다.
 
-| 빌트인 에이전트 | 역할 | 사용 시점 | 모델(modelRoles) |
+| 빌트인 에이전트 | 역할 | 사용 시점 | 유효 모델 라우팅 |
 |------|------|-----------|------|
 | explore | 읽기 전용 코드베이스 스카우트 | 넓은 탐색, 메인 컨텍스트 보호 | smol = gpt-5.6-terra:medium |
 | librarian | 외부 라이브러리/API 소스 검증 | 라이브러리 동작·시그니처 확인 | smol = gpt-5.6-terra:medium |
 | sonic | 저추론 기계적 작업 | 단순·반복 기계 작업 | smol = gpt-5.6-terra:medium |
 | task | 범용 다단계 위임 | 일반 서브에이전트 작업 | task = gpt-5.6-sol:xhigh |
 | Tester | 테스트 작성·검증 설계 | 고신호 테스트 작성 | task = gpt-5.6-sol:xhigh |
-| reviewer | 코드 품질/보안 리뷰 | 변경 완료·PR 검토 | slow = claude-opus-4-8:xhigh |
+| reviewer | 코드 품질/보안 리뷰 | 변경 완료·PR 검토 | slow = claude-opus-5:high |
 | plan | 다중 파일 아키텍처 설계 | 복잡한 설계 결정 | plan = claude-fable-5:xhigh |
 | designer | UI/UX 디자인 구현·리뷰 | 프런트엔드/시각 작업 | designer = gpt-5.6-sol:xhigh |
 
@@ -32,6 +32,6 @@ timestamp: 2026-07-10T00:00:00Z
 - 위임받은 에이전트도 작업 전 [OKF](/index.md)의 관련 개념을 확인하고 omp 기본 도구·스킬을 우선한다.
 
 ## 참고
-- `advisor`도 `modelRoles.advisor`로 설정되는 역할이며(현재 claude-fable-5:xhigh), advisor 런타임은 매 턴을 자기 모델·컨텍스트로 검토한다.
+- `advisor`도 `modelRoles.advisor`로 설정되는 역할이며(현재 claude-fable-5:high), advisor 런타임은 매 턴을 자기 모델·컨텍스트로 검토한다.
 - `vision` 역할은 이미지/시각 입력 보조 모델이며(현재 claude-fable-5:high), 일반 서브에이전트 표에는 없지만 `modelRoles.vision`으로 라우팅된다.
 - 위임 기준은 [서브에이전트](/tools/subagents.md), 도구 우선순위는 [omp 기본 도구](/tools/builtin.md).
