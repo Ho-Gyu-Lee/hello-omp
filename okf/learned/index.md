@@ -1,6 +1,12 @@
 # 축적 지식
 
-개인별·환경별로 누적되는 영속 지식의 진입점이다. 새 항목은 Google OKF concept 문서로 작성하고 이 파일에 번들 루트 절대 링크(`/learned/<file>.md`)로 추가한다.
+개인별·환경별로 누적되는 영속 지식의 진입점이다.
 
-* [DynamoDB ConsumedCapacity 필드 채움 규칙](/learned/dynamodb-consumed-capacity.md) - TOTAL 응답은 `CapacityUnits`만 채움, 방향별 필드 폴백·RCU/WCU 환산 기준
-* [커밋 준비 보고 규칙](/learned/commit-prep-reporting.md) - 명시 요청 시에만 커밋, 무관 변경 포함 전체 스테이징 목록 보고
+이 디렉터리의 concept 파일은 **프로젝트·회사·라이브러리 한정 내부 지식**(디컴파일 근거·내부 엔드포인트·미공개 벤더 결함 등)이라 `.gitignore`로 로컬 전용이다. 공개 레포에는 커밋하지 않는다. setup은 파일시스템 복사이므로 gitignore 여부와 무관하게 배포본으로 전개된다.
+
+발견은 이 index의 정적 목록이 아니라 `/learned/` 디렉터리를 직접 읽어 각 concept의 frontmatter 요약으로 한다(로컬 목록을 커밋 트리에 남기지 않기 위함).
+
+새 항목 작성 규칙:
+* Google OKF concept 문서로 작성한다(YAML frontmatter + non-empty `type`).
+* 벤더 무관하게 일반화할 가치가 있는 교훈은 별도로 공개 번들의 적합한 concept(예: `/security/*`, `/workflow.md`)에 반영하고, 로컬 concept에서 그 공개 concept을 교차 참조한다.
+* 내부 접속정보·미패치 3자 취약점 상세·PII는 공개 번들에 올리지 않는다.

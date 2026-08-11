@@ -71,7 +71,7 @@ omp의 기본 기능으로 되는 일은 MCP를 두지 않고 기본 도구를 �
 - 반복 사용 가치가 있는 규칙·결정·도메인 지식은 `__OKF_DIR__/learning/accumulation.md` 기준으로 OKF에 누적한다.
 - 영속 학습의 소스 오브 트루스는 `__OKF_SOURCE_DIR__` 이다. 배포본 `__OKF_DIR__`만 직접 고치면 다음 setup 재배포 때 사라진다.
 - 새 concept은 `__OKF_SOURCE_DIR__/learned/` 또는 적합한 소스 OKF 위치에 만든다. 반영 후 setup을 재실행해 배포본으로 동기화한다.
-- 새 concept을 만들면 해당 디렉터리 `index.md`, 루트 `index.md`, `log.md`를 함께 갱신한다. 링크는 번들 루트 절대 경로(`/path.md`)로 쓴다.
+- 관리 번들 concept을 새로 만들면 해당 디렉터리 `index.md`, 루트 `index.md`, `log.md`를 함께 갱신한다(링크는 번들 루트 절대 경로 `/path.md`). 단 `/learned/` concept은 프로젝트·회사·라이브러리 한정 내부 지식이라 `.gitignore`로 로컬 전용이며, index에 per-file bullet을 남기지 않고 디렉터리를 직접 읽어 발견한다. 벤더 무관 교훈은 공개 번들 concept으로 일반화하고 로컬에서 교차 참조한다.
 - API 키·토큰·PII·내부 접속정보, 검증되지 않은 추측, 일회성 진행 상태는 OKF에 기록하지 않는다.
 
 ## 검증·리뷰

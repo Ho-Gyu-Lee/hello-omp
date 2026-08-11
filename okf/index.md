@@ -11,14 +11,13 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 * [OKF 학습 축적 루프](/learning/accumulation.md) - 영속 학습의 기준·절차·변경 후 무결성 검사
 
 ## 축적 지식
-* [축적 지식](/learned/) - 소스 OKF에 누적해 setup으로 배포하는 개인별·환경별 영속 지식
-* [DynamoDB ConsumedCapacity 필드 채움 규칙](/learned/dynamodb-consumed-capacity.md) - TOTAL 응답은 `CapacityUnits`만 채움, 방향별 필드 폴백·RCU/WCU 환산 기준
-* [커밋 준비 보고 규칙](/learned/commit-prep-reporting.md) - 명시 요청 시에만 커밋, 무관 변경 포함 전체 스테이징 목록 보고
+* [축적 지식](/learned/) - 소스 OKF에 누적해 setup으로 배포하는 개인별·환경별 영속 지식. concept 파일은 프로젝트·회사·라이브러리 한정 내부 지식이라 gitignore(로컬 전용)이며 `/learned/` 디렉터리를 직접 읽어 발견한다
 
 ## 보안
 * [보안 개요](/security/overview.md) - 즉시 경고·취약점 설명 원칙·MCP 공급망
 * [게임 보안](/security/game.md) - 서버 권위·예측/보정·커맨드·경제·정보 가시성·세션/통신
 * [코드 리뷰 보안 체크리스트](/security/review-checklist.md) - 공통 서버·애플리케이션·게임 클라·게임 서버
+* [요청 서명 정규화 계약](/security/signing-canonicalization.md) - 크로스 런타임 서명 베이스 불일치: 키 정렬·값 문자열화·기대 키 집합
 
 ## 게임 클라이언트/서버
 * [네트워크 동기화](/game/network-sync.md) - 권위 상태·시간/순서·예측/보정·복구·전달 의미론·검증

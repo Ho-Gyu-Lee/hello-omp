@@ -8,3 +8,9 @@
 # omp state if PI_CODING_AGENT_DIR is accidentally pointed at the repo
 agent.db*
 .DS_Store
+
+# Local-only learned concepts (project/company/library-specific internal knowledge).
+# Deployed via filesystem copy by setup, but never committed to the public repo.
+# index.md stays tracked as the local-only policy note; concept files are discovered by directory read.
+okf/learned/*
+!okf/learned/index.md

@@ -3,12 +3,14 @@
 ## 2026-08-10
 * **Update**: 고빈도 역할은 GPT 5.6 Sol/Terra, 전문 역할은 Claude Opus/Fable 5로 통일하고 모든 quota/429 fallback에서 GPT 5.5·Claude Opus 4.8을 제거. `reviewer`는 `slow = claude-opus-5:high`를 직접 따르도록 에이전트별 pin을 비웠고, 매 턴 advisor도 Fable 5 high로 낮춰 장시간 `xhigh` 사고 턴을 제한. Opus 4.8로 향하는 Anthropic 암묵적 서버 fallback은 비활성화.
 
+## 2026-08-08
+* **Reorg**: 로컬↔레포↔배포본 지식 싱크 정리. `/learned/`의 프로젝트·회사·라이브러리 한정 내부 지식(디컴파일 근거·내부 엔드포인트·미공개 벤더 결함 등)은 공개 레포에 커밋하지 않도록 `.gitignore`로 로컬 전용화. 발견은 `/learned/` 디렉터리 직접 읽기로 전환하고 index의 per-file bullet 제거.
+* **Creation**: 벤더 무관 교훈을 공개 번들 concept으로 일반화. [요청 서명 정규화 계약](/security/signing-canonicalization.md) 추가 — 서명자↔검증자 런타임 차이로 서명 베이스가 갈리는 세 결함 클래스(키 정렬·값 문자열화·기대 키 집합)와 근본 수정·격리법.
+* **Update**: [코드 리뷰 보안 체크리스트](/security/review-checklist.md)에 객체 수준 인가(BOLA/IDOR)와 인증 스코프 캐시 폐기 항목 추가. [워크플로](/workflow.md)에 정본 검증(프록시 아닌 실제 배포 경로·런타임 소스) 규칙 추가.
+* **Update**: 학습 축적 규칙 정합화 — [OKF 학습 축적 루프](/learning/accumulation.md)와 글로벌 AGENTS의 index 갱신 규칙을 "관리 번들 concept은 index 링크, 로컬 `/learned/` concept은 gitignore·디렉터리 발견"으로 분기하고, 벤더 무관 교훈의 공개 일반화+로컬 교차 참조 절차를 명시.
+
 ## 2026-08-07
 * **Update**: 테스트·스모크 테스트·버그 재현에서 만든 사용자 검증용 산출물을 자동 삭제·원복하지 않고, 완료 보고에 정확한 위치·상태·확인 방법과 정리 대상·영향을 남기도록 글로벌 AGENTS와 워크플로 규칙을 변경. 검증 산출물 보존은 일반적인 마지막 cleanup보다 우선하고 정리는 사용자 명시 요청 시 별도 수행하며, 러너 자체 캐시와 즉시 차단할 위험 상태의 경계를 명시.
-
-## 2026-07-31
-* **Creation**: DynamoDB `ReturnConsumedCapacity` 응답이 비트랜잭션 오퍼레이션에서 `CapacityUnits`만 채우고 `Read/WriteCapacityUnits`는 비어 있어 사용량 집계가 조용히 0이 되는 사실과, 방향별 필드 우선·집계 필드 폴백 규칙 및 RCU/WCU→MB 환산 기준을 `/learned/dynamodb-consumed-capacity.md`로 추가. 근거는 AWS 답변(aws/aws-sdk-go#2699)과 DynamoDB Local 프로브.
-* **Creation**: 커밋은 명시 요청이 있을 때만 수행하고, 준비 보고 시 무관 변경을 포함한 전체 스테이징 목록을 구분 표기하며, 선별 스테이징 시 스테이징 트리만으로 검증하도록 요구하는 `/learned/commit-prep-reporting.md`를 추가.
 
 ## 2026-07-16
 * **Creation**: 버그 수정 시 증상이 아니라 결함 클래스를 고치고, 수정 전 코드 이력을 확인해 새 엣지 케이스 때문에 이전 수정을 롤백하지 않으며, 고친 케이스마다 회귀 테스트를 남기도록 요구하는 `/bugfix.md` concept을 추가. 수정→롤백→수정 루프 차단이 목적.
