@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-08-23
+* **Update**: [워크플로](/workflow.md)에 다단계·대규모 작업의 사용자 요구→관찰 가능한 결과→검증 경로→실행 증거 폐루프를 추가. 완료 근거가 실제 결함에서 실패하도록 성공 표시는 모든 단언 뒤에만 내고, 부재를 증명할 때의 알려진 양성 대조군과 목표 수치 달성의 독립 측정을 요구하며, 미충족·차단·포기 기준의 조용한 삭제·축소를 금지.
+* **Update**: 글로벌 AGENTS와 OKF index에서 다단계·대규모 작업을 워크플로 concept으로 라우팅하고, [서브에이전트 위임](/tools/subagents.md)에 병렬 fan-out 전 인터페이스·의존성·완료 기준·write-set 소유권 고정, 충돌 작업 순차화, 부모 재검증 원칙을 추가.
+* **Fix**: [에이전트 가이드](/agents/guide.md)를 현재 OMP 빌트인 7종(`scout`, `designer`, `reviewer`, `security-reviewer`, `librarian`, `task`, `sonic`)과 실제 model alias 기준으로 동기화하고, 제거된 `explore`·`Tester`·`plan` task-agent 항목을 정리.
+
 ## 2026-08-10
 * **Update**: 고빈도 역할은 GPT 5.6 Sol/Terra, 전문 역할은 Claude Opus/Fable 5로 통일하고 모든 quota/429 fallback에서 GPT 5.5·Claude Opus 4.8을 제거. `reviewer`는 `slow = claude-opus-5:high`를 직접 따르도록 에이전트별 pin을 비웠고, 매 턴 advisor도 Fable 5 high로 낮춰 장시간 `xhigh` 사고 턴을 제한. Opus 4.8로 향하는 Anthropic 암묵적 서버 fallback은 비활성화.
 

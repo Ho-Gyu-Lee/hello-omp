@@ -61,7 +61,7 @@ omp의 기본 기능으로 되는 일은 MCP를 두지 않고 기본 도구를 �
 상세 룰·도메인 지식은 OKF 번들(Open Knowledge Format)에 있다. 배포본 절대경로는 `__OKF_DIR__`, 관리 소스 절대경로는 `__OKF_SOURCE_DIR__` 이다. 작업 전 관련 개념을 참조한다.
 
 1. 진입점은 `__OKF_DIR__/index.md` — `read`로 읽으면 개념 목록과 위치를 준다.
-2. 작업 유형에 맞는 개념을 `read __OKF_DIR__/<경로>`로 읽는다. 예: 버그 수정·디버깅 → `bugfix.md`; 서버/API 구현·수정 → `coding-style.md`; 서버/API·코드 리뷰 → `coding-style.md`·`security/review-checklist.md`; 게임 → `game/*`·`security/game.md`; 도구 선택 → `tools/*`.
+2. 작업 유형에 맞는 개념을 `read __OKF_DIR__/<경로>`로 읽는다. 예: 다단계·대규모 작업 → `workflow.md`; 버그 수정·디버깅 → `bugfix.md`; 서버/API 구현·수정 → `coding-style.md`; 서버/API·코드 리뷰 → `coding-style.md`·`security/review-checklist.md`; 게임 → `game/*`·`security/game.md`; 도구 선택 → `tools/*`.
 3. 번들 내부 링크 `[..](/path.md)`는 번들 루트 기준이므로 `__OKF_DIR__/path.md`로 읽는다. 개념 파일은 YAML 프런트매터(`type` 등) + 본문.
 4. 상대경로로 읽지 말 것 — 에이전트의 cwd는 작업 중인 프로젝트라 번들 위치와 다르다. 항상 `__OKF_DIR__` 절대경로를 쓴다.
 5. OKF 내용과 실제 코드/파일이 다르면 실제를 우선하고 검증한 뒤 진행한다(OKF는 작성 시점 기준).

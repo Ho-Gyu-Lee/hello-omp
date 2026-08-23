@@ -7,7 +7,7 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 * [응답 원칙](/response-principles.md) - 앵커·범위 제한·함축성·옵션 제시·구조화
 * [코딩 스타일](/coding-style.md) - YAGNI·결정 사다리·네이밍·공개 API·아키텍처·서버 상태 처리
 * [버그 수정 원칙](/bugfix.md) - 결함 클래스 수정·전방 영향 범위 분석·후방 의도 복구(롤백 차단)·회귀 방지·YAGNI 경계
-* [워크플로](/workflow.md) - 개발 흐름·검증 산출물 보존·정리 보고·advisor 시점
+* [워크플로](/workflow.md) - 개발 흐름·수락 기준-증거 폐루프·실패 가능한 검증·산출물 보존·독립 평가
 * [OKF 학습 축적 루프](/learning/accumulation.md) - 영속 학습의 기준·절차·변경 후 무결성 검사
 
 ## 축적 지식
@@ -28,7 +28,7 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 * [omp 기본 도구](/tools/builtin.md) - lsp·ast·web_search·read·browser (현 MCP 대체)
 * [MCP 정책](/tools/mcp.md) - 기본 도구 우선, MCP는 기본으로 안 되는 외부 연동만
 * [스킬](/tools/skills.md) - 스킬 사용 시점
-* [서브에이전트](/tools/subagents.md) - 위임 기준·병렬·워크트리 격리
+* [서브에이전트](/tools/subagents.md) - 위임 기준·병렬 계약·파일 소유권·task 격리·반환 결과 검증
 
 ## 에이전트
-* [에이전트 가이드](/agents/guide.md) - 각 에이전트 역할·사용 시점·OKF/도구 활용 방식
+* [에이전트 가이드](/agents/guide.md) - 현재 빌트인 에이전트 7종·역할별 사용 시점·modelRoles 라우팅
