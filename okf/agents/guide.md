@@ -1,14 +1,14 @@
 ---
 type: Reference
 title: 에이전트 가이드
-description: 현재 omp 빌트인 에이전트 7종의 역할과 modelRoles 라우팅, 커스텀 에이전트 작성 기준.
+description: 현재 OMP 빌트인 에이전트 7종의 역할과 modelRoles 라우팅, 커스텀 에이전트 작성 기준.
 tags: [agents, subagents, routing, builtin]
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-08-31T00:00:00Z
 ---
 
 # 에이전트 가이드
 
-기본 원칙은 현재 omp 빌트인 에이전트 7종을 그대로 사용하는 것이다 — 같은 이름으로 복제·오버라이드하지 않는다(번들 프롬프트 stale·빌트인 컨텍스트 상속 손실 방지).
+기본 원칙은 현재 OMP 빌트인 에이전트 7종을 그대로 사용하는 것이다 — 같은 이름으로 복제·오버라이드하지 않는다(번들 프롬프트 stale·빌트인 컨텍스트 상속 손실 방지).
 
 - 번들 model alias는 `scout`·`librarian`·`sonic` → `@smol`, `task` → `@task`, `designer` → `@designer`, `reviewer` → `@slow`이다.
 - `security-reviewer`는 번들 model 지정이 없어 부모 세션의 모델 선택을 따른다. 별도 라우팅이 필요할 때만 `task.agentModelOverrides`를 사용한다.
@@ -32,7 +32,12 @@ timestamp: 2026-08-23T00:00:00Z
 - 위임받은 에이전트도 작업 전 [OKF](/index.md)의 관련 개념을 확인하고 omp 기본 도구·스킬을 우선한다.
 
 ## 참고
-- `advisor`도 `modelRoles.advisor`로 설정되는 역할이며(현재 claude-fable-5:high), advisor 런타임은 매 턴을 자기 모델·컨텍스트로 검토한다.
+- `advisor`도 `modelRoles.advisor`로 설정되는 역할이며(현재 claude-opus-5:high), advisor 런타임은 매 턴을 자기 모델·컨텍스트로 검토한다.
 - `vision` 역할은 이미지/시각 입력 보조 모델이며(현재 claude-fable-5:high), 일반 서브에이전트 표에는 없지만 `modelRoles.vision`으로 라우팅된다.
-- `plan`은 plan mode용 모델 역할이며 빌트인 task agent 이름이 아니다. 테스트 작성은 별도 `Tester`가 아니라 작업 성격에 맞는 `task` 또는 현재 제공 specialist에 위임한다.
+- `plan`은 plan mode용 모델 역할이며 현재 claude-opus-5:xhigh를 사용한다. 빌트인 task agent 이름이 아니며, 테스트 작성은 작업 성격에 맞는 `task` 또는 현재 제공 specialist에 위임한다.
+- `tiny`는 제목·메모리·auto-thinking 분류 등 경량 백그라운드 작업에 사용하며 gpt-5.6-luna:low로 분리한다. `commit`은 분석·map/reduce·changelog·commit 제안 전체 agentic pipeline을 담당하므로 gpt-5.6-terra:medium을 유지한다.
+- OMP 18.0.7부터 원격 모델 카탈로그가 바이너리 업데이트 없이 병합되므로 portable 설정은 모든 실제 모델을 `provider/model-id`로 고정한다.
+- quota/429 fallback은 역할당 다른 provider의 동급 모델 1개만 둔다. 동일 provider 모델을 연쇄 재시도해 장애 지연과 행동 드리프트를 늘리지 않는다.
+- `retry.modelFallback=true`를 전제로, coding-plan usage report에 매핑된 rolling quota 중 하나라도 잔여 5% 이하이면 `retry.usageAwareFallback=true`와 `retry.usageReservePolicy=auto`가 역할별 단일 교차-provider fallback을 선제 적용한다. 일반 configured API key는 제외되며 quota가 unknown이면 primary를 유지한다.
+- `claude-mythos-5`는 카탈로그 존재가 계정 사용 권한을 보장하지 않는 제한 접근 모델이므로 primary와 fallback에 넣지 않는다.
 - 위임 기준은 [서브에이전트](/tools/subagents.md), 도구 우선순위는 [omp 기본 도구](/tools/builtin.md).

@@ -1,5 +1,11 @@
 # Change Log
 
+## 2026-08-31
+* **Update**: OMP v18.0.11의 `tiny` 역할을 gpt-5.6-luna:low로 명시해 제목·메모리·auto-thinking 분류 등 경량 백그라운드 작업을 분리. 도구 판단과 편집을 수행하는 `commit` agentic pipeline·`sonic`은 `smol`과 같은 gpt-5.6-terra:medium을 유지.
+* **Update**: 최근 공식 포지셔닝과 제한된 공개 사용자 평가를 반영해 `plan`·`advisor`를 Fable 5에서 반값의 근접 frontier 성능을 표방하는 Opus 5로 전환. 장기 시각 입력 근거가 직접적인 `vision`만 Fable 5를 유지하고, 제한 접근인 Mythos 5는 primary·fallback에서 제외.
+* **Update**: 역할별 quota/429 fallback을 다른 provider의 동급 모델 1개로 단순화. 동일 provider 모델의 연쇄 재시도를 제거해 불필요한 재시도 지연·비용·모델 행동 드리프트를 차단.
+* **Update**: OAuth coding-plan의 신뢰 가능한 usage report에 한해 usage-aware fallback을 활성화하고 `retry.modelFallback=true`를 명시적으로 고정. 모델에 매핑된 rolling quota의 잔여 5%에서 확인 프롬프트 없이 역할별 단일 교차-provider fallback으로 선제 전환하며, 일반 configured API key와 unknown quota는 primary를 유지.
+
 ## 2026-08-23
 * **Update**: [워크플로](/workflow.md)에 다단계·대규모 작업의 사용자 요구→관찰 가능한 결과→검증 경로→실행 증거 폐루프를 추가. 완료 근거가 실제 결함에서 실패하도록 성공 표시는 모든 단언 뒤에만 내고, 부재를 증명할 때의 알려진 양성 대조군과 목표 수치 달성의 독립 측정을 요구하며, 미충족·차단·포기 기준의 조용한 삭제·축소를 금지.
 * **Update**: 글로벌 AGENTS와 OKF index에서 다단계·대규모 작업을 워크플로 concept으로 라우팅하고, [서브에이전트 위임](/tools/subagents.md)에 병렬 fan-out 전 인터페이스·의존성·완료 기준·write-set 소유권 고정, 충돌 작업 순차화, 부모 재검증 원칙을 추가.
