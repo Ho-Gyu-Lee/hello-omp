@@ -1,5 +1,8 @@
 # Change Log
 
+## 2026-09-02
+* **Update**: Fable 5.1 출시에 따라 Fable 5를 사용하던 `vision` 역할을 `anthropic/claude-fable-5-1:high`로 전환. 카탈로그에서 1M 컨텍스트·128K 출력·이미지 입력·high thinking 지원을 확인했으며, 교차-provider fallback(gpt-5.6-sol:high)과 나머지 역할은 유지.
+
 ## 2026-08-31
 * **Update**: OMP v18.0.11의 `tiny` 역할을 gpt-5.6-luna:low로 명시해 제목·메모리·auto-thinking 분류 등 경량 백그라운드 작업을 분리. 도구 판단과 편집을 수행하는 `commit` agentic pipeline·`sonic`은 `smol`과 같은 gpt-5.6-terra:medium을 유지.
 * **Update**: 최근 공식 포지셔닝과 제한된 공개 사용자 평가를 반영해 `plan`·`advisor`를 Fable 5에서 반값의 근접 frontier 성능을 표방하는 Opus 5로 전환. 장기 시각 입력 근거가 직접적인 `vision`만 Fable 5를 유지하고, 제한 접근인 Mythos 5는 primary·fallback에서 제외.

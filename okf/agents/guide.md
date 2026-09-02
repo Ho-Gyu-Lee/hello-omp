@@ -33,7 +33,7 @@ timestamp: 2026-08-31T00:00:00Z
 
 ## 참고
 - `advisor`도 `modelRoles.advisor`로 설정되는 역할이며(현재 claude-opus-5:high), advisor 런타임은 매 턴을 자기 모델·컨텍스트로 검토한다.
-- `vision` 역할은 이미지/시각 입력 보조 모델이며(현재 claude-fable-5:high), 일반 서브에이전트 표에는 없지만 `modelRoles.vision`으로 라우팅된다.
+- `vision` 역할은 이미지/시각 입력 보조 모델이며(현재 claude-fable-5-1:high), 일반 서브에이전트 표에는 없지만 `modelRoles.vision`으로 라우팅된다.
 - `plan`은 plan mode용 모델 역할이며 현재 claude-opus-5:xhigh를 사용한다. 빌트인 task agent 이름이 아니며, 테스트 작성은 작업 성격에 맞는 `task` 또는 현재 제공 specialist에 위임한다.
 - `tiny`는 제목·메모리·auto-thinking 분류 등 경량 백그라운드 작업에 사용하며 gpt-5.6-luna:low로 분리한다. `commit`은 분석·map/reduce·changelog·commit 제안 전체 agentic pipeline을 담당하므로 gpt-5.6-terra:medium을 유지한다.
 - OMP 18.0.7부터 원격 모델 카탈로그가 바이너리 업데이트 없이 병합되므로 portable 설정은 모든 실제 모델을 `provider/model-id`로 고정한다.
