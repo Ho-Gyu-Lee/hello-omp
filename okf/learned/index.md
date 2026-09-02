@@ -8,5 +8,5 @@
 
 새 항목 작성 규칙:
 * Google OKF concept 문서로 작성한다(YAML frontmatter + non-empty `type`).
-* 벤더 무관하게 일반화할 가치가 있는 교훈은 별도로 공개 번들의 적합한 concept(예: `/security/*`, `/workflow.md`)에 반영하고, 로컬 concept에서 그 공개 concept을 교차 참조한다.
+* 벤더 무관하게 일반화할 가치가 있는 교훈은 주제와 가장 가까운 공개 concept에 반영하고, 로컬 concept에서 그 공개 concept을 교차 참조한다. 보안 지식은 `/security/*`, 워크플로 지식은 `/workflow.md`에 반영하는 식이며 이 매핑은 비한정이다.
 * 내부 접속정보·미패치 3자 취약점 상세·PII는 공개 번들에 올리지 않는다.
