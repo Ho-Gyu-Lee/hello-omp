@@ -17,7 +17,9 @@ omp/
 
 ## 사용
 
-전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있음. 모델 인증은 OAuth/환경 변수로 별도 설정 — 이 스크립트 범위 밖. 공유 프로필은 OpenAI Codex Pro와 Claude Fable 5.1을 사용하며, Fable 권한이 없는 머신은 배포 후 Anthropic 역할·fallback·`enabledModels`를 사용 가능한 Claude 모델로 로컬에서 덮어쓴다.
+전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있으며 OpenAI Codex Pro 인증이 구성되어 있어야 한다. 모델 인증은 OAuth/환경 변수로 별도 설정하며 이 스크립트 범위 밖이다.
+
+공유 프로필은 인증된 OpenAI Codex 모델만 사용한다. `modelRoles`·`enabledModels`·fallback·advisor 상태를 `config/settings.conf`에서 명시적으로 덮어쓰므로 이전 Fable 프로필도 setup 재실행 후 같은 상태로 수렴한다. 교차-provider fallback과 advisor는 비활성화하며, 두 번째 provider를 도입할 때는 PC별 임시 override 대신 이 저장소 설정을 갱신한다.
 
 ```
 # macOS / Linux

@@ -83,4 +83,4 @@ omp의 기본 기능으로 되는 일은 MCP를 두지 않고 기본 도구를 �
 ## 검증·리뷰
 
 - 생성자가 자기 결과를 평가하지 않는다 — 독립 평가는 fresh context `reviewer`·`security-reviewer` 에이전트에 맡긴다.
-- advisor(다른 provider·다른 모델 계열)는 접근/해석 확정 전, 막혔을 때, 완료 선언 전(산출물을 durable하게 저장한 뒤), 불확실성이 높을 때 활용한다. 공유 프로필은 메인 GPT-5.6 Sol과 advisor Claude Fable 5.1을 서로 다른 quota pool에서 운용한다.
+- advisor는 인증된 다른 provider·다른 모델 계열을 공유 저장소 프로필에 구성한 경우에만 사용한다. 현재 OpenAI-only 공유 프로필은 인증되지 않은 호출을 막기 위해 advisor와 model fallback을 비활성화하며, 완료 전 독립 평가는 fresh context `reviewer`·`security-reviewer`가 담당한다.

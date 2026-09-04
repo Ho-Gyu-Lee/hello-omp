@@ -1,6 +1,7 @@
 # Change Log
 
 ## 2026-09-04
+* **Fix**: Anthropic 인증이 없는 PC에서 `slow`·`plan`·`vision`·`advisor`와 Codex fallback이 실패하던 포터블 프로필을 OpenAI Codex-only로 전환. `modelRoles`·`enabledModels`·fallback·advisor 상태를 명시적으로 덮어써 기존 Fable 설정이 남지 않게 하고, 두 번째 provider를 저장소에 구성하기 전까지 advisor와 model fallback을 비활성화한다.
 * **Update**: 공유 OMP 프로필의 Anthropic 역할과 fallback을 모두 Claude Fable 5.1로 통일하고, Fable 권한이 없는 머신의 Opus 사용은 로컬 설정으로 분리. GPT 메인 레인은 GPT-5.6 Sol/Terra, `tiny`는 GPT-5.3 Codex Spark를 유지한다.
 * **Update**: `extendedContext=true`를 포터블 OMP 설정에 고정해 GPT-5.6 Sol/Terra/Luna의 subscription Codex 컨텍스트를 표준 요율 구간인 272K에서 1M으로 확장. 272K 입력 초과 요청에는 OpenAI long-context 요율이 적용된다.
 * **Fix**: OMP 18.1.8에서 제거된 `task.isolation.mode=auto` 포터블 설정을 현재 스키마의 `task.isolation.enabled=true`와 `isolation.backend=auto`로 교체하고 서브에이전트 지침의 키 이름도 동기화. 클린 배포에서도 격리를 활성화하고 `setup.sh`가 중단 없이 전체 설정을 배포한다.
