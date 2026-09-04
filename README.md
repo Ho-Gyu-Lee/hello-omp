@@ -17,7 +17,7 @@ omp/
 
 ## 사용
 
-전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있음. 모델 인증(Anthropic/OpenAI Codex 등)은 OAuth/환경 변수로 별도 설정 — 이 스크립트 범위 밖.
+전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있음. 모델 인증은 OAuth/환경 변수로 별도 설정 — 이 스크립트 범위 밖. 공유 프로필은 OpenAI Codex Pro와 Claude Fable 5.1을 사용하며, Fable 권한이 없는 머신은 배포 후 Anthropic 역할·fallback·`enabledModels`를 사용 가능한 Claude 모델로 로컬에서 덮어쓴다.
 
 ```
 # macOS / Linux

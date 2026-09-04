@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-09-04
+* **Update**: 공유 OMP 프로필의 Anthropic 역할과 fallback을 모두 Claude Fable 5.1로 통일하고, Fable 권한이 없는 머신의 Opus 사용은 로컬 설정으로 분리. GPT 메인 레인은 GPT-5.6 Sol/Terra, `tiny`는 GPT-5.3 Codex Spark를 유지한다.
+* **Update**: `extendedContext=true`를 포터블 OMP 설정에 고정해 GPT-5.6 Sol/Terra/Luna의 subscription Codex 컨텍스트를 표준 요율 구간인 272K에서 1M으로 확장. 272K 입력 초과 요청에는 OpenAI long-context 요율이 적용된다.
+* **Fix**: OMP 18.1.8에서 제거된 `task.isolation.mode=auto` 포터블 설정을 현재 스키마의 `task.isolation.enabled=true`와 `isolation.backend=auto`로 교체하고 서브에이전트 지침의 키 이름도 동기화. 클린 배포에서도 격리를 활성화하고 `setup.sh`가 중단 없이 전체 설정을 배포한다.
+
 ## 2026-09-02
 * **Fix**: 글로벌 AGENTS와 [응답 원칙](/response-principles.md)에 비한정 예시 해석 규칙을 추가. `예를 들어` 같은 사례를 완전 목록으로 오인하지 않고 요청문의 대상 집합·판정 기준에 맞는 모든 항목으로 탐색·구현·검증을 확장하되, 명시적 폐쇄 지시와 YAGNI 경계를 우선하도록 수정.
 * **Update**: 글로벌 AGENTS와 관련 OKF 문서의 `예:` 표기를 일반 기준 뒤의 명시적 비한정 사례로 정비. 예시보다 대상이 많아도 확인 게이트로 축소하지 않고 판정 기준·대상 집합을 밝힌 뒤 진행하며 실제 처리 범위를 보고하도록 고정.
