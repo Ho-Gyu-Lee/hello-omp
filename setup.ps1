@@ -43,18 +43,33 @@ function Set-OkfPath($path) {
 }
 
 # --- 1) role-based models ---
-Write-Host "[1/5] applying model settings..."
-$settings = Join-Path $ScriptDir 'config\settings.conf'
-foreach ($line in Get-Content -LiteralPath $settings) {
-  $t = $line.Trim()
-  if ($t -eq '' -or $t.StartsWith('#')) { continue }
-  $parts = $t -split '\s+', 2
-  if ($parts.Count -lt 2) { continue }
-  $key = $parts[0]
-  # PowerShell 5.1 strips inner double-quotes when passing to a native exe; escape them as \"
-  $value = $parts[1] -replace '"', '\"'
-  & omp config set $key $value | Out-Null
-  Write-Host "  set $key"
+function Set-OmpSettings([string]$Path) {
+  foreach ($line in Get-Content -LiteralPath $Path) {
+    $t = $line.Trim()
+    if ($t -eq '' -or $t.StartsWith('#')) { continue }
+    $parts = $t -split '\s+', 2
+    if ($parts.Count -lt 2) { continue }
+    $key = $parts[0]
+    # PowerShell 5.1 strips inner double-quotes when passing to a native exe; escape them as \"
+    $value = $parts[1] -replace '"', '\"'
+    & omp config set $key $value | Out-Null
+    Write-Host "  set $key"
+  }
+}
+
+$anthropicPlan = [Environment]::GetEnvironmentVariable('HELLO_OMP_ANTHROPIC_PLAN')
+if ([string]::IsNullOrWhiteSpace($anthropicPlan)) { $anthropicPlan = 'default' }
+$anthropicPlan = $anthropicPlan.ToLowerInvariant()
+if ($anthropicPlan -notin @('default', 'max', 'pro')) {
+  Write-Error "HELLO_OMP_ANTHROPIC_PLAN must be default, max, or pro"
+  exit 1
+}
+
+Write-Host "[1/5] applying model settings ($anthropicPlan)..."
+Set-OmpSettings (Join-Path $ScriptDir 'config\settings.conf')
+if ($anthropicPlan -eq 'pro') {
+  Write-Host "  applying Anthropic Pro overrides..."
+  Set-OmpSettings (Join-Path $ScriptDir 'config\settings.anthropic-pro.conf')
 }
 
 # --- 2) global rules ---

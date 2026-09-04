@@ -7,7 +7,8 @@
 ```
 omp/
   setup.sh / setup.ps1     OS별 부트스트랩 (얇음)
-  config/settings.conf     공유 소스: omp config set 키/값 (모델 역할·폴백·approval·advisor)
+  config/settings.conf                     공유 기본 소스: 최신 상급 OpenAI/Anthropic 모델·fallback·advisor
+  config/settings.anthropic-pro.conf       Anthropic Pro 예외: Fable을 제거하고 Opus 5로 통일
   rules/AGENTS.md          글로벌 룰 (기본 룰 + OKF/도구 정책)
   okf/                     OKF 지식 번들 (상세 룰·도메인 지식·도구 정책·축적 지식의 소스)
   scripts/validate-okf.ts  공유 OKF frontmatter/type 검증기
@@ -17,20 +18,34 @@ omp/
 
 ## 사용
 
-전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있으며 OpenAI Codex Pro 인증이 구성되어 있어야 한다. 모델 인증은 OAuth/환경 변수로 별도 설정하며 이 스크립트 범위 밖이다.
+전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있으며 OpenAI Codex와 Anthropic 인증이 모두 구성되어 있어야 한다. 모델 인증은 OAuth/환경 변수로 별도 설정하며 이 스크립트 범위 밖이다.
 
-공유 프로필은 인증된 OpenAI Codex 모델만 사용한다. `modelRoles`·`enabledModels`·fallback·advisor 상태를 `config/settings.conf`에서 명시적으로 덮어쓰므로 이전 Fable 프로필도 setup 재실행 후 같은 상태로 수렴한다. 교차-provider fallback과 advisor는 비활성화하며, 두 번째 provider를 도입할 때는 PC별 임시 override 대신 이 저장소 설정을 갱신한다.
+기본 규칙은 최신 상급 모델을 사용한다. OpenAI 역할은 GPT-5.6 Sol/Terra, Anthropic 심층·advisor 역할은 Claude Opus 5, vision은 Claude Fable 5.1이다. 교차-provider fallback의 Anthropic 경로도 Opus 5만 사용한다.
 
-```
-# macOS / Linux
+| 프로필 | 선택 | Anthropic 라우팅 |
+|---|---|---|
+| 기본/Max | 환경 변수 없음 또는 `HELLO_OMP_ANTHROPIC_PLAN=max` | `slow`·`plan`·`advisor`와 Codex fallback은 Opus 5, `vision`은 Fable 5.1 |
+| Pro | `HELLO_OMP_ANTHROPIC_PLAN=pro` | Fable을 허용하지 않고 모든 Anthropic 역할·fallback·advisor를 Opus 5로 통일 |
+
+```sh
+# macOS / Linux — 기본/Max
 sh setup.sh
 
-# Windows (PowerShell)
+# macOS / Linux — Anthropic Pro
+HELLO_OMP_ANTHROPIC_PLAN=pro sh setup.sh
+```
+
+```powershell
+# Windows — 기본/Max
+.\setup.ps1
+
+# Windows — Anthropic Pro
+$env:HELLO_OMP_ANTHROPIC_PLAN = 'pro'
 .\setup.ps1
 ```
 
 ## 배포 순서 (스크립트가 수행)
-1. 롤별 모델·도구 설정 — `config/settings.conf`를 `omp config set`으로 적용.
+1. 롤별 모델·도구 설정 — `config/settings.conf`를 적용하고, `HELLO_OMP_ANTHROPIC_PLAN=pro`이면 `config/settings.anthropic-pro.conf`를 이어서 적용.
 2. 글로벌 룰 — `rules/AGENTS.md` → `<configdir>/AGENTS.md` (기존은 최초 1회 .bak 백업).
 3. OKF 번들 — `scripts/validate-okf.ts`로 소스 concept의 YAML frontmatter와 non-empty `type`을 검증한 뒤 `okf/` → `<configdir>/okf/`로 클린 재배포. `AGENTS.md`에는 배포본 경로와 이 레포의 소스 `okf/` 경로를 함께 주입한다.
 4. 확장 — `extensions/*.{js,ts}` → `<configdir>/extensions/` (OMP native extension auto-discovery 대상).

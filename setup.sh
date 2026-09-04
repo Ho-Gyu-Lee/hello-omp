@@ -53,17 +53,39 @@ OKF_ABS=$(printf '%s' "${CONFIG_DIR}/okf" | sed 's|\\|/|g')
 OKF_SOURCE_ABS=$(printf '%s' "${SCRIPT_DIR}/okf" | sed 's|\\|/|g')
 
 # --- 1) role-based models ---
-echo "[1/5] applying model settings..."
-SETTINGS="${SCRIPT_DIR}/config/settings.conf"
-while IFS= read -r line || [ -n "${line}" ]; do
-  case "${line}" in
-    ''|\#*) continue ;;
-  esac
-  key=${line%% *}
-  value=${line#* }
-  omp config set "${key}" "${value}" >/dev/null
-  echo "  set ${key}"
-done < "${SETTINGS}"
+apply_settings_file() {
+  settings_file=$1
+  while IFS= read -r line || [ -n "${line}" ]; do
+    case "${line}" in
+      ''|\#*) continue ;;
+    esac
+    key=${line%% *}
+    value=${line#* }
+    omp config set "${key}" "${value}" >/dev/null
+    echo "  set ${key}"
+  done < "${settings_file}"
+}
+
+ANTHROPIC_PLAN=${HELLO_OMP_ANTHROPIC_PLAN:-default}
+case "${ANTHROPIC_PLAN}" in
+  *[![:space:]]*) ;;
+  *) ANTHROPIC_PLAN=default ;;
+esac
+ANTHROPIC_PLAN=$(printf '%s' "${ANTHROPIC_PLAN}" | tr '[:upper:]' '[:lower:]')
+case "${ANTHROPIC_PLAN}" in
+  default|max|pro) ;;
+  *)
+    echo "ERROR: HELLO_OMP_ANTHROPIC_PLAN must be default, max, or pro" >&2
+    exit 1
+    ;;
+esac
+
+echo "[1/5] applying model settings (${ANTHROPIC_PLAN})..."
+apply_settings_file "${SCRIPT_DIR}/config/settings.conf"
+if [ "${ANTHROPIC_PLAN}" = "pro" ]; then
+  echo "  applying Anthropic Pro overrides..."
+  apply_settings_file "${SCRIPT_DIR}/config/settings.anthropic-pro.conf"
+fi
 
 # --- 2) global rules ---
 echo "[2/5] deploying global rules (AGENTS.md)..."
