@@ -20,7 +20,7 @@ omp/
 
 전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있으며 OpenAI Codex와 Anthropic 인증이 모두 구성되어 있어야 한다. 모델 인증은 OAuth/환경 변수로 별도 설정하며 이 스크립트 범위 밖이다.
 
-기본 규칙은 최신 상급 모델을 사용한다. OpenAI 역할은 GPT-5.6 Sol/Terra, Anthropic 심층·advisor 역할은 Claude Opus 5, vision은 Claude Fable 5.1이다. 교차-provider fallback의 Anthropic 경로도 Opus 5만 사용한다.
+기본 규칙은 최신 상급 모델을 사용한다. OpenAI 역할은 UI/UX `designer`에 GPT-6 Astra, 나머지 주·경량 레인에 GPT-5.6 Sol/Terra를 사용한다. Anthropic 심층·advisor 역할은 Claude Opus 5, vision은 Claude Fable 5.1이다. 교차-provider fallback의 Anthropic 경로도 Opus 5만 사용한다.
 
 | 프로필 | 선택 | Anthropic 라우팅 |
 |---|---|---|

@@ -1,5 +1,8 @@
 # Change Log
 
+## 2026-09-05
+* **Update**: OMP 원격 카탈로그와 실제 호출에서 확인한 GPT-6 Astra를 기본/Max·Anthropic Pro 프로필의 `designer`에 xhigh로 배치하고 `enabledModels`에 추가. 272K로 노출되는 현재 OMP Astra 컨텍스트를 고려해 장기 주 작업인 `default`·`task`는 GPT-5.6 Sol xhigh를 유지한다.
+
 ## 2026-09-04
 * **Policy**: 모든 명시적 Opus 역할·fallback은 `anthropic/claude-opus-5`만 허용하고, 대상 모델을 Opus 5로 지정할 수 없는 Anthropic provider-managed legacy Opus fallback은 비활성화한다.
 * **Update**: 공유 기본 프로필을 최신 상급 모델 기준으로 확정해 `slow`·`plan`·`advisor`와 모든 Codex→Anthropic fallback은 Claude Opus 5, 기본/Max `vision`은 Claude Fable 5.1로 라우팅. Fable을 사용할 수 없는 Anthropic Pro 구독은 `HELLO_OMP_ANTHROPIC_PLAN=pro`로 모든 Anthropic 역할·fallback·advisor를 Opus 5로 통일한다.

@@ -3,7 +3,7 @@ type: Reference
 title: 에이전트 가이드
 description: 현재 OMP 빌트인 에이전트 7종의 역할과 modelRoles 라우팅, 커스텀 에이전트 작성 기준.
 tags: [agents, subagents, routing, builtin]
-timestamp: 2026-09-04T00:00:00Z
+timestamp: 2026-09-05T00:00:00Z
 ---
 
 # 에이전트 가이드
@@ -19,7 +19,7 @@ timestamp: 2026-09-04T00:00:00Z
 | 빌트인 에이전트 | 역할 | 사용 시점 | 유효 모델 라우팅 |
 |------|------|-----------|------|
 | `scout` | 읽기 전용 코드베이스 스카우트 | 넓은 탐색, 메인 컨텍스트 보호 | `smol` = gpt-5.6-terra:medium |
-| `designer` | UI/UX 구현·리뷰 | 프런트엔드·시각 작업 | `designer` = gpt-5.6-sol:xhigh |
+| `designer` | UI/UX 구현·리뷰 | 프런트엔드·시각 작업 | `designer` = gpt-6-astra:xhigh |
 | `reviewer` | 코드 품질·보안 리뷰 | 변경 완료·PR 독립 검토 | `slow` = claude-opus-5:xhigh |
 | `security-reviewer` | 읽기 전용 취약점 분석 | 근거 기반 저장소 보안 감사 | 부모 세션 모델(필요 시 agent override) |
 | `librarian` | 외부 라이브러리/API 소스 검증 | 라이브러리 동작·시그니처 확인 | `smol` = gpt-5.6-terra:medium |
@@ -32,8 +32,9 @@ timestamp: 2026-09-04T00:00:00Z
 - 위임받은 에이전트도 작업 전 [OKF](/index.md)의 관련 개념을 확인하고 omp 기본 도구·스킬을 우선한다.
 
 ## 참고
-- 기본 공유 프로필은 최신 상급 OpenAI Codex와 Anthropic 모델을 함께 사용한다. `enabledModels`는 GPT-5.6 Sol/Terra/Luna·GPT-5.3 Codex Spark·Claude Opus 5·Claude Fable 5.1로 한정하며, 모든 대상 PC에서 두 provider 인증을 setup 전에 완료한다.
-- `default`·`task`·`designer`는 gpt-5.6-sol:xhigh, `smol`·`commit`은 gpt-5.6-terra:medium, `tiny`는 gpt-5.3-codex-spark:low, `slow`·`plan`은 claude-opus-5:xhigh, `vision`은 claude-fable-5-1:high, `advisor`는 claude-opus-5:high다.
+- 기본 공유 프로필은 최신 상급 OpenAI Codex와 Anthropic 모델을 함께 사용한다. `enabledModels`는 GPT-6 Astra·GPT-5.6 Sol/Terra/Luna·GPT-5.3 Codex Spark·Claude Opus 5·Claude Fable 5.1로 한정하며, 모든 대상 PC에서 두 provider 인증을 setup 전에 완료한다.
+- `default`·`task`는 gpt-5.6-sol:xhigh, `designer`는 gpt-6-astra:xhigh, `smol`·`commit`은 gpt-5.6-terra:medium, `tiny`는 gpt-5.3-codex-spark:low, `slow`·`plan`은 claude-opus-5:xhigh, `vision`은 claude-fable-5-1:high, `advisor`는 claude-opus-5:high다.
+- OMP 18.1.10의 현재 원격 카탈로그는 gpt-6-astra를 272K 컨텍스트로 노출하며 `extendedContext=true`의 GPT-5.6 확장 대상에 포함하지 않는다. 대규모 장기 작업은 `task`로 유지하고, `designer`에는 UI/UX·컴퓨터 조작처럼 범위가 제한된 작업을 배정한다.
 - `advisor`는 활성(`advisor.enabled=true`, `syncBacklog=1`)이다. primary 메인이 GPT-5.6 Sol일 때 Claude Opus 5 advisor는 다른 모델 계열·quota pool에서 검토한다. 메인이 Anthropic fallback으로 전환된 동안에는 같은 quota pool을 사용하므로 독립성이 보장되지 않으며, 완료 전 독립 검토는 fresh context `reviewer`·`security-reviewer` 서브에이전트로 수행한다.
 - 기본/Max 프로필의 `vision`은 이미지 입력을 지원하는 claude-fable-5-1:high로 라우팅한다. 일반 서브에이전트 표에는 없지만 `modelRoles.vision`으로 설정되며, gpt-5.3-codex-spark는 이미지 입력을 지원하지 않는다.
 - `plan`은 plan mode용 모델 역할이며 claude-opus-5:xhigh를 사용한다. 빌트인 task agent 이름이 아니며, 테스트 작성은 작업 성격에 맞는 `task` 또는 현재 제공 specialist에 위임한다.
