@@ -1,5 +1,9 @@
 # Change Log
 
+## 2026-09-07
+* **Update**: GPT-6 Astra의 272K 제약 해소에 따라 상급 모델 우선 정책을 적용해 기본/Max·Anthropic Pro 프로필의 `default`·`task`를 Astra xhigh로 전환하고 기존 `designer` 배치를 유지. Sol도 기존 설정에서 1M을 사용했으므로 Sol 대비 컨텍스트 확대가 전환 근거는 아니다. 2026-09-05의 Astra 한정 사용 정책을 폐기하고 `extendedContext=true`를 유지한다.
+* **Update**: `slow`·`plan`의 OpenAI fallback을 Astra xhigh, `vision` fallback을 Astra high로 전환. 경량 Terra/Spark, Claude primary 역할, advisor의 Terra fallback, 역할당 단일 교차-provider fallback 정책은 유지한다.
+
 ## 2026-09-05
 * **Update**: OMP 원격 카탈로그와 실제 호출에서 확인한 GPT-6 Astra를 기본/Max·Anthropic Pro 프로필의 `designer`에 xhigh로 배치하고 `enabledModels`에 추가. 272K로 노출되는 현재 OMP Astra 컨텍스트를 고려해 장기 주 작업인 `default`·`task`는 GPT-5.6 Sol xhigh를 유지한다.
 

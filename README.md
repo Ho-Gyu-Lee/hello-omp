@@ -20,7 +20,7 @@ omp/
 
 전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있으며 OpenAI Codex와 Anthropic 인증이 모두 구성되어 있어야 한다. 모델 인증은 OAuth/환경 변수로 별도 설정하며 이 스크립트 범위 밖이다.
 
-기본 규칙은 최신 상급 모델을 사용한다. OpenAI 역할은 UI/UX `designer`에 GPT-6 Astra, 나머지 주·경량 레인에 GPT-5.6 Sol/Terra를 사용한다. Anthropic 심층·advisor 역할은 Claude Opus 5, vision은 Claude Fable 5.1이다. 교차-provider fallback의 Anthropic 경로도 Opus 5만 사용한다.
+기본 규칙은 최신 상급 모델을 사용한다. Astra의 272K 제약 해소에 따라 이 원칙을 적용해 OpenAI 주 역할 `default`·`task`와 UI/UX `designer`는 GPT-6 Astra xhigh를 사용한다. Sol도 기존 설정에서 1M을 사용했으므로 Sol 대비 컨텍스트 확대가 아니라 Astra의 모델 선택 제약 해소에 따른 전환이다. 경량 `smol`·`commit`은 GPT-5.6 Terra, `tiny`는 GPT-5.3 Codex Spark를 유지한다. Anthropic 심층·advisor 역할은 Claude Opus 5, vision은 Claude Fable 5.1이다. 교차-provider fallback은 Codex 역할 → Opus 5, `slow`·`plan`·`vision` → Astra, `advisor` → Terra다. `extendedContext=true`를 유지하며 Astra를 컨텍스트 크기 때문에 제한된 작업에만 배정하지 않는다.
 
 | 프로필 | 선택 | Anthropic 라우팅 |
 |---|---|---|
