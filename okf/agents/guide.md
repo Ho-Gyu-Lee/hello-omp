@@ -46,7 +46,7 @@ timestamp: 2026-09-08T00:00:00Z
 - 기본/Max 프로필의 `vision`은 이미지 입력을 지원하는 claude-fable-5-1:high로 라우팅한다. 교차-provider fallback인 gpt-6-astra:high도 OMP 모델 카탈로그의 `input: ["text", "image"]`로 이미지 입력 지원을 확인했다. 일반 서브에이전트 표에는 없지만 `modelRoles.vision`으로 설정되며, gpt-5.3-codex-spark는 이미지 입력을 지원하지 않는다.
 - `plan`은 plan mode용 모델 역할이며 claude-opus-5:xhigh를 사용한다. 빌트인 task agent 이름이 아니며, 테스트 작성은 작업 성격에 맞는 `task` 또는 현재 제공 specialist에 위임한다.
 - Anthropic Pro 구독은 Fable을 사용할 수 없으므로 `HELLO_OMP_ANTHROPIC_PLAN=pro`로 setup을 실행한다. 이 프로필은 `vision`을 포함한 모든 Anthropic 역할·fallback·advisor를 Opus 5로 통일하고 `enabledModels`에서 Fable을 제거한다.
-- `tiny`는 제목·메모리·auto-thinking 분류 등 경량 백그라운드 작업에 쓰며 gpt-5.3-codex-spark:low로 분리해 메인 7d Chat pool을 아낀다. Spark는 128K 컨텍스트·이미지 미지원이지만 컨텍스트 초과 시 빌트인 context promotion이 gpt-5.5로 승격한다. `commit`은 분석·map/reduce·changelog·commit 제안 전체 agentic pipeline이라 gpt-5.6-terra:medium을 유지한다.
+- `tiny`는 제목·메모리·auto-thinking 분류 등 경량 백그라운드 작업에 쓰며 gpt-5.3-codex-spark:low로 분리해 메인 7d Chat pool을 아낀다. Spark는 128K 컨텍스트·이미지 미지원이며, 이 프로필은 `contextPromotion.enabled`를 켜지 않으므로 한도 초과 시 자동 승격이 아니라 compaction/overflow 복구 경로를 사용한다. `commit`은 분석·map/reduce·changelog·commit 제안 전체 agentic pipeline이라 gpt-5.6-terra:medium을 유지한다.
 - OMP 18.0.7부터 원격 모델 카탈로그가 바이너리 업데이트 없이 병합되므로 portable 설정은 모든 실제 모델을 `provider/model-id`로 고정한다.
 - Opus가 필요한 명시적 역할·fallback에는 `anthropic/claude-opus-5`만 허용한다. 대상 모델을 Opus 5로 지정할 수 없는 Anthropic provider-managed legacy Opus fallback은 `providers.anthropic.serverSideFallback=false`로 비활성화한다.
 - quota/429 fallback은 역할당 다른 provider의 동급 모델 1개만 둔다(Codex 역할 → Claude Opus 5, `slow`·`plan` → GPT-6 Astra xhigh, `vision` → GPT-6 Astra high, `advisor` → GPT-5.6 Terra high). 동일 provider 모델을 연쇄 재시도하지 않고, 복구는 `retry.fallbackRevertPolicy=cooldown-expiry`로 cooldown 종료 시 primary로 되돌린다.
