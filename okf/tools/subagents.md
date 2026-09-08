@@ -3,7 +3,7 @@ type: Reference
 title: 서브에이전트 위임
 description: 직접 처리와 위임의 경계, 병렬 작업의 계약·파일 소유권·task 격리, 반환 결과 검증 기준.
 tags: [tools, subagents, task, parallel, ownership, verification]
-timestamp: 2026-08-23T00:00:00Z
+timestamp: 2026-09-08T00:00:00Z
 ---
 
 # 서브에이전트 위임
@@ -22,4 +22,5 @@ timestamp: 2026-08-23T00:00:00Z
 
 ## 에이전트 선택
 - 역할별 에이전트와 사용 시점은 [에이전트 가이드](/agents/guide.md) 참조.
+- 현재 세션의 가용 에이전트 목록에서 이름을 선택한다. `modelRoles`의 키는 모델 별칭이지 에이전트 등록이 아니므로 같은 이름의 에이전트가 있다고 가정하지 않는다. 가이드와 설치본이 다르면 실제 목록을 우선한다.
 - 위임받은 에이전트도 작업 전 관련 OKF 개념을 확인하고 omp 기본 도구·스킬을 우선 사용한다.

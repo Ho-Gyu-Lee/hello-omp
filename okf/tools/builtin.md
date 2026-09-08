@@ -3,7 +3,7 @@ type: Reference
 title: omp 기본 도구
 description: omp 내장 도구로 코드 분석·검색·웹·디버깅을 처리한다. 현재 MCP를 대체하는 매핑 포함.
 tags: [tools, builtin, lsp, ast, web_search]
-timestamp: 2026-06-29T00:00:00Z
+timestamp: 2026-09-08T00:00:00Z
 ---
 
 # omp 기본 도구
@@ -21,7 +21,7 @@ omp는 배터리 포함 — 코딩 워크플로 대부분이 내장 도구로 �
 - `read` — URL·문서·내부 URI 읽기.
 
 ## 라이브러리/API 조사
-- `librarian` 에이전트 — 소스 코드를 직접 읽어 출처 검증된 답을 준다(문서 MCP보다 정확). + `web_search` + `read` 보강.
+- `read`로 공식 문서·소스를 직접 확인하고 `web_search`로 보강한다. 넓은 읽기 전용 조사는 현재 제공되는 `scout`에 위임한다. 제공되지 않은 에이전트 이름을 가정하지 않는다([에이전트 가이드](/agents/guide.md)).
 
 ## 실행·디버깅·자동화
 - `bash` / `eval` — 명령·Python/JS 코드 실행(영속 세션).
@@ -34,6 +34,6 @@ omp는 배터리 포함 — 코딩 워크플로 대부분이 내장 도구로 �
 |----------|------|------|
 | brave-search | 웹 검색 | `web_search` |
 | serena | 시맨틱 코드 분석 | `lsp` + `ast_grep`/`ast_edit` + grep/glob |
-| context7 | 라이브러리 문서 | `librarian` + `web_search` + `read` |
+| context7 | 라이브러리 문서 | `read` + `web_search`; 넓은 읽기 전용 조사는 `scout` |
 
 위 3종은 기본 도구로 완전/충분 대체되므로 omp에 설정하지 않는다. 상세 정책은 [MCP 정책](/tools/mcp.md).

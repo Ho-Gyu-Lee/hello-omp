@@ -20,7 +20,9 @@ omp/
 
 전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있으며 OpenAI Codex와 Anthropic 인증이 모두 구성되어 있어야 한다. 모델 인증은 OAuth/환경 변수로 별도 설정하며 이 스크립트 범위 밖이다.
 
-기본 규칙은 최신 상급 모델을 사용한다. Astra의 272K 제약 해소에 따라 이 원칙을 적용해 OpenAI 주 역할 `default`·`task`와 UI/UX `designer`는 GPT-6 Astra xhigh를 사용한다. Sol도 기존 설정에서 1M을 사용했으므로 Sol 대비 컨텍스트 확대가 아니라 Astra의 모델 선택 제약 해소에 따른 전환이다. 경량 `smol`·`commit`은 GPT-5.6 Terra, `tiny`는 GPT-5.3 Codex Spark를 유지한다. Anthropic 심층·advisor 역할은 Claude Opus 5, vision은 Claude Fable 5.1이다. 교차-provider fallback은 Codex 역할 → Opus 5, `slow`·`plan`·`vision` → Astra, `advisor` → Terra다. `extendedContext=true`를 유지하며 Astra를 컨텍스트 크기 때문에 제한된 작업에만 배정하지 않는다.
+기본 규칙은 최신 상급 모델을 사용한다. Astra의 272K 제약 해소에 따라 이 원칙을 적용해 OpenAI 주 역할 `default`·`task`는 GPT-6 Astra xhigh를 사용한다. Sol도 기존 설정에서 1M을 사용했으므로 Sol 대비 컨텍스트 확대가 아니라 Astra의 모델 선택 제약 해소에 따른 전환이다. 경량 `smol`·`commit`은 GPT-5.6 Terra, `tiny`는 GPT-5.3 Codex Spark를 유지한다. Anthropic 심층·advisor 역할은 Claude Opus 5, vision은 Claude Fable 5.1이다. 교차-provider fallback은 Codex 역할 → Opus 5, `slow`·`plan`·`vision` → Astra, `advisor` → Terra다. `extendedContext=true`를 유지하며 Astra를 컨텍스트 크기 때문에 제한된 작업에만 배정하지 않는다.
+
+`modelRoles`는 에이전트 등록이나 자동 실행 설정이 아니다. 공유 프로필의 `designer`는 GPT-6 Astra xhigh에 배정한 사용자 정의 모델 별칭이며, 설치본에 같은 이름의 빌트인 에이전트는 없다. UI/UX 구현은 기본 `task`에 위임하고, `@designer`는 명시적 모델 선택이나 이를 참조하는 커스텀 에이전트에서 사용한다. 가용 에이전트와 역할의 구분은 [에이전트 가이드](okf/agents/guide.md)를 따른다.
 
 | 프로필 | 선택 | Anthropic 라우팅 |
 |---|---|---|
@@ -57,7 +59,7 @@ $env:HELLO_OMP_ANTHROPIC_PLAN = 'pro'
 이 레포 디렉터리가 영속 학습 원장이다. 레포를 삭제하면 배포본 OKF 읽기는 계속 가능하지만, 새 학습은 메모리에만 남고 소스 OKF 승격은 별도 설정 정비가 필요하다.
 
 ## 도구 정책
-코딩 워크플로의 MCP(웹 검색·시맨틱 코드 분석·라이브러리 문서)는 omp 기본 도구(`web_search`/`lsp`+`ast_grep`/`librarian`+`read`)로 대체한다. MCP는 기본 기능으로 안 되는 외부 연동에만. 상세: `okf/tools/`.
+코딩 워크플로의 MCP(웹 검색·시맨틱 코드 분석·라이브러리 문서)는 omp 기본 도구(`web_search`, `lsp`+`ast_grep`, `read`)로 대체한다. 넓은 읽기 전용 조사는 현재 제공되는 `scout`에 위임한다. MCP는 기본 기능으로 안 되는 외부 연동에만. 상세: `okf/tools/`.
 
 ## 안전한 테스트 (실제 설정 미변경)
 `PI_CODING_AGENT_DIR`을 임시 디렉토리로 지정해 그곳에 배포된다.

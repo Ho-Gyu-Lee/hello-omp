@@ -1,5 +1,9 @@
 # Change Log
 
+## 2026-09-08
+* **Fix**: 설치본이 내보낸 빌트인 5종(`scout`, `reviewer`, `security-reviewer`, `task`, `sonic`)에 맞춰 [에이전트 가이드](/agents/guide.md)와 index를 정정. 2026-08-23의 7종 설명을 대체하고, 제공되지 않는 `librarian` 호출 지침을 글로벌 AGENTS·README·도구 정책에서 제거한다.
+* **Clarify**: 모델 역할 배정과 에이전트 등록·실행을 구분. `designer` 모델 별칭과 fallback 설정은 유지하되 빌트인 에이전트로 안내하지 않고, 라이브러리 조사는 직접 처리 또는 `scout`, UI/UX 구현은 `task`로 연결한다. 위임 전 현재 세션의 가용 목록을 기준으로 선택하도록 명시한다.
+
 ## 2026-09-07
 * **Update**: GPT-6 Astra의 272K 제약 해소에 따라 상급 모델 우선 정책을 적용해 기본/Max·Anthropic Pro 프로필의 `default`·`task`를 Astra xhigh로 전환하고 기존 `designer` 배치를 유지. Sol도 기존 설정에서 1M을 사용했으므로 Sol 대비 컨텍스트 확대가 전환 근거는 아니다. 2026-09-05의 Astra 한정 사용 정책을 폐기하고 `extendedContext=true`를 유지한다.
 * **Update**: `slow`·`plan`의 OpenAI fallback을 Astra xhigh, `vision` fallback을 Astra high로 전환. 경량 Terra/Spark, Claude primary 역할, advisor의 Terra fallback, 역할당 단일 교차-provider fallback 정책은 유지한다.
