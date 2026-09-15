@@ -1,5 +1,8 @@
 # Change Log
 
+## 2026-09-15
+* **Fix**: 사용 불가가 보고되고 갱신된 이 환경의 Codex 모델 목록에서도 제외된 GPT-5.3 Codex Spark를 기본/Max·Anthropic Pro 프로필의 `tiny`와 `enabledModels`에서 제거. 경량 분류·요약에 맞는 GPT-5.6 Luna low로 교체하고 다른 역할·fallback은 유지한다. 공식 문서는 Spark를 Pro 전용 연구 프리뷰로 안내하므로 서비스 전체 지원 종료로 단정하지 않으며, 가이드의 Spark 전용 quota·컨텍스트 가정을 제거한다.
+
 ## 2026-09-08
 * **Fix**: 설치본이 내보낸 빌트인 5종(`scout`, `reviewer`, `security-reviewer`, `task`, `sonic`)에 맞춰 [에이전트 가이드](/agents/guide.md)와 index를 정정. 2026-08-23의 7종 설명을 대체하고, 제공되지 않는 `librarian` 호출 지침을 글로벌 AGENTS·README·도구 정책에서 제거한다.
 * **Clarify**: 모델 역할 배정과 에이전트 등록·실행을 구분. `designer` 모델 별칭과 fallback 설정은 유지하되 빌트인 에이전트로 안내하지 않고, 라이브러리 조사는 직접 처리 또는 `scout`, UI/UX 구현은 `task`로 연결한다. 위임 전 현재 세션의 가용 목록을 기준으로 선택하도록 명시한다.

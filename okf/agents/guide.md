@@ -3,7 +3,7 @@ type: Reference
 title: 에이전트 가이드
 description: 설치본의 빌트인 에이전트와 가용성 확인, modelRoles 배정과 실행의 구분, 커스텀 에이전트 작성 기준.
 tags: [agents, subagents, routing, builtin]
-timestamp: 2026-09-08T00:00:00Z
+timestamp: 2026-09-15T00:00:00Z
 ---
 
 # 에이전트 가이드
@@ -38,15 +38,15 @@ timestamp: 2026-09-08T00:00:00Z
 - 위임받은 에이전트도 작업 전 [OKF](/index.md)의 관련 개념을 확인하고 omp 기본 도구·스킬을 우선한다.
 
 ## 참고
-- 기본 공유 프로필은 최신 상급 OpenAI Codex와 Anthropic 모델을 함께 사용한다. `enabledModels`는 GPT-6 Astra·GPT-5.6 Sol/Terra/Luna·GPT-5.3 Codex Spark·Claude Opus 5·Claude Fable 5.1로 한정하며, 모든 대상 PC에서 두 provider 인증을 setup 전에 완료한다.
-- `default`·`task`·`designer`는 gpt-6-astra:xhigh, `smol`·`commit`은 gpt-5.6-terra:medium, `tiny`는 gpt-5.3-codex-spark:low, `slow`·`plan`은 claude-opus-5:xhigh, `vision`은 claude-fable-5-1:high, `advisor`는 claude-opus-5:high다.
+- 기본 공유 프로필은 최신 상급 OpenAI Codex와 Anthropic 모델을 함께 사용한다. `enabledModels`는 GPT-6 Astra·GPT-5.6 Sol/Terra/Luna·Claude Opus 5·Claude Fable 5.1로 한정하며, 모든 대상 PC에서 두 provider 인증을 setup 전에 완료한다.
+- `default`·`task`·`designer`는 gpt-6-astra:xhigh, `smol`·`commit`은 gpt-5.6-terra:medium, `tiny`는 gpt-5.6-luna:low, `slow`·`plan`은 claude-opus-5:xhigh, `vision`은 claude-fable-5-1:high, `advisor`는 claude-opus-5:high다.
 - Astra의 272K 제약 해소에 따라 상급 모델 우선 정책을 적용해 `default`·`task`에도 Astra를 사용하고 `extendedContext=true`를 유지한다. Sol도 기존 설정에서 1M을 사용했으므로 Sol 대비 컨텍스트 확대가 전환 근거는 아니다. Astra를 주 역할에서 제외하던 정책은 폐기하고, UI/UX 구현도 별도 에이전트 등록 없이 범용 `task`에 위임할 수 있다.
 - OMP 카탈로그의 API 요금 메타데이터(`input`/`output`)는 Astra 10/50(별도 `longContext` 티어 없음), Sol 4/20(입력 272K 초과 시 10/45)이다. Sol의 272K는 컨텍스트 한계가 아니라 요금 임계치다. 이 단가 차이를 구독 quota 소모율과 동일시하지 않으며, 실제 quota 영향은 provider usage report로 별도 관측해야 한다.
 - `advisor`는 활성(`advisor.enabled=true`, `syncBacklog=1`)이다. primary 메인이 GPT-6 Astra일 때 Claude Opus 5 advisor는 다른 모델 계열·quota pool에서 검토한다. 메인이 Anthropic fallback으로 전환된 동안에는 같은 quota pool을 사용하므로 독립성이 보장되지 않으며, 완료 전 독립 검토는 fresh context `reviewer`·`security-reviewer` 서브에이전트로 수행한다.
-- 기본/Max 프로필의 `vision`은 이미지 입력을 지원하는 claude-fable-5-1:high로 라우팅한다. 교차-provider fallback인 gpt-6-astra:high도 OMP 모델 카탈로그의 `input: ["text", "image"]`로 이미지 입력 지원을 확인했다. 일반 서브에이전트 표에는 없지만 `modelRoles.vision`으로 설정되며, gpt-5.3-codex-spark는 이미지 입력을 지원하지 않는다.
+- 기본/Max 프로필의 `vision`은 이미지 입력을 지원하는 claude-fable-5-1:high로 라우팅한다. 교차-provider fallback인 gpt-6-astra:high도 OMP 모델 카탈로그의 `input: ["text", "image"]`로 이미지 입력 지원을 확인했다. 일반 서브에이전트 표에는 없지만 `modelRoles.vision`으로 설정된다.
 - `plan`은 plan mode용 모델 역할이며 claude-opus-5:xhigh를 사용한다. 빌트인 task agent 이름이 아니며, 테스트 작성은 작업 성격에 맞는 `task` 또는 현재 제공 specialist에 위임한다.
 - Anthropic Pro 구독은 Fable을 사용할 수 없으므로 `HELLO_OMP_ANTHROPIC_PLAN=pro`로 setup을 실행한다. 이 프로필은 `vision`을 포함한 모든 Anthropic 역할·fallback·advisor를 Opus 5로 통일하고 `enabledModels`에서 Fable을 제거한다.
-- `tiny`는 제목·메모리·auto-thinking 분류 등 경량 백그라운드 작업에 쓰며 gpt-5.3-codex-spark:low로 분리해 메인 7d Chat pool을 아낀다. Spark는 128K 컨텍스트·이미지 미지원이며, 이 프로필은 `contextPromotion.enabled`를 켜지 않으므로 한도 초과 시 자동 승격이 아니라 compaction/overflow 복구 경로를 사용한다. `commit`은 분석·map/reduce·changelog·commit 제안 전체 agentic pipeline이라 gpt-5.6-terra:medium을 유지한다.
+- `tiny`는 제목·메모리·auto-thinking 분류 등 경량 백그라운드 작업에 쓰며 gpt-5.6-luna:low를 사용한다. [공식 모델 안내](https://learn.chatgpt.com/docs/models)는 Luna를 추출·분류·구조화 요약 같은 명확하고 반복적인 작업에 권장한다. GPT-5.3 Codex Spark는 공식 문서상 ChatGPT Pro 전용 연구 프리뷰지만, 2026-09-15에 갱신한 이 환경의 Codex 모델 목록에서는 제공되지 않아 역할과 `enabledModels`에서 제거했다. 이를 전체 서비스 지원 종료로 단정하지 않으며, Spark 전용 quota 분리 가정도 Luna에 적용하지 않는다. `commit`은 분석·map/reduce·changelog·commit 제안 전체 agentic pipeline이라 gpt-5.6-terra:medium을 유지한다.
 - OMP 18.0.7부터 원격 모델 카탈로그가 바이너리 업데이트 없이 병합되므로 portable 설정은 모든 실제 모델을 `provider/model-id`로 고정한다.
 - Opus가 필요한 명시적 역할·fallback에는 `anthropic/claude-opus-5`만 허용한다. 대상 모델을 Opus 5로 지정할 수 없는 Anthropic provider-managed legacy Opus fallback은 `providers.anthropic.serverSideFallback=false`로 비활성화한다.
 - quota/429 fallback은 역할당 다른 provider의 동급 모델 1개만 둔다(Codex 역할 → Claude Opus 5, `slow`·`plan` → GPT-6 Astra xhigh, `vision` → GPT-6 Astra high, `advisor` → GPT-5.6 Terra high). 동일 provider 모델을 연쇄 재시도하지 않고, 복구는 `retry.fallbackRevertPolicy=cooldown-expiry`로 cooldown 종료 시 primary로 되돌린다.
