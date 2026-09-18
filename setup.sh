@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # omp portable setup — macOS / Linux
-# Deploy order: 1) role-based models  2) global rules (AGENTS.md)  3) OKF bundle  4) extensions  5) agents
+# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents
 # Idempotent: safe to re-run. Honors PI_CODING_AGENT_DIR via `omp config path`.
 set -eu
 
@@ -87,13 +87,17 @@ if [ "${ANTHROPIC_PLAN}" = "pro" ]; then
   apply_settings_file "${SCRIPT_DIR}/config/settings.anthropic-pro.conf"
 fi
 
-# --- 2) global rules ---
-echo "[2/5] deploying global rules (AGENTS.md)..."
+# --- 2) global/advisor rules ---
+echo "[2/5] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
 if [ -f "${CONFIG_DIR}/AGENTS.md" ] && [ ! -f "${CONFIG_DIR}/AGENTS.md.bak" ]; then
   cp "${CONFIG_DIR}/AGENTS.md" "${CONFIG_DIR}/AGENTS.md.bak"
 fi
 cp "${SCRIPT_DIR}/rules/AGENTS.md" "${CONFIG_DIR}/AGENTS.md"
 sed -e "s|__OKF_DIR__|${OKF_ABS}|g" -e "s|__OKF_SOURCE_DIR__|${OKF_SOURCE_ABS}|g" "${CONFIG_DIR}/AGENTS.md" > "${CONFIG_DIR}/AGENTS.md.tmp" && mv "${CONFIG_DIR}/AGENTS.md.tmp" "${CONFIG_DIR}/AGENTS.md"
+if [ -f "${CONFIG_DIR}/WATCHDOG.md" ] && [ ! -f "${CONFIG_DIR}/WATCHDOG.md.bak" ]; then
+  cp "${CONFIG_DIR}/WATCHDOG.md" "${CONFIG_DIR}/WATCHDOG.md.bak"
+fi
+cp "${SCRIPT_DIR}/rules/WATCHDOG.md" "${CONFIG_DIR}/WATCHDOG.md"
 
 # --- 3) OKF bundle (validate source, then clean redeploy) ---
 echo "[3/5] validating and deploying OKF bundle..."

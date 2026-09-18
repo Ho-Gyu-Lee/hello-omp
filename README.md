@@ -10,6 +10,7 @@ omp/
   config/settings.conf                     공유 기본 소스: 선택한 OpenAI/Anthropic 모델·fallback·advisor
   config/settings.anthropic-pro.conf       선택형 Opus 전용 프로필: Fable을 제외하고 Opus 5로 통일
   rules/AGENTS.md          글로벌 룰 (기본 룰 + OKF/도구 정책)
+  rules/WATCHDOG.md        advisor 전용 지침 (한국어 노트, 코드·설정 키는 원문 유지)
   okf/                     OKF 지식 번들 (상세 룰·도메인 지식·도구 정책·축적 지식의 소스)
   scripts/validate-okf.ts  공유 OKF frontmatter/type 검증기
   extensions/              런타임 확장(예: dangerous-tool-guard)
@@ -52,7 +53,7 @@ $env:HELLO_OMP_ANTHROPIC_PLAN = 'pro'
 
 ## 배포 순서 (스크립트가 수행)
 1. 롤별 모델·도구 설정 — `config/settings.conf`를 적용하고, `HELLO_OMP_ANTHROPIC_PLAN=pro`이면 `config/settings.anthropic-pro.conf`를 이어서 적용.
-2. 글로벌 룰 — `rules/AGENTS.md` → `<configdir>/AGENTS.md` (기존은 최초 1회 .bak 백업).
+2. 글로벌·advisor 룰 — `rules/AGENTS.md`·`rules/WATCHDOG.md` → `<configdir>/` (각 기존 파일은 최초 1회 .bak 백업). `WATCHDOG.md`는 advisor 시스템 지침에 추가되며 노트의 설명·근거·권고를 한국어 존댓말로 지정한다. 코드·설정 키·severity 값은 원문을 유지한다.
 3. OKF 번들 — `scripts/validate-okf.ts`로 소스 concept의 YAML frontmatter와 non-empty `type`을 검증한 뒤 `okf/` → `<configdir>/okf/`로 클린 재배포. `AGENTS.md`에는 배포본 경로와 이 레포의 소스 `okf/` 경로를 함께 주입한다.
 4. 확장 — `extensions/*.{js,ts}` → `<configdir>/extensions/` (OMP native extension auto-discovery 대상).
 5. 에이전트 override/custom(있을 때만) — `agents/*.md` → `<configdir>/agents/`. 없으면 빌트인을 쓰고, 이전에 이 레포가 관리하던 `reviewer`/`plan` override는 제거한다.

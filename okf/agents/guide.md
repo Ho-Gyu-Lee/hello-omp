@@ -30,6 +30,7 @@ OMP 18.2.5 설치본에서 확인한 빌트인 에이전트는 `scout`·`reviewe
 - `modelRoles`는 작업 용도별 모델 배정이며 에이전트를 등록하거나 상시 실행하는 설정이 아니다. 메인이 `task` 에이전트를 실행하면 `@task`가 해석되지만, 모델 역할 이름을 그대로 `agent`에 넣어서는 안 된다.
 - 공유 프로필의 `modelRoles.designer`와 해당 fallback은 유효한 사용자 정의 역할 별칭으로 유지한다. `@designer`를 명시적으로 선택하거나 이를 참조하는 커스텀 에이전트를 등록해야 사용되며, 설정만으로 UI/UX 에이전트가 자동 실행되지는 않는다.
 - `plan`은 계획 모드, `commit`은 OMP 커밋 생성 기능, `vision`은 이미지 질문·설명 경로, `tiny`는 경량 보조 기능에서 선택되는 모델 역할이다. `advisor`는 역할 배정과 별도로 `advisor.enabled` 또는 `/advisor on`으로 활성화해야 한다.
+- advisor 노트의 출력 언어는 관리 소스 `rules/WATCHDOG.md`를 active agent dir의 `WATCHDOG.md`로 배포해 지정한다. 지적 내용·근거·권고는 한국어 존댓말로 작성하고 코드·설정 키·도구 필드·severity 값은 원문을 유지한다. 이 파일은 advisor 전용 시스템 지침이며 감시의 활성 여부·심각도·검토 범위를 바꾸지 않는다. 근거: `omp://advisor-watchdog.md`의 WATCHDOG.md(확인: 2026-09-18).
 - 설치본의 번들 정의는 `omp agents unpack --dir <별도 검증 디렉터리> --json`으로 내보내 확인할 수 있다. 확인 목적으로 기본 사용자·프로젝트 에이전트 디렉터리에 풀어 빌트인 override를 만들지 않는다. 실제 위임 가능 여부는 현재 세션의 가용 목록을 기준으로 한다.
 
 ## 커스텀 에이전트 작성 시

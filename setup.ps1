@@ -1,6 +1,6 @@
 #requires -version 5
 # omp portable setup - Windows (PowerShell 5.1+)
-# Deploy order: 1) role-based models  2) global rules (AGENTS.md)  3) OKF bundle  4) extensions  5) agents
+# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents
 # Idempotent: safe to re-run. Honors PI_CODING_AGENT_DIR via `omp config path`.
 $ErrorActionPreference = 'Stop'
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -72,12 +72,15 @@ if ($anthropicPlan -eq 'pro') {
   Set-OmpSettings (Join-Path $ScriptDir 'config\settings.anthropic-pro.conf')
 }
 
-# --- 2) global rules ---
-Write-Host "[2/5] deploying global rules (AGENTS.md)..."
+# --- 2) global/advisor rules ---
+Write-Host "[2/5] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
 $agentsMd = Join-Path $ConfigDir 'AGENTS.md'
 if ((Test-Path $agentsMd) -and -not (Test-Path "$agentsMd.bak")) { Copy-Item $agentsMd "$agentsMd.bak" -Force }
 Copy-Item (Join-Path $ScriptDir 'rules\AGENTS.md') $agentsMd -Force
 Set-OkfPath $agentsMd
+$watchdogMd = Join-Path $ConfigDir 'WATCHDOG.md'
+if ((Test-Path $watchdogMd) -and -not (Test-Path "$watchdogMd.bak")) { Copy-Item $watchdogMd "$watchdogMd.bak" -Force }
+Copy-Item (Join-Path $ScriptDir 'rules\WATCHDOG.md') $watchdogMd -Force
 
 # --- 3) OKF bundle (validate source, then clean redeploy) ---
 Write-Host "[3/5] validating and deploying OKF bundle..."
