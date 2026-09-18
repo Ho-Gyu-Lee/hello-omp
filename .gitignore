@@ -1,3 +1,6 @@
+# Agent-created working scripts and evidence (not canonical project files)
+/.omp-artifacts/
+
 # Local smoke-test deployment targets
 .tmp-omp-test*/
 .tmp omp test*/

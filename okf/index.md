@@ -7,7 +7,7 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 * [응답 원칙](/response-principles.md) - 앵커·비한정 예시 해석·범위 제한·함축성·보고 매체 선택·검토 후 통합 최종본
 * [코딩 스타일](/coding-style.md) - YAGNI·결정 사다리·네이밍·공개 API·아키텍처·서버 상태 처리
 * [버그 수정 원칙](/bugfix.md) - 결함 클래스 수정·전방 영향 범위 분석·후방 의도 복구(롤백 차단)·회귀 방지·YAGNI 경계
-* [워크플로](/workflow.md) - 개발 흐름·수락 기준-증거 폐루프·실패 가능한 검증·산출물 보존·독립 검토·통합 최종 응답
+* [워크플로](/workflow.md) - 개발 흐름·수락 기준-증거 폐루프·작업 파일 단일 저장 위치·산출물 보존·독립 검토·통합 최종 응답
 * [OKF 학습 축적 루프](/learning/accumulation.md) - 영속 학습의 기준·절차·변경 후 무결성 검사
 
 ## 축적 지식
@@ -25,7 +25,7 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 * [서버 체크리스트](/game/server-checklist.md) - 메모리·동시성·네트워크·틱·권위 상태·복구·처리량
 
 ## 도구
-* [omp 기본 도구](/tools/builtin.md) - lsp·ast·web_search·read·browser (현 MCP 대체)
+* [omp 기본 도구](/tools/builtin.md) - lsp·ast·web_search·read·browser·작업용 TypeScript+Bun 단일화
 * [MCP 정책](/tools/mcp.md) - 기본 도구 우선, MCP는 기본으로 안 되는 외부 연동만
 * [스킬](/tools/skills.md) - 스킬 사용 시점
 * [서브에이전트](/tools/subagents.md) - 위임 기준·병렬 계약·파일 소유권·task 격리·반환 결과 검증

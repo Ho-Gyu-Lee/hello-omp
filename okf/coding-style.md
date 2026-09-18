@@ -3,7 +3,7 @@ type: Rule
 title: 코딩 스타일
 description: 간결성(YAGNI)·결정 사다리·네이밍·줄바꿈·공개 API·아키텍처·서버 특화.
 tags: [rule, coding-style, naming, architecture, api-design, server]
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-09-18T00:00:00Z
 ---
 
 # 코딩 스타일
@@ -11,6 +11,7 @@ timestamp: 2026-07-13T00:00:00Z
 ## 간결성 (Over-Engineering 금지)
 - 요청하지 않은 파일/추상화/기능 추가 금지. 가장 직접적인 해결, 요청 범위만 수정.
 - YAGNI는 기능 범위에만 적용된다. 버그 수정 깊이에는 적용하지 않는다 — 증상 하나가 아니라 결함 클래스 전체를 고친다. 상세는 [버그 수정 원칙](/bugfix.md).
+- 새 작업용 스크립트는 TypeScript+Bun으로 통일하되 제품 코드·영구 테스트는 프로젝트 언어를 유지한다. 실행 언어·예외 기준은 [omp 기본 도구](/tools/builtin.md), 작업 파일 위치는 [워크플로](/workflow.md)를 따른다.
 
 ## 결정 사다리 (코드 생성 전, 위에서부터 첫 적용 단계에서 멈춤)
 1. 존재할 필요가 있는가? 없으면 안 만든다(YAGNI).

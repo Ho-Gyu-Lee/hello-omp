@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # omp portable setup — macOS / Linux
-# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents
+# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents  6) commands
 # Idempotent: safe to re-run. Honors PI_CODING_AGENT_DIR via `omp config path`.
 set -eu
 
@@ -80,7 +80,7 @@ case "${ANTHROPIC_PLAN}" in
     ;;
 esac
 
-echo "[1/5] applying model settings (${ANTHROPIC_PLAN})..."
+echo "[1/6] applying model settings (${ANTHROPIC_PLAN})..."
 apply_settings_file "${SCRIPT_DIR}/config/settings.conf"
 if [ "${ANTHROPIC_PLAN}" = "pro" ]; then
   echo "  applying Opus-only profile overrides..."
@@ -88,7 +88,7 @@ if [ "${ANTHROPIC_PLAN}" = "pro" ]; then
 fi
 
 # --- 2) global/advisor rules ---
-echo "[2/5] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
+echo "[2/6] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
 if [ -f "${CONFIG_DIR}/AGENTS.md" ] && [ ! -f "${CONFIG_DIR}/AGENTS.md.bak" ]; then
   cp "${CONFIG_DIR}/AGENTS.md" "${CONFIG_DIR}/AGENTS.md.bak"
 fi
@@ -100,7 +100,7 @@ fi
 cp "${SCRIPT_DIR}/rules/WATCHDOG.md" "${CONFIG_DIR}/WATCHDOG.md"
 
 # --- 3) OKF bundle (validate source, then clean redeploy) ---
-echo "[3/5] validating and deploying OKF bundle..."
+echo "[3/6] validating and deploying OKF bundle..."
 if ! bun "${SCRIPT_DIR}/scripts/validate-okf.ts" "${SCRIPT_DIR}/okf"; then
   echo "ERROR: OKF conformance validation failed" >&2
   exit 1
@@ -110,7 +110,7 @@ mkdir -p "${CONFIG_DIR}/okf"
 cp -R "${SCRIPT_DIR}/okf/." "${CONFIG_DIR}/okf/"
 
 # --- 4) extensions (auto-discovered from user agent dir) ---
-echo "[4/5] deploying extensions (if any)..."
+echo "[4/6] deploying extensions (if any)..."
 n=0
 for ext in "${SCRIPT_DIR}/extensions/"*.js "${SCRIPT_DIR}/extensions/"*.ts; do
   [ -f "$ext" ] || continue
@@ -127,7 +127,7 @@ fi
 
 
 # --- 5) agent overrides/custom agents (optional; built-in agents are default) ---
-echo "[5/5] deploying agent overrides/custom agents (if any)..."
+echo "[5/6] deploying agent overrides/custom agents (if any)..."
 for managed in reviewer.md plan.md; do
   managed_role=${managed%.md}
   managed_marker="# source: omp v16.3.8 bundled ${managed_role}; only thinkingLevel changed high -> xhigh."
@@ -148,6 +148,22 @@ if ls "${SCRIPT_DIR}/agents/"*.md >/dev/null 2>&1; then
   echo "  deployed ${n} agent file(s)"
 else
   echo "  none — using omp built-in agents (models via roles)"
+fi
+
+# --- 6) file slash commands (preserve unrelated user commands) ---
+echo "[6/6] deploying commands (if any)..."
+n=0
+for cmd in "${SCRIPT_DIR}/commands/"*.md; do
+  [ -f "$cmd" ] || continue
+  if [ "$n" -eq 0 ]; then mkdir -p "${CONFIG_DIR}/commands"; fi
+  base=$(basename "$cmd")
+  cp "$cmd" "${CONFIG_DIR}/commands/${base}"
+  n=$((n+1))
+done
+if [ "$n" -gt 0 ]; then
+  echo "  deployed ${n} command(s)"
+else
+  echo "  none"
 fi
 
 echo ""

@@ -1,6 +1,6 @@
 # 도구
 
-* [omp 기본 도구](/tools/builtin.md) - omp 내장 도구로 코드 분석·검색·웹·디버깅을 처리한다. 현재 MCP를 대체하는 매핑 포함.
+* [omp 기본 도구](/tools/builtin.md) - 내장 도구 우선·작업용 TypeScript+Bun 단일화·실행 언어 예외·MCP 대체 매핑.
 * [MCP 정책](/tools/mcp.md) - omp 기본 도구 우선, MCP는 기본으로 안 되는 외부 연동에만. 공급망 보안 포함.
 * [스킬 사용](/tools/skills.md) - 작업에 맞는 스킬이 있으면 사용한다. 사용 시점과 원칙.
 * [서브에이전트 위임](/tools/subagents.md) - 직접 처리와 위임의 경계, 병렬 계약·파일 소유권·task 격리·반환 결과 검증 기준.
