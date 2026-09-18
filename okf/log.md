@@ -5,6 +5,8 @@
 ## 2026-09-18
 * **Policy**: [OKF 학습 축적 루프](/learning/accumulation.md)를 작업 완료 절차에 연결. 로컬 기록과 공개 반영의 기준을 분리하고, 기존 지식의 재사용·정정에도 재평가를 요구한다. [워크플로](/workflow.md)에 학습·공개 반영 결과 필드를 고정하며 단순 질의 예외, 보류·차단 보고, 공개/로컬 이력 분리, 검증·배포와 Git 작업 승인 경계를 명시한다.
 * **Learning**: 선별 커밋 검증은 작업 트리가 아니라 실제 인덱스 스냅샷을 격리해야 한다는 원칙을 [워크플로](/workflow.md)에 반영. 선택적 외부 응답 필드의 부재와 실제 0을 구분하고 계약에 따른 폴백·집계를 검증하는 원칙을 [코딩 스타일](/coding-style.md)에 반영.
+* **Correction**: [요청 서명 정규화 계약](/security/signing-canonicalization.md)의 원시 body 바이트 일치 권고를 rawBody 모델로 한정하고, 파싱 후 canonical 재구성 모델과 구분한다. UTF-16/UTF-8 정렬의 비등가성·JS 안전 정수 경계·소비자 합의 없는 타입 변경 금지와 상태코드만으로 판정하지 않는 대조 기준도 명시한다.
+* **Learning**: [워크플로](/workflow.md)에 ignored 복구본·검증 산출물의 Git 정리·전체 stash 보호 경계와 인덱스 복사본 생성·상위 Git 탐색 주의를 추가. [코딩 스타일](/coding-style.md)의 외부 응답 집계 원칙에는 공식 DynamoDB 선택 필드 계약과 실제 0·누락·집계값 처리 예를 보강한다.
 * **Policy**: 작업용 파일을 사용자·프로젝트 지정 경로 또는 `<프로젝트 루트>/.omp-artifacts/<작업-ID>/` 한 곳으로 모으도록 글로벌 룰과 [워크플로](/workflow.md)에 기준을 추가. OMP 설정 탐색 경로 `.omp/`와 분리하며 재개 시 기존 작업-ID를 확인한다. 정본 위치·기존 파일·검증 산출물 보존·정리 승인을 유지하고 위임·격리·도구 고정 출력·로컬 Git 제외의 경계를 명시한다. `/cleanup` 탐색 안내·README의 격리 검증 예시·Git 제외 경로도 맞춘다.
 * **Policy**: 새 작업용 스크립트를 TypeScript+Bun으로, 파일이 필요 없는 실행을 Bun의 JavaScript 경로로 통일. [omp 기본 도구](/tools/builtin.md)에 Python 편의 사용 금지와 사용자 지정·기존 프로젝트·필수 런타임 제약의 예외를 명시한다. 기존 제품 언어·OS 부트스트랩·OMP 자체의 Python 지원은 변경하지 않는다.
 * **Fix**: advisor 노트의 자연어 본문에도 한국어 존댓말을 명시하도록 advisor 전용 `rules/WATCHDOG.md`를 추가하고 POSIX·PowerShell setup의 관리 배포에 포함. 코드·설정 키·도구 필드·severity 값은 원문을 보존하며 감시 범위나 심각도 판정은 변경하지 않는다.
