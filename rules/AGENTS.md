@@ -87,10 +87,10 @@ omp의 기본 기능으로 되는 일은 MCP를 두지 않고 기본 도구를 �
 
 ## OKF 학습 축적
 
-- 반복 사용 가치가 있는 규칙·결정·도메인 지식은 `__OKF_DIR__/learning/accumulation.md` 기준으로 OKF에 누적한다.
+- 구현·버그 수정·조사·설정/규칙 변경 작업과 사용자 교정·영속 결정에서는 별도 요청 없이 완료 전에 학습을 판정한다. 관련 로컬 지식을 재사용·정정할 때도 공개 반영 가능성을 재평가한다. 실행 조건·기록·공개 범위의 정본은 `__OKF_DIR__/learning/accumulation.md`, 필수 완료 보고 형식은 `__OKF_DIR__/workflow.md`를 따른다. 새 학습 후보가 없는 단순 질의·사소한 편집에는 형식적으로 적용하지 않는다.
 - 영속 학습의 소스 오브 트루스는 `__OKF_SOURCE_DIR__` 이다. 배포본 `__OKF_DIR__`만 직접 고치면 다음 setup 재배포 때 사라진다.
-- 새 concept은 `__OKF_SOURCE_DIR__/learned/` 또는 적합한 소스 OKF 위치에 만든다. 반영 후 setup을 재실행해 배포본으로 동기화한다.
-- 관리 번들 concept을 새로 만들면 해당 디렉터리 `index.md`, 루트 `index.md`, `log.md`를 함께 갱신한다(링크는 번들 루트 절대 경로 `/path.md`). 단 `/learned/` concept은 프로젝트·회사·라이브러리 한정 내부 지식이라 `.gitignore`로 로컬 전용이며, index에 per-file bullet을 남기지 않고 디렉터리를 직접 읽어 발견한다. 벤더 무관 교훈은 공개 번들 concept으로 일반화하고 로컬에서 교차 참조한다.
+- 새 concept은 공개 가능한 지식이면 주제에 맞는 소스 OKF 위치에, 개인 선호·프로젝트 한정 사실·공개 범위 검토 중인 지식이면 `__OKF_SOURCE_DIR__/learned/`에 만든다. 반영 후 setup을 재실행해 배포본으로 동기화한다.
+- 개인 선호·프로젝트 한정 사실과 공개 가능한 지식을 구분하고 기존 concept 갱신을 우선한다. 관리 번들의 변경 이력은 `log.md`에 남기고 새 concept은 해당 디렉터리와 루트 `index.md`에 연결한다. `/learned/` concept은 `.gitignore`로 로컬 전용이며 index에 per-file 목록을 남기지 않는다. 공개 반영은 소스 문서 수정까지이며 Git 스테이징·커밋·푸시의 승인이 아니다.
 - API 키·토큰·PII·내부 접속정보, 검증되지 않은 추측, 일회성 진행 상태는 OKF에 기록하지 않는다.
 
 ## 검증·리뷰

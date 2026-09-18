@@ -12,7 +12,7 @@
 agent.db*
 .DS_Store
 
-# Local-only learned concepts (project/company/library-specific internal knowledge).
+# Local-only learned concepts (personal preferences, scoped facts, publication review).
 # Deployed via filesystem copy by setup, but never committed to the public repo.
 # index.md stays tracked as the local-only policy note; concept files are discovered by directory read.
 okf/learned/*
