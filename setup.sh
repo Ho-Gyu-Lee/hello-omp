@@ -83,7 +83,7 @@ esac
 echo "[1/5] applying model settings (${ANTHROPIC_PLAN})..."
 apply_settings_file "${SCRIPT_DIR}/config/settings.conf"
 if [ "${ANTHROPIC_PLAN}" = "pro" ]; then
-  echo "  applying Anthropic Pro overrides..."
+  echo "  applying Opus-only profile overrides..."
   apply_settings_file "${SCRIPT_DIR}/config/settings.anthropic-pro.conf"
 fi
 

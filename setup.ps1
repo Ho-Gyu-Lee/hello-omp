@@ -68,7 +68,7 @@ if ($anthropicPlan -notin @('default', 'max', 'pro')) {
 Write-Host "[1/5] applying model settings ($anthropicPlan)..."
 Set-OmpSettings (Join-Path $ScriptDir 'config\settings.conf')
 if ($anthropicPlan -eq 'pro') {
-  Write-Host "  applying Anthropic Pro overrides..."
+  Write-Host "  applying Opus-only profile overrides..."
   Set-OmpSettings (Join-Path $ScriptDir 'config\settings.anthropic-pro.conf')
 }
 

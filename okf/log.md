@@ -1,5 +1,17 @@
 # Change Log
 
+이 문서는 변경 당시의 기록이며 현재 설정·지원 사양의 근거가 아니다. 현재 안내는 소스 설정과 해당 concept을 따른다. 오류가 확인된 과거 설명은 정정 표시를 우선한다.
+
+## 2026-09-18
+* **Policy — 기본 비활성 방침 대체**: 게임 서버의 위험 변경에 보수적으로 접근하기 위해 advisor 기본값을 활성(`advisor.enabled=true`)으로 복원. 작업 중 감시와 최종 응답 전 독립 검토를 함께 유지하고, 보안·영속 데이터·서버 권위·동시성 정합성에 영향을 주는 변경에는 구현 전 독립 검토도 요구한다. 같은 날짜에 기록한 기본 비활성 방침을 대체하며 모델 라우팅·fallback·`syncBacklog`는 변경하지 않는다.
+* **Policy**: 비동기 advisor를 기본 비활성화(`advisor.enabled=false`)하고 필요한 작업의 최종 응답 전 독립 검토를 결과 수신·지적 판단·수정·재검증까지 완료하도록 명시. 작업 중 감시는 세션별 선택 사항으로 남기며 advisor 모델·fallback·`syncBacklog`는 유지한다. 검토 요청·카드 표시와 의견 반영 완료를 구분하고, 새 세션 적용 및 실행 중 세션의 `/advisor off` 경계를 문서화한다.
+* **Policy**: 보고 매체를 터미널 기본으로 정하되, 사용자 요청·길고 복잡한 내용의 반복 검토·문서 자체의 편집·공유·비교 필요에 따라 파일 보고를 선택하도록 글로벌 룰과 [응답 원칙](/response-principles.md)에 기준을 명시. 파일 보고도 핵심 결론·근거·주의사항·필요한 결정·경로를 터미널에 제공하며 필수 작업 산출물과 검증 자료 생성을 억제하지 않는다.
+* **Fix**: [워크플로](/workflow.md)의 완료 전 일률적 파일 저장 조건을 제거하고 산출물 보존과 보고 파일 생성을 구분. 독립 검토 전 본문을 먼저 공개하지 않고 검토·수정·검증 후 통합 최종본을 전달하도록 변경. advisor의 비동기 검토와 `syncBacklog`의 한계를 명시하고, 공개 답변 수정 시 차이만 덧붙이지 않고 자기완결적인 대체 최종본을 제공하도록 고정.
+* **Correction**: Astra의 컨텍스트 제약 및 그 해소를 모델 선택 근거로 삼던 잘못된 설명을 README·에이전트 가이드에서 제거. 2026-09-05·2026-09-07 기록의 해당 전제도 정정하며 모델 라우팅과 `extendedContext` 설정은 유지한다.
+* **Policy**: [정확성](/accuracy.md)에 버전 의존 사실의 적용 범위·근거·확인 시점과 현재 안내/과거 이력 구분을 명시. 설치본·유효 설정·공식 자료에 따라 관련 설명과 배포본을 갱신하되 문서 최신화를 근거로 모델·설정을 임의 교체하지 않는다.
+* **Refresh**: 공식 자료와 설치 OMP 18.2.5에 맞춰 Pro의 Fable 불가 단정, Astra 장문 요금 티어 부재, 설정만으로 보장하던 가용성·quota·인증 전제를 정정. 고정 단가와 불필요한 모델 도입 이력은 현재 가이드에서 제거하고, 기존 `pro` 라우팅은 선택형 Opus 전용 프로필로 명확화한다. 실제 모델·설정값은 유지한다.
+* **Clarify**: 버그 수정 문서의 폐기된 advisor 참조와 핸드오프 파일 전면 금지를 새 독립 검토·보고 매체 기준에 맞춤. 설치본의 `PI_CODING_AGENT_DIR`과 custom-agent 탐색 루트 차이를 README에 명시하고, 동명 agent override가 글로벌 컨텍스트를 잃는다는 부정확한 설명을 제거한다.
+
 ## 2026-09-15
 * **Fix**: 사용 불가가 보고되고 갱신된 이 환경의 Codex 모델 목록에서도 제외된 GPT-5.3 Codex Spark를 기본/Max·Anthropic Pro 프로필의 `tiny`와 `enabledModels`에서 제거. 경량 분류·요약에 맞는 GPT-5.6 Luna low로 교체하고 다른 역할·fallback은 유지한다. 공식 문서는 Spark를 Pro 전용 연구 프리뷰로 안내하므로 서비스 전체 지원 종료로 단정하지 않으며, 가이드의 Spark 전용 quota·컨텍스트 가정을 제거한다.
 
@@ -8,11 +20,11 @@
 * **Clarify**: 모델 역할 배정과 에이전트 등록·실행을 구분. `designer` 모델 별칭과 fallback 설정은 유지하되 빌트인 에이전트로 안내하지 않고, 라이브러리 조사는 직접 처리 또는 `scout`, UI/UX 구현은 `task`로 연결한다. 위임 전 현재 세션의 가용 목록을 기준으로 선택하도록 명시한다.
 
 ## 2026-09-07
-* **Update**: GPT-6 Astra의 272K 제약 해소에 따라 상급 모델 우선 정책을 적용해 기본/Max·Anthropic Pro 프로필의 `default`·`task`를 Astra xhigh로 전환하고 기존 `designer` 배치를 유지. Sol도 기존 설정에서 1M을 사용했으므로 Sol 대비 컨텍스트 확대가 전환 근거는 아니다. 2026-09-05의 Astra 한정 사용 정책을 폐기하고 `extendedContext=true`를 유지한다.
+* **Update — 전제 정정(2026-09-18)**: 상급 모델 우선 정책에 따라 기본/Max·Anthropic Pro 프로필의 `default`·`task`를 Astra xhigh로 전환하고 기존 `designer` 배치와 `extendedContext=true`를 유지한 변경이다. 원래 기록의 "Astra의 272K 제약 해소"는 잘못된 전제이며 모델 선택 근거로 사용하지 않는다. 2026-09-05의 Astra 한정 사용 정책은 폐기됐다.
 * **Update**: `slow`·`plan`의 OpenAI fallback을 Astra xhigh, `vision` fallback을 Astra high로 전환. 경량 Terra/Spark, Claude primary 역할, advisor의 Terra fallback, 역할당 단일 교차-provider fallback 정책은 유지한다.
 
 ## 2026-09-05
-* **Update**: OMP 원격 카탈로그와 실제 호출에서 확인한 GPT-6 Astra를 기본/Max·Anthropic Pro 프로필의 `designer`에 xhigh로 배치하고 `enabledModels`에 추가. 272K로 노출되는 현재 OMP Astra 컨텍스트를 고려해 장기 주 작업인 `default`·`task`는 GPT-5.6 Sol xhigh를 유지한다.
+* **Update — 전제 정정(2026-09-18)**: GPT-6 Astra를 기본/Max·Anthropic Pro 프로필의 `designer`에 xhigh로 배치하고 `enabledModels`에 추가했으며 당시 `default`·`task`는 GPT-5.6 Sol xhigh를 유지했다. 이 선택을 정당화하던 "Astra의 272K 컨텍스트 제약"은 잘못된 설명이다. 해당 제약이나 Astra 한정 사용 정책을 현재 판단에 적용하지 않는다.
 
 ## 2026-09-04
 * **Policy**: 모든 명시적 Opus 역할·fallback은 `anthropic/claude-opus-5`만 허용하고, 대상 모델을 Opus 5로 지정할 수 없는 Anthropic provider-managed legacy Opus fallback은 비활성화한다.

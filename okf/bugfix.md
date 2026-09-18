@@ -3,7 +3,7 @@ type: Rule
 title: 버그 수정 원칙
 description: 결함 클래스 수정, 전방 영향 범위 분석과 후방 의도 복구, 회귀 방지, 계약 경계 bounding, YAGNI 경계.
 tags: [rule, bugfix, root-cause, impact-analysis, regression, invariant]
-timestamp: 2026-07-16T00:00:00Z
+timestamp: 2026-09-18T00:00:00Z
 ---
 
 # 버그 수정 원칙
@@ -34,7 +34,7 @@ timestamp: 2026-07-16T00:00:00Z
 
 ## 검증
 - 재현 → 수정 → 재현 불가 확인 + 인접 경계값 + 영향 범위 분석에서 나온 상·하류 케이스 확인. 실행 가능한 체크(테스트/빌드/린트)의 증거로만 "완료"를 주장한다.
-- 불확실하거나 반복 수정 지점이면 [워크플로](/workflow.md)의 advisor 시점 기준으로 상위 모델·`reviewer`에 독립 평가를 맡긴다.
+- 불확실하거나 반복 수정 지점이면 [워크플로](/workflow.md)의 독립 검토 시점 기준으로 fresh context `reviewer`·`security-reviewer`에 독립 평가를 맡긴다.
 
 ## YAGNI와의 경계
 - YAGNI는 **기능 범위**에 적용된다: 요청하지 않은 기능·추상화·파일·확장점을 선제적으로 추가하지 않는다.
