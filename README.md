@@ -8,7 +8,7 @@
 omp/
   setup.sh / setup.ps1     OS별 부트스트랩 (얇음)
   config/settings.conf                     공유 기본 소스: 선택한 OpenAI/Anthropic 모델·fallback·advisor
-  config/settings.anthropic-pro.conf       선택형 Opus 전용 프로필: Fable을 제외하고 Opus 5로 통일
+  config/settings.anthropic-pro.conf       선택형 Opus 전용 프로필: Anthropic 선택에서 Fable을 제외하고 Opus 5.5 사용
   rules/AGENTS.md          글로벌 룰 (기본 룰 + OKF/도구 정책)
   rules/WATCHDOG.md        advisor 전용 지침 (한국어 노트, 코드·설정 키는 원문 유지)
   okf/                     OKF 지식 번들 (상세 룰·도메인 지식·도구 정책·축적 지식의 소스)
@@ -22,18 +22,22 @@ omp/
 
 전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있어야 한다. 선택된 역할과 교차-provider fallback을 사용하려면 해당 provider의 유효 인증이 필요하며, 기본 프로필 전체를 의도대로 사용하려면 OpenAI Codex와 Anthropic을 모두 인증한다. 모델 인증은 OAuth/환경 변수로 별도 설정하며 이 스크립트 범위 밖이다.
 
-기본 규칙은 상급 모델을 우선 사용한다. OpenAI 주 역할 `default`·`task`는 GPT-6 Astra xhigh를 사용한다. 경량 `smol`·`commit`은 GPT-5.6 Terra, `tiny`는 GPT-5.6 Luna low를 사용한다. Anthropic 심층·advisor 역할은 Claude Opus 5, vision은 Claude Fable 5.1이다. 교차-provider fallback은 Codex 역할 → Opus 5, `slow`·`plan`·`vision` → Astra, `advisor` → Terra다. `extendedContext=true`를 유지한다. 모델 선택에 폐기된 컨텍스트 제한을 근거로 적용하지 않으며, 실제 컨텍스트와 가용성은 사용 중인 provider·모델 카탈로그·설정으로 확인한다.
+기본 규칙은 상급 모델을 우선 사용한다. OpenAI 주 역할 `default`·`task`는 GPT-6 Astra xhigh를 사용한다. 경량 `smol`·`commit`은 GPT-6 Sol medium, `tiny`·`memory`는 GPT-6 Luna low로 명시한다. Anthropic `designer`·`slow`·`plan`은 Claude Opus 5.5 xhigh, `advisor`는 Opus 5.5 high, `vision`은 Claude Fable 5.1 high다. 교차-provider fallback은 Codex 역할 → Opus 5.5, `designer`·`slow`·`plan`·`vision` → Astra, `advisor` → GPT-6 Sol high다. `memory`에도 Opus 5.5 low 체인을 명시해 `default` 체인의 추론 강도를 상속하지 않게 한다. `enabledModels`는 Astra·GPT-6 Sol·GPT-6 Luna·Opus 5.5·Fable 5.1의 전체 목록이며 모든 주 모델과 fallback 후보가 포함되어야 한다. `extendedContext=true`를 유지한다. 모델 선택에 폐기된 컨텍스트 제한을 근거로 적용하지 않으며, 실제 컨텍스트와 가용성은 사용 중인 provider·모델 카탈로그·설정으로 확인한다.
 
-`modelRoles`는 에이전트 등록이나 자동 실행 설정이 아니다. 공유 프로필의 `designer`는 GPT-6 Astra xhigh에 배정한 사용자 정의 모델 별칭이며, 설치본에 같은 이름의 빌트인 에이전트는 없다. UI/UX 구현은 기본 `task`에 위임하고, `@designer`는 명시적 모델 선택이나 이를 참조하는 커스텀 에이전트에서 사용한다. 가용 에이전트와 역할의 구분은 [에이전트 가이드](okf/agents/guide.md)를 따른다.
+`modelRoles`는 에이전트 등록이나 자동 실행 설정이 아니다. 공유 프로필의 `designer`는 Claude Opus 5.5 xhigh에 배정한 사용자 정의 모델 별칭이며, 설치본에 같은 이름의 빌트인 에이전트는 없다. UI/UX 구현을 일반 `task`에 위임하면 Astra가 사용되고, `@designer`는 명시적 모델 선택이나 이를 참조하는 커스텀 에이전트에서 사용한다. 가용 에이전트와 역할의 구분은 [에이전트 가이드](okf/agents/guide.md)를 따른다.
 
 비동기 advisor는 작업 중 위험 감시를 위해 기본 활성(`advisor.enabled=true`)이다. 보안·영속 데이터·서버 권위·동시성 정합성에 영향을 주는 위험 변경은 구현 전에 설계·불변조건·영향 범위·복구 가능성을 독립 검토한다. 완료 전 독립 검토도 별도로 유지하며 `reviewer`·`security-reviewer`의 결과와 이미 수신한 advisor 지적을 판단·반영·재검증하고 통합 최종본을 전달한다. advisor가 켜져 있다는 사실이나 `syncBacklog`를 최종 검토 완료의 증거로 삼지 않으며, 출력 정리만을 위해 감시를 끄지 않는다.
 
+기본 작성 경로(Astra)와 `reviewer`의 `@slow`(Opus 5.5)는 다른 계열이다. `designer`·`plan` 또는 fallback으로 Anthropic이 작성한 산출물은 Astra 등 반대 계열로 검토 모델을 명시적으로 선택해야 한다. 정적 역할 배정은 이 조건을 자동 분기하지 않으며, 검토가 작성 계열로 fallback되면 교차 모델 독립 검토를 충족한 것으로 세지 않는다. `security-reviewer`는 부모 모델을 상속하므로 `slow` 변경만으로 검토 모델이 바뀌지 않는다.
+
 | 프로필 | 선택 | Anthropic 라우팅 |
 |---|---|---|
-| 기본(구독 공통) | 환경 변수 없음 또는 `HELLO_OMP_ANTHROPIC_PLAN=max` | `slow`·`plan`·`advisor`와 Codex fallback은 Opus 5, `vision`은 Fable 5.1 |
-| Opus 전용(선택형) | `HELLO_OMP_ANTHROPIC_PLAN=pro` | `vision`을 포함한 모든 Anthropic 역할·fallback·advisor를 Opus 5로 통일 |
+| 기본(구독 공통) | 환경 변수 없음 또는 `HELLO_OMP_ANTHROPIC_PLAN=max` | `designer`·`slow`·`plan`·`advisor`와 Codex fallback은 Opus 5.5, `vision`은 Fable 5.1 |
+| Opus 전용(선택형) | `HELLO_OMP_ANTHROPIC_PLAN=pro` | Anthropic 주 모델은 `vision`을 포함해 Opus 5.5, Fable은 허용 목록에서 제외 |
 
 `pro`는 이 저장소의 선택형 프로필 이름이며 Pro 구독의 모델 권한을 판정하는 값이 아니다. [Anthropic 공식 안내](https://www.anthropic.com/claude/fable)는 Fable 5.1을 Pro에도 제공한다고 명시한다(확인: 2026-09-18). Pro라는 이유만으로 Opus 전용을 선택하지 않으며, 기본 프로필을 사용할 수 있다. Opus 전용은 Fable을 제외하려는 경우에만 명시적으로 선택한다. 실제 계정·연동 경로의 가용성은 별도로 확인한다.
+
+선택형 프로필은 `modelRoles`와 `enabledModels` 두 키만 덮어쓴다. `retry.fallbackChains`는 기본 프로필에서 상속하므로 OpenAI로의 교차-provider 전환은 유지된다. 배열은 병합이 아니라 전체 교체이므로 프로필을 바꿀 때 상속된 fallback 후보까지 해당 허용 목록에 포함되는지 확인한다.
 
 ```sh
 # macOS / Linux — 기본(구독 공통)
@@ -96,19 +100,41 @@ $env:HELLO_OMP_ANTHROPIC_PLAN = 'pro'
 명령 파일은 세션 시작 시 발견된다. 실행 중 세션에서는 `/reload-plugins`로 갱신할 수 있으나 스킬·에이전트·MCP 등도 함께 갱신한다. 자동완성에 `/cleanup`과 설명이 표시되는지 확인한다. 미등록 슬래시 입력은 일반 프롬프트로 전달될 수 있으므로 등록 확인 없이 실행됐다고 판단하지 않는다.
 
 ## 도구 정책
-코딩 워크플로의 MCP(웹 검색·시맨틱 코드 분석·라이브러리 문서)는 omp 기본 도구(`web_search`, `lsp`+`ast_grep`, `read`)로 대체한다. 넓은 읽기 전용 조사는 현재 제공되는 `scout`에 위임한다. MCP는 기본 기능으로 안 되는 외부 연동에만. 상세: `okf/tools/`.
+코딩 워크플로의 MCP(웹 검색·시맨틱 코드 분석·라이브러리 문서)는 OMP 기본 도구(`web_search`, 가용 `lsp`·AST 도구, `grep`/`glob`, `read`)로 대체한다. 현재 세션에 노출된 도구와 호출 문서를 우선하며 `ast_grep`이 항상 활성이라는 전제를 두지 않는다. 정적 웹은 `read`, 실제 UI는 `eval`의 `browser` facade로 확인한다. 먼저 직접 범위를 잡고 넓은 읽기 전용 조사는 가용 `scout`에 위임한다. MCP는 기본 기능으로 안 되는 외부 연동에만 사용한다. 상세: [기본 도구](okf/tools/builtin.md)·[스킬 도입 경계](okf/tools/skills.md).
+
+## 지식·생태계 갱신 근거
+
+[에이전트 생태계 동향과 적용 판단](okf/tools/ecosystem-watch.md)은 **2026-08-26~2026-09-26 공식 발표**와 **09-26 GitHub 월간 Trending 관측**을 분리한 조사 기록이다. 관측 목록 23개 중 이 레포에 직접 관련된 10개 저장소의 원문을 대조하고 지침 반영·기존 기준 유지·미채택 이유를 남겼다. 누적 별 수·월간 표시값은 품질·안전성·실사용 점유율의 증거가 아니다.
+
+OMP 18.3.2와 공식 변경을 대조해 도구 가용성·browser facade·백그라운드 협의·위임 기준을 정정하고, 외부 스킬의 실행 경계·메모리 재검증·독립 반증 리뷰를 보강했다. 게임 권위 검증·경제 확정과 화면 예측의 구분, 인증 방식별 CSRF·동시성 선택·회귀 테스트 기준도 정합화했다. 이는 지식·지침 갱신이며 인기 도구 설치나 모델·fallback·advisor·권한 설정의 변경이 아니다.
 
 ## 안전한 테스트 (실제 설정 미변경)
-`PI_CODING_AGENT_DIR`을 같은 작업 디렉터리 아래의 격리된 배포 경로로 지정한다. 아래 예시는 이 레포 루트에서 실행하며, `<작업-ID>`는 목적과 충돌 방지 식별자를 조합한 실제 값으로 바꾸고 같은 검증 작업에서 재사용한다. 검증 배포본은 자동 삭제하지 않는다.
+`OMP_PROFILE=default`와 `PI_CODING_AGENT_DIR`을 같은 작업 디렉터리 아래의 격리된 배포 경로로 지정한다. 이름 있는 OMP 프로필은 `PI_CODING_AGENT_DIR`을 무시하므로 동일 환경의 `omp config path`가 의도한 격리 경로인지 먼저 확인하고, 다르면 중단한다. 아래 예시는 이 레포 루트에서 실행하며, `<작업-ID>`는 목적과 충돌 방지 식별자를 조합한 실제 값으로 바꾸고 같은 검증 작업에서 재사용한다. 검증 배포본은 자동 삭제하지 않는다.
 `PI_CODING_AGENT_DIR`은 이 레포 루트와 달라야 한다. setup은 소스 OKF 삭제를 막기 위해 레포 루트를 config dir로 쓰면 중단한다.
-설치 OMP 18.2.5에서는 task-agent 사용자 탐색이 `PI_CODING_AGENT_DIR`과 다른 설정 루트를 사용한다. 따라서 이 격리 경로에 복사한 custom agent의 발견·실행까지 검증됐다고 보지 않는다. custom agent를 검증할 때는 프로젝트 `.omp/agents/` 또는 활성 기본/이름 있는 프로필의 실제 탐색 경로를 사용한다. 기본 빌트인 에이전트에는 영향이 없으며, 격리 테스트를 위해 전역 agents 경로에 복사하지 않는다. 근거: 설치본 `src/task/discovery.ts`의 `getConfigDirs("agents")`와 `omp://config-usage.md`의 Canonical roots(확인: 2026-09-18).
+격리용 환경 변수는 아래처럼 자식 셸 또는 `try/finally` 범위로 제한한다. 실제 배포 전에는 원래 환경에서 `omp config path`가 의도한 사용자 설정 경로인지 다시 확인한다.
+OMP 18.3.2에서도 task-agent 사용자 탐색은 `PI_CODING_AGENT_DIR`이 바꾸는 설정 경로와 구별된다. 따라서 격리 경로에 복사한 custom agent의 발견·실행까지 검증됐다고 보지 않는다. custom agent는 프로젝트 `.omp/agents/` 또는 활성 기본/이름 있는 프로필의 실제 탐색 경로에서 검증하고, 테스트를 위해 전역 agents 경로에 복사하지 않는다. 기본 빌트인에는 영향이 없다. 근거: [v18.3.2 `src/task/discovery.ts`](https://github.com/can1357/oh-my-pi/blob/v18.3.2/packages/coding-agent/src/task/discovery.ts)의 `getConfigDirs("agents", { project: false })`와 설치본 `omp://config-usage.md`의 Canonical roots(재확인: 2026-09-26).
 ```sh
 # macOS / Linux
-PI_CODING_AGENT_DIR="$PWD/.omp-artifacts/<작업-ID>/config" sh setup.sh
+(
+  export OMP_PROFILE=default
+  export PI_CODING_AGENT_DIR="$PWD/.omp-artifacts/<작업-ID>/config"
+  mkdir -p "$PI_CODING_AGENT_DIR"
+  [ "$(CDPATH= cd "$(omp config path)" && pwd -P)" = "$(CDPATH= cd "$PI_CODING_AGENT_DIR" && pwd -P)" ] || exit 1
+  sh setup.sh
+)
 ```
 
 ```powershell
 # Windows
-$env:PI_CODING_AGENT_DIR = Join-Path $PWD '.omp-artifacts/<작업-ID>/config'
-.\setup.ps1
+$oldProfile = $env:OMP_PROFILE
+$oldAgentDir = $env:PI_CODING_AGENT_DIR
+try {
+  $env:OMP_PROFILE = 'default'
+  $env:PI_CODING_AGENT_DIR = Join-Path $PWD '.omp-artifacts/<작업-ID>/config'
+  if ([IO.Path]::GetFullPath((omp config path).Trim()).TrimEnd([char[]]'\/') -ne [IO.Path]::GetFullPath($env:PI_CODING_AGENT_DIR).TrimEnd([char[]]'\/')) { throw 'unexpected config path' }
+  .\setup.ps1
+} finally {
+  $env:OMP_PROFILE = $oldProfile
+  $env:PI_CODING_AGENT_DIR = $oldAgentDir
+}
 ```

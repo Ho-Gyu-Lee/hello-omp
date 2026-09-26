@@ -2,6 +2,16 @@
 
 이 문서는 변경 당시의 기록이며 현재 설정·지원 사양의 근거가 아니다. 현재 안내는 소스 설정과 해당 concept을 따른다. 오류가 확인된 과거 설명은 정정 표시를 우선한다.
 
+## 2026-09-26
+* **Refresh**: [에이전트 생태계 동향](/tools/ecosystem-watch.md)에 2026-08-26~09-26 공식 변경과 09-26 GitHub 월간 Trending 표시값을 분리 기록. 관측 23개 중 직접 관련된 10개 저장소의 원문과 반영·유지·미채택 이유를 연결하고, [정확성](/accuracy.md)에 기간·지표·저자 주장·적용 환경의 구분을 추가한다. 인기 도구 설치·모델 전환·성능 우열 판정은 하지 않는다.
+* **Correction**: 설치 OMP 18.3.2 및 공식 18.3.0~18.3.2 변경과 대조해 AST의 조건부 가용성·browser facade·백그라운드 메시지/대기·glob 범위를 [기본 도구](/tools/builtin.md)에 반영. [서브에이전트](/tools/subagents.md)의 탐색 횟수 임계값을 제거하고 README의 config 경로/agent 탐색 차이를 재확인한다. 설정·setup·기존 확장은 유지한다.
+* **Policy**: [스킬](/tools/skills.md)·[MCP](/tools/mcp.md)·[보안 개요](/security/overview.md)에 host 호환성, 설치 전 hooks/의존성 검토, 외부 자료의 권한 승격 금지와 OS 실행 격리 경계를 명시. [워크플로](/workflow.md)·[학습 축적](/learning/accumulation.md)에 독립 반증과 메모리 원문 재검증을 보강하고 글로벌 지침·관련 index를 동기화한다.
+* **Correction**: [코딩 스타일](/coding-style.md)의 기존 구현 재사용과 측정·불변조건 기반 동시성 선택, [버그 수정](/bugfix.md)의 소비자 관측 회귀 검증을 명확화. 회귀 테스트 지침은 트렌드·신규 공식 사양의 채택이 아니라 같은 문서의 소비자 계약 보호·YAGNI 경계와 독립 검토 지적을 근거로 정정했다. 테스트 정리는 이번 수정 범위의 비계약 구현 세부에 한정하고 계약인 메시지·프로토콜 문자열은 보호한다. [게임 보안](/security/game.md)·[서버 체크리스트](/game/server-checklist.md)는 권위 검증/경제 커밋과 예측 표시를, [보안 리뷰](/security/review-checklist.md)는 인증 경로별 CSRF와 클라 탐지의 보조 역할을 구분한다. 게임 엔진·SDK의 신규 사양으로 주장하지 않는다.
+* **Clarify**: 독립 검토의 잔여 지적을 반영해 [생태계 동향](/tools/ecosystem-watch.md)에 `i-have-adhd`의 고정 revision·OMP 확장 선언·활성 조건에 따른 비표시 규칙 주입과 미설치 판단을 명시. 실행 성공·악성 여부는 단정하지 않는다. 외부 평가의 일반 해석 기준은 [정확성](/accuracy.md)으로 모으고 [에이전트 가이드](/agents/guide.md)는 이를 참조하며 역할별 기준만 유지한다.
+* **Cutover**: 사용자 승인에 따라 기본·선택형 프로필의 GPT-5.6 Terra/Luna와 Opus 5 배정을 GPT-6 Sol/Luna·Opus 5.5로 교체하고 구형 모델을 허용 목록에서 제거. `default`·`task`는 Astra, `designer`·`slow`·`plan`은 Opus 5.5, `vision`은 기본 프로필에서 Fable 5.1을 유지한다. `memory`와 해당 low fallback을 명시하고 11개 역할 모두 교차-provider 후보 1개를 둔다. 모델별 추천을 운영 정책으로 바꾸지 않았던 아래 조사 기록과 구분되는 실제 전환이다.
+* **Correction**: Opus 전용 오버레이는 `modelRoles`·`enabledModels`만 덮고 fallback은 기본 프로필에서 상속한다는 기전을 README·가이드에 명시. 이름 있는 OMP 프로필이 `PI_CODING_AGENT_DIR`을 무시하므로 격리 setup 전에 해석된 경로를 확인하도록 테스트 안내를 보강한다. Anthropic 작성·폴백 시 반대 계열 검토를 명시 선택해야 하며 정적 역할 배정만으로 자동 분리되지 않음을 기록한다.
+* **Learning**: [에이전트 가이드](/agents/guide.md)에 OMP 18.3.2의 기본 chat 역할 10종·model-kind 역할 5종과 `memory` → `tiny` → `smol` 미배정 해석을 명시. 이미지 분석/생성·모델 역할/에이전트를 구분하고, 후기의 독립성·평가 조건·역할별 직접 근거·API 비용/구독 quota·카탈로그/실제 호출 구분을 추가한다. 모델별 추천이나 역할·fallback 설정은 변경하지 않는다.
+
 ## 2026-09-18
 * **Policy**: [OKF 학습 축적 루프](/learning/accumulation.md)를 작업 완료 절차에 연결. 로컬 기록과 공개 반영의 기준을 분리하고, 기존 지식의 재사용·정정에도 재평가를 요구한다. [워크플로](/workflow.md)에 학습·공개 반영 결과 필드를 고정하며 단순 질의 예외, 보류·차단 보고, 공개/로컬 이력 분리, 검증·배포와 Git 작업 승인 경계를 명시한다.
 * **Learning**: 선별 커밋 검증은 작업 트리가 아니라 실제 인덱스 스냅샷을 격리해야 한다는 원칙을 [워크플로](/workflow.md)에 반영. 선택적 외부 응답 필드의 부재와 실제 0을 구분하고 계약에 따른 폴백·집계를 검증하는 원칙을 [코딩 스타일](/coding-style.md)에 반영.

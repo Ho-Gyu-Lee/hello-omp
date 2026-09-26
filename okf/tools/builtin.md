@@ -1,9 +1,9 @@
 ---
 type: Reference
 title: omp 기본 도구
-description: omp 내장 도구 우선 정책, 작업용 TypeScript+Bun 단일화와 실행 언어 예외, MCP 대체 매핑.
-tags: [tools, builtin, lsp, ast, web_search, typescript, bun]
-timestamp: 2026-09-18T00:00:00Z
+description: 세션별 도구 가용성, OMP 내장 도구·browser facade·백그라운드 작업, TypeScript+Bun 실행과 MCP 대체 매핑.
+tags: [tools, builtin, lsp, ast, browser, background, typescript, bun]
+timestamp: 2026-09-26T00:00:00Z
 ---
 
 # omp 기본 도구
@@ -11,10 +11,11 @@ timestamp: 2026-09-18T00:00:00Z
 omp는 배터리 포함 — 코딩 워크플로 대부분이 내장 도구로 처리된다. 기본으로 되는 일에 MCP를 두지 않는다.
 
 ## 코드 분석/탐색
-- `lsp` — 심볼 검색, 참조 찾기, 리네임, 코드 액션, 진단(LSP 기반 코드 인텔리전스).
-- `ast_grep` / `ast_edit` — 트리시터 기반 구조적 검색·치환.
-- `grep` / `glob` — 내용·파일 검색(.gitignore 존중).
-- 폴백 체인: lsp → ast_grep → grep/glob → read.
+- 현재 세션에 노출된 도구와 해당 호출 문서를 우선한다. 문서에 이름이 있다는 사실만으로 활성화·호출 가능성을 가정하지 않는다.
+- `lsp` — 심볼·정의·참조·리네임·코드 액션·진단. 가용하면 코드 인텔리전스에 우선 사용하고 텍스트 검색으로 의미 분석을 대신하지 않는다.
+- `ast_grep` — 노출된 경우 구조 검색. `ast_edit` — 노출된 경우 구조적 치환. OMP 18.3.2 내장 `omp://tools/ast-grep.md`는 `astGrep.enabled=false` 기본값을 명시한다(확인: 2026-09-26). 사용을 전제로 설정을 임의 활성화하지 않는다.
+- `grep` / `glob` — 내용·파일 검색(.gitignore 존중), `read` — 필요한 범위 읽기. 의미 분석·구조 검색을 쓸 수 없으면 검색의 한계를 밝히고 실제 코드·런타임으로 보완한다.
+- `grep`의 `dir/*.ts`는 해당 디렉터리 바로 아래, `dir/**/*.ts`는 하위 디렉터리 포함이다. [OMP 18.3.2](https://github.com/can1357/oh-my-pi/releases/tag/v18.3.2)의 glob 정정에 맞춰 전수 탐색 의도와 범위를 일치시킨다.
 
 ## 웹·문서
 - `web_search` — 내장 웹 검색(다수 프로바이더, anonymous 폴백 포함). 별도 검색 MCP 불필요.
@@ -26,8 +27,13 @@ omp는 배터리 포함 — 코딩 워크플로 대부분이 내장 도구로 �
 ## 실행·디버깅·자동화
 - `bash` — 기존 CLI·프로젝트 명령 실행. `eval` — 파일이 필요 없는 계산·변환·자동화는 `language: "js"`로 Bun에서 실행한다.
 - `debug` — DAP 디버거(lldb/dlv/debugpy) 스테핑·브레이크포인트.
-- `browser` — Puppeteer 브라우저 자동화.
+- `eval`의 `browser` facade — 활성화된 경우 `browser.open`으로 탭을 열고 관찰·상호작용·시각 확인 후 닫는다. 정적 URL은 `read`가 우선이다. 독립 Puppeteer 도구로 가정하지 않으며 실제 API는 `xd://eval/browser`를 읽는다. relay/CDP는 사용자의 실제 로그인 세션일 수 있으므로 대상 탭·행동 권한을 구분한다.
 - `read` — 이미지 파일 디코딩·분석.
+
+## 백그라운드 작업
+- [OMP 18.3.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.3.0)의 `wait`·`proc://`·`agent://` 경로를 사용한다. 이전 `hub` 호출을 복제하지 않으며 정확한 인자는 현재 세션 문서가 정본이다.
+- 작업 결과·메시지는 자동 전달을 사용하고 할 일이 남아 있으면 진행한다. 외부 결과만 기다려야 할 때 `wait`를 사용하며 상태 조회를 반복하지 않는다.
+- 에이전트 협의는 `write agent://<id>`, 프로세스 입력은 `write proc://<id>`, 중단은 명시적인 `proc://<id>/kill` 대상이다. 실행 중인 실제 식별자를 사용하며 URI만으로 권한이나 파괴적 작업 승인이 생기지 않는다.
 
 ## 작업용 스크립트와 실행 언어
 - 적용 대상은 에이전트가 새로 작성하는 작업용 자동화·분석·재현·스모크 스크립트다. **저장 파일은 TypeScript(`.ts`), 실행은 `bun <파일.ts>`**로 통일한다. 저장 위치는 [워크플로](/workflow.md)의 작업 디렉터리를 따른다. 기존 제품 코드·영구 테스트·빌드 도구를 TypeScript로 이식하라는 뜻은 아니다.
@@ -41,7 +47,7 @@ omp는 배터리 포함 — 코딩 워크플로 대부분이 내장 도구로 �
 | 기존 MCP | 용도 | omp 기본 대체 |
 |----------|------|------|
 | brave-search | 웹 검색 | `web_search` |
-| serena | 시맨틱 코드 분석 | `lsp` + `ast_grep`/`ast_edit` + grep/glob |
+| serena | 시맨틱 코드 분석 | 가용 `lsp`, 구조 검색·편집은 노출된 AST 도구, 범위 탐색은 `grep`/`glob`·`read` |
 | context7 | 라이브러리 문서 | `read` + `web_search`; 넓은 읽기 전용 조사는 `scout` |
 
-위 3종은 기본 도구로 완전/충분 대체되므로 omp에 설정하지 않는다. 상세 정책은 [MCP 정책](/tools/mcp.md).
+이 레포의 코드 탐색·검색·문서 조사에는 위 기본 경로를 사용하며 중복 MCP를 기본 설정에 추가하지 않는다. 별도 외부 연동의 필요성과 공급망 검토는 [MCP 정책](/tools/mcp.md)을 따른다.

@@ -3,16 +3,16 @@ type: Checklist
 title: 게임 서버 기능/성능 체크리스트
 description: 메모리·동시성·네트워크·틱·권위 상태·복구·처리량 체크리스트.
 tags: [game, server, performance, networking, checklist]
-timestamp: 2026-07-13T00:00:00Z
+timestamp: 2026-09-26T00:00:00Z
 ---
 
 # 게임 서버 기능/성능 체크리스트
 
 - [ ] 메모리: 힙 할당 최소화·풀링(GC 일시정지·틱 흔들림 회피)
-- [ ] 동시성: 락 범위 최소화·lock-free 선호·데드락 방지
+- [ ] 동시성: 정확성·객체 수명·진행 보장을 우선하고 경합 측정 후 락 축소·샤딩·lock-free를 선택. 다중 필드·교차 shard 불변조건과 트랜잭션 경계·데드락/기아·메모리 회수를 검증([코딩 스타일](/coding-style.md))
 - [ ] 네트워크: 버퍼 재사용·직렬화 비용 고려·비동기 I/O
 - [ ] 틱/루프: 처리량·지연 예산 내 동작, 무거운 작업 프레임/잡 분산
-- [ ] 반응성: 클라이언트 예측에 대한 서버 보정(reconciliation) 지원
+- [ ] 반응성: 계약상 허용된 클라이언트 예측에 서버 보정을 제공하되 경제 결과는 서버 커밋 성공 후 확정. pending 표시·수신 ACK를 사용 가능한 권위 상태로 취급하지 않음([게임 보안](/security/game.md))
 - [ ] 상태 수락: 입력의 형식·권한·순서·게임 불변조건 검증을 마친 뒤에만 권위 상태·baseline·통계를 갱신
 - [ ] 보정 전파: 최종 accepted 값을 시뮬레이션·저장·복제·송신자 reconciliation·관전자 전파 전체에 사용
 - [ ] 순서/생명주기: sequence 중복·역순·wraparound와 session/entity generation을 검증해 stale packet 차단
