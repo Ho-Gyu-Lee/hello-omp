@@ -1,0 +1,322 @@
+---
+type: Concept
+title: Godot와 C++ 게임 개발
+description: 공식 Godot·godot-cpp 버전 근거, 물리·전투·네트워크와 4X/MMORPG 코어 성능 설계, GDExtension 수명·빌드·실행 검증 지침입니다.
+tags: [game, godot, cpp, gdextension, physics, combat, networking, simulation, build, ownership, performance]
+timestamp: 2026-09-27T00:00:00Z
+---
+
+# Godot와 C++ 게임 개발
+
+공식 API 사실과 프로젝트에서 선택할 정책을 구분합니다. 코드 작성 전 [코딩 스타일](/coding-style.md)과 [언어 공통 코딩 스타일](/language-style.md)의 공통 규칙·C/C++ 예외를 읽고 기존 프로젝트 계약과 Godot의 외부 API 이름을 보존합니다. 사용자·프로젝트별 게임 개발 목적이 있으면 [축적 지식 발견 경로](/learned/index.md)에서 해당 concept을 추가로 확인합니다.
+
+## 확인 기준과 버전 고정
+
+**자료 확인일은 2026-09-26입니다. 아래 발표일과 다릅니다.** 검색으로 출처를 찾은 다음 공식 발표·문서·태그 원문을 직접 확인했습니다.
+
+| 구분 | 확인한 사실 | 공식 근거 |
+|---|---|---|
+| 최신 Godot 안정판 | **4.7.2-stable**, 발표일 **2026-08-18** | [공식 전체 아카이브](https://godotengine.org/download/archive/), [4.7.2 발표](https://godotengine.org/article/maintenance-release-godot-4-7-2/) |
+| Godot 엔진 소스 | `4.7.2-stable` → `ed1daf0bf001b61586d9930840f2f1394092c079` | [공식 태그 조회](https://api.github.com/repos/godotengine/godot/git/ref/tags/4.7.2-stable), 발표 본문의 빌드 커밋과 일치합니다. |
+| 개발판 | 아카이브의 4.8 최신 항목은 **4.8-dev6**, 발표일 **2026-09-15**입니다. 안정판이 아닙니다. | [공식 전체 아카이브](https://godotengine.org/download/archive/), [4.7 릴리스 정책](https://docs.godotengine.org/en/4.7/about/release_policy.html) |
+| 공식 C++ 바인딩 | **godot-cpp 10.0.0-stable**, 공개일 **2026-09-15**, `prerelease=false` | [공식 릴리스](https://github.com/godotengine/godot-cpp/releases/tag/10.0.0-stable), [릴리스 API의 published_at](https://api.github.com/repos/godotengine/godot-cpp/releases?per_page=5) |
+| 바인딩 소스 핀 | `10.0.0-stable` → `507ed9d840c01a3c5b2a39af8bb4000bfac30bf5` | [공식 태그 조회](https://api.github.com/repos/godotengine/godot-cpp/git/ref/tags/10.0.0-stable) |
+| 바인딩 버전 체계 | v10부터 엔진과 **독립 버전**입니다. 이 핀의 내장 API 대상은 `4.3`, `4.4`, `4.5`, `4.6`, `4.7`입니다. | [핀의 README](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/README.md), [핀의 supported_api_versions](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/tools/godotcpp.py) |
+
+**출처 간 차이도 보존합니다.** [4.7 입문 문서](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/gdextension_cpp_example.html)는 여전히 엔진과 같은 `4.x` 브랜치를 선택하는 이전 방식을 설명합니다. v10에는 위 릴리스의 README·빌드 소스를 적용하며 존재를 확인하지 않은 `godot-4.7.2-stable` 바인딩 태그를 만들어 쓰지 않습니다. 릴리스 API는 `10.0.0-rc1`·`rc2`에도 `prerelease=false`를 표시하므로 이 플래그만으로 안정판을 판정하지 않습니다. RC라는 이름과 정식 `10.0.0-stable` 발표를 함께 확인합니다.
+
+**프로젝트 선택:** 신규 4.7 프로젝트의 출발점은 엔진·export templates `4.7.2`, 바인딩 위 커밋, API 대상 `4.7`로 고정할 수 있습니다. 이는 이 조합을 실제 게임에서 실행 검증했다는 뜻은 아닙니다. 기존 프로젝트는 검증된 핀을 유지하고 의도적인 업그레이드 변경에서만 교체합니다.
+
+- 엔진 바이너리/커밋, export templates 버전, 바인딩 submodule 커밋, API JSON 또는 `api_version`, 컴파일러·SDK·아키텍처·정밀도·빌드 옵션을 함께 기록합니다. 움직이는 `master`, `stable`, `/latest/` 문서를 빌드 잠금 대신 사용하지 않습니다.
+- 새 기능·버그 수정·보안/플랫폼 요구로 업그레이드를 검토할 때 공식 아카이브와 릴리스·태그를 다시 열고 **확인일과 발표일을 각각 갱신**합니다. 읽을 때마다 의존성을 자동 업그레이드하지 않습니다.
+- 패치 업데이트는 공식적으로 권장되지만, 프로젝트 사본/버전 관리와 아래 editor·export 실행 검증을 거쳐 핀을 갱신합니다. minor 변경에는 마이그레이션과 동작 변화도 검토합니다. [공식 정책](https://docs.godotengine.org/en/4.7/about/release_policy.html)
+
+## GDExtension과 엔진 모듈 선택
+
+**사실:** `godot-cpp`는 Godot 프로젝트가 유지하는 공식 C++ GDExtension 바인딩입니다. GDExtension은 엔진을 다시 빌드하지 않고 네이티브 라이브러리를 로드하며 대부분의 스크립트 API에 접근합니다. 엔진 모듈은 엔진 내부까지 더 깊이 접근하지만 엔진과 필요한 플랫폼의 export templates를 함께 다시 빌드해야 합니다. [공식 비교](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/about_godot_cpp.html)
+
+**선택 기준:** 게임 로직, 계산 병목, 외부 C/C++ 라이브러리 통합에 공개 API가 충분하면 GDExtension을 먼저 선택합니다. 필요한 내부 기능이 노출되지 않았거나 엔진 자체 변경이 요구되면 모듈을 검토합니다. C++ 사용 자체를 성능 증거로 보지 않고 프로파일링으로 이동할 경계를 정합니다. Godot 3의 GDNative 예제를 Godot 4의 GDExtension 등록 코드와 혼합하지 않습니다.
+
+## 성능 중심 시뮬레이션 코어
+
+### C++가 바꾸는 비용과 바꾸지 않는 비용
+
+**사실:** Jolt는 C++로 구현된 물리 라이브러리이며 Godot에 내장된 3D backend로 제공됩니다. Godot 4.7 문서는 새 프로젝트가 Jolt를 기본 사용한다고 설명하지만 기존 프로젝트의 실제 `physics/3d/physics_engine` 값을 확인해야 합니다. 이 안내는 2D 물리 backend 선택에 적용되지 않습니다. [Jolt 공식 소스](https://github.com/jrouwe/JoltPhysics), [Godot 4.7 Jolt 통합](https://docs.godotengine.org/en/4.7/tutorials/physics/using_jolt_physics.html)
+
+**선택:** 성능이 주목적인 새 게임에서는 계산 집약적 코어를 처음부터 C++로 설계할 수 있습니다. 반드시 모든 기능을 스크립트로 만든 뒤 이식해야 한다는 규칙은 없습니다. 다만 C++ 채택과 실제 성능 향상은 별개이며 동일 부하에서 측정합니다. UI·에디터·콘텐츠 연결까지 일률적으로 C++로 옮기지 않습니다.
+
+| 관측한 비용 | 우선 검토할 변경 | 해결된다고 가정하면 안 되는 것 |
+|---|---|---|
+| 스크립트의 전투·AI·경제·탐색 계산 | C++ 데이터/알고리즘, 연속 메모리 순회, 불필요한 할당·복사 제거 | 네이티브 물리 solver·GPU·회선 비용 |
+| 다수 Node의 개별 콜백·Variant/문자열 변환·엔진 경계 호출 | 한 번의 호출로 entity 집합 처리, 필요한 데이터만 경계 변환, 필요 시 서버 API | 같은 호출을 C++ 문법으로 바꾸는 것만으로 배치 효과 발생 |
+| 충돌 후보·접촉·constraint·physics query | shape/레이어/활성 객체·쿼리 빈도·backend/solver 설정 검토 | C++에서 `PhysicsServer3D`를 호출하면 solver 자체가 빨라진다는 주장 |
+| 네트워크 fan-out·직렬화·큐 적체 | 관심 영역(AOI), delta/snapshot·전송 빈도·버퍼·메시지 크기·전달 의미론 설계 | C++나 UDP만으로 대역폭·지연·동접 문제가 해결된다는 주장 |
+| 렌더링 draw/인스턴스 비용 | 렌더링 profiler와 batching/인스턴싱 경로 | 코어의 C++ 이식만으로 GPU 병목 해소 |
+
+공식 성능 지침은 설계 단계의 알고리즘·데이터 배치와 profiler 기반 검증을 함께 요구합니다. 미세 최적화보다 처리량 자체·메모리 접근·경계 호출을 먼저 검토합니다. 근거: [General optimization tips](https://docs.godotengine.org/en/4.7/tutorials/performance/general_optimization.html).
+
+### 코어와 Godot 연결부의 경계
+
+- **권장 기본:** 전투 수치·효과·쿨다운·타깃 선정·AI/경로 탐색·4X 월드/경제 갱신 등 반복 계산은 필요한 범위에서 순수 C++ 데이터와 함수로 묶고, Godot Node/Resource는 에디터·표시·입출력 연결부로 사용합니다. 매 entity마다 Node·가상 호출·signal·heap 객체를 만드는 모델을 강제하지 않습니다. 반대로 작은 시스템까지 ECS·별도 프레임워크로 다시 만들지 않습니다.
+- hot data를 함께 순회하고 읽기 전용 설정과 가변 시뮬레이션 상태를 분리합니다. AoS/SoA·풀·SIMD는 접근 패턴과 측정 결과로 선택합니다. 재사용 entity ID에는 generation 등 수명 검증을 두고 삭제·재배치로 포인터/참조가 무효화되는 경계를 정합니다.
+- 물리·전투·AI·경제·복제·시각 갱신의 주기를 동일하게 강제하지 않습니다. 바꿀 때는 게임 의미·권위 상태·입력 적용 순서를 보존합니다. 고정 tick은 과부하를 해결하지 않으므로 입력/작업 큐 상한과 초과 시 거부·병합·복구 정책을 정의합니다. 재화·전투 명령을 성능 때문에 조용히 버리지 않습니다.
+- 병렬화는 읽기 snapshot, 작업별 쓰기 소유권, 합류/커밋 경계를 먼저 정합니다. 독립 계산 결과를 검증해 권위 상태에 적용하고 SceneTree는 아래 「물리·프레임·스레드 경계」의 계약을 지킵니다. lock-free·작업 분할·샤딩은 측정된 경합과 불변조건이 정당화할 때만 도입합니다.
+
+### 물리와 저수준 서버 API
+
+- `PhysicsServer2D/3D`·`RenderingServer`는 Node 계층 아래의 API이며 대량 객체의 Node 관리 비용을 줄일 수 있습니다. 여기서 **Server는 네트워크 게임 서버를 뜻하지 않습니다.** 실제 solver 비용과 Node/바인딩 비용을 구분한 뒤 필요한 경계에만 적용합니다. [Optimization using Servers](https://docs.godotengine.org/en/4.7/tutorials/performance/using_servers.html)
+- 직접 생성한 RID는 해당 서버의 `free_rid` 계약으로 한 번 정리합니다. Node/Resource에서 빌린 RID를 직접 해제하지 않고 원래 소유자를 유지합니다. RID는 Resource의 참조 카운트를 늘리지 않으므로 RID만 보관한 채 `Ref<Resource>`를 잃지 않습니다. Node가 소유한 같은 객체를 저수준 API로 경쟁 제어하지 않습니다.
+- 서버의 반환값 조회는 비동기 작업의 동기화를 유발할 수 있습니다. 프레임마다 모든 transform·body state를 되읽지 말고 권위 있는 데이터와 callback/snapshot 경계를 설계합니다. 모든 getter가 항상 비싸다는 단정 대신 실제 호출의 stall을 측정합니다.
+- 활성 body 수뿐 아니라 접촉 밀도·constraint 수·shape 복잡도·ray/shape query 수·CCD·sleep/wake 패턴을 부하 변수로 둡니다. 필요한 판정 정확도를 유지하며 collision layer/mask, 단순 shape, 쿼리 배치·공간 분할을 검토합니다. 게임 규칙과 다른 충돌을 내면서 빠른 결과는 성공이 아닙니다.
+- 내장 Jolt와 구형 Godot Jolt 확장 플러그인의 설정 경로·지원 joint·동작 차이를 구분합니다. 4.7 공식 문서는 Jolt의 별도 physics thread 지원을 **experimental**로 설명합니다. CPU 코어를 더 쓰려는 이유만으로 무검증 활성화하지 않습니다. joint, margin, kinematic contact·ray face index 옵션은 정확도·메모리·처리량을 함께 검증합니다. [Jolt 차이·스레드 제약](https://docs.godotengine.org/en/4.7/tutorials/physics/using_jolt_physics.html)
+- 공개 API와 backend 설정으로 부족하면 해당 버전의 확장 API 노출 범위를 먼저 확인하고 엔진 모듈/fork 또는 별도 physics 통합을 비교합니다. 별도 world의 충돌·자원 수명·디버깅·플랫폼 빌드 비용까지 포함하며 C++ 채택을 물리 엔진 재작성의 승인으로 해석하지 않습니다.
+- upstream Jolt의 조건부 deterministic simulation 설명을 Godot 통합 전체의 결정성 보장으로 전이하지 않습니다. lockstep·rollback이 필요하면 빌드/플랫폼/수치 연산/입력 순서와 재현 결과를 검증하고, 보장되지 않으면 권위 snapshot·보정 모델을 선택합니다.
+
+### 전투·실시간 네트워크·4X/MMORPG의 부하
+
+다음은 장르별 설계·측정 지침이지 특정 동접이나 성능 배수의 보장, 특정 장르/아키텍처를 반드시 채택하라는 지시가 아닙니다.
+
+| 영역 | 대표 부하와 최적화 경계 | 정확성·성능을 함께 볼 증거 |
+|---|---|---|
+| 전투 코어 | 광역기 타깃 후보, 효과/버프 갱신, 투사체·충돌 질의, 동시 사망·spawn/despawn | 밀집 전투의 tick 분포·판정 결과, 할당/복사, 큐 깊이, 대상 generation 오류 |
+| 4X | 맵/유닛 수, 경제/생산 의존성, AI 의사결정, 다수 경로 요청, 턴 종료 또는 실시간 월드 갱신 | 턴 완료 비용 또는 tick 예산, 재계산 범위·캐시 무효화, 메모리와 결과 일관성 |
+| MMORPG | 존 내 밀집도, 관심 영역, 플레이어당 복제 대상, 입장/재접속 burst, 전투와 저장 경계 | 존별 처리량·tick 꼬리 지연, bandwidth/peer, queue 상한·복구, 권위·재화 정합성 |
+| 실시간 전송 | 직렬화/역직렬화, broadcast fan-out, snapshot baseline, 손실·재정렬·중복·지연 | packet/byte rate, encode/decode CPU, 낡은 상태 폐기·resync, 느린 peer의 backlog |
+
+- 전체 entity×전체 peer 방송을 기본값으로 삼지 않습니다. AOI·가시성·전송 주기를 설계하되 숨겨야 할 정보를 성능 편의상 클라이언트에 보내지 않습니다. delta에는 대상이 실제 보유한 baseline과 누락 시 재동기화 경로가 필요합니다.
+- Godot의 `ENetMultiplayerPeer`·고수준 RPC를 먼저 평가할 수 있지만 성능 충분성을 이름만으로 판단하지 않습니다. reliable/unreliable/unreliable_ordered와 channel은 메시지의 손실·순서 계약으로 선택합니다. channel 분리는 순서 의존을 분리할 뿐 공유 대역폭·혼잡을 제거하지 않습니다. `reliable`은 업무 명령의 정확히 한 번 커밋을 보장하지 않습니다. [고수준 multiplayer·channels](https://docs.godotengine.org/en/4.7/tutorials/networking/high_level_multiplayer.html#channels)
+- **독립 C++ 서버 경계:** Godot `SceneMultiplayer`의 고수준 프로토콜은 엔진 구현 세부이며 비-Godot 서버용 안정 프로토콜이 아닙니다. Godot headless 서버에서는 해당 API를 검증해 쓸 수 있지만 독립 C++ 서버에는 명시적인 wire schema와 호환되는 transport를 설계합니다. C++ 서버가 ENet을 사용한다는 사실만으로 Godot RPC와 호환되지 않습니다. [공식 SceneMultiplayer 계약](https://docs.godotengine.org/en/4.7/classes/class_scenemultiplayer.html)
+- **보안 경계:** 신뢰할 수 없는 peer의 객체 역직렬화를 허용하지 않습니다. `SceneMultiplayer.allow_object_decoding`은 실행 코드가 포함된 객체를 복원해 원격 코드 실행 위험을 만들 수 있습니다. 바이트/필드 메시지를 길이·개수·권한·상태와 함께 검증하고, `auth_callback`이 비어 있으면 연결 peer가 자동 수락되는 동작을 계정 인증 완료로 해석하지 않습니다. [객체 디코딩 경고와 인증 callback](https://docs.godotengine.org/en/4.7/classes/class_scenemultiplayer.html#class-scenemultiplayer-property-allow-object-decoding)
+- MMO는 한 프로세스의 CCU 숫자만으로 검증하지 않습니다. 이동·전투·존 밀집·AOI 규모·접속/저장 부하를 명시하고 샤딩/존 분리는 필요한 규모와 권위 이전 계약이 확인될 때 결정합니다. Godot headless가 게임 계산 서버인지, 독립 C++ 서버가 필요한지는 엔진 의존성과 실측 비용으로 판단합니다.
+- 공통 프로토콜·서버 권위·복구 기준은 [네트워크 동기화](/game/network-sync.md), [게임 보안](/security/game.md), [서버 체크리스트](/game/server-checklist.md)를 따릅니다.
+
+### 성능 수락 기준
+
+1. **부하 정의:** 목표 기기·CPU/코어·메모리, 렌더러/physics backend, 활성 객체 수·밀집도·peer/관심 대상 수, tick/턴/복제 주기, 입력 데이터·seed·시나리오를 고정합니다. 미정인 값은 프로젝트 요구로 결정하며 임의의 달성 수치를 제시하지 않습니다.
+2. **동일 조건 비교:** 최적화 전후 같은 release 옵션·해상도·콘텐츠·warm-up·계측 조건으로 비교합니다. Godot profiler와 네이티브 CPU profiler를 함께 사용하고 C++ 상세 비용을 GDScript profiler만으로 판정하지 않습니다. [공식 측정 도구](https://docs.godotengine.org/en/4.7/tutorials/performance/general_optimization.html#measuring-performance)
+3. **지표:** 평균뿐 아니라 frame/tick/턴 처리의 p95·p99·최대값, 예산 초과 횟수, 처리량, 메모리 peak, 할당/복사, 경합, backlog, peer별 bytes/packets와 재전송/폐기를 기록합니다. tick 예산은 `1 / tickRate`이며 물리·전투·네트워크·기타 작업이 함께 소비하므로 평균만 예산 안에 들어가는 것으로 통과시키지 않습니다.
+4. **정상·한계·과부하:** 밀집 전투·대규모 턴 갱신·대량 생성/해제·재접속·느린 peer·손실/재정렬·지연을 재현합니다. 정의한 상한에서는 유지하거나 명시적으로 거부하고 큐가 무한 증가하지 않도록 합니다.
+5. **동작 보존:** 같은 입력에서 전투/경제 결과·물리 판정·권한·소유권·복제 의미가 유지되는지 확인합니다. 병렬화·backend 교체로 결과가 달라지는 경우 의도한 계약 변경인지 구분합니다. microbenchmark만으로 editor·exported client·headless server의 전체 성능을 주장하지 않습니다.
+
+## API·ABI·툴체인 호환성
+
+- **방향:** 낮은 Godot API를 대상으로 만든 확장은 이후 minor 엔진에서 동작하도록 설계되며 반대 방향은 보장되지 않습니다. 필요한 기능을 제공하는 최소 API를 선택하고 실제 지원할 최소/최대 엔진에서 실행합니다. Godot 4.0 대상 확장은 4.1 이후와 호환되지 않는 예외가 있습니다. API 호환성은 모든 게임 동작이 같다는 보장이 아닙니다. [공식 호환성](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/about_godot_cpp.html#version-compatibility)
+- **v10 API 선택:** `scons api_version=4.7`처럼 명시합니다. 프로젝트의 `SConscript("godot-cpp/SConstruct", {"api_version": "4.7"})`에서도 기본 대상을 지정할 수 있습니다. 바인딩 버전 `10.0.0`을 `api_version`에 넣지 않습니다. [핀의 README](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/README.md)
+- **커스텀 엔진:** 실제 대상 editor 실행 파일로 `godot --dump-extension-api`를 실행하고 생성된 `extension_api.json`을 `custom_api_file`로 지정합니다. 빌드 소스에서 이 옵션은 `api_version`보다 우선합니다. 엔진 fork·노출 모듈·API 제거 옵션이 달라지면 공식 JSON으로 대체하지 않습니다. [SCons 문서](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/build_system/scons.html#using-a-custom-api-file), [핀의 옵션 구현](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/tools/godotcpp.py)
+- **JSON 출력 위치 주의:** 위 SCons 설명은 실행 파일 디렉터리라고 적지만 [4.7 CLI 참조](https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html)는 현재 디렉터리라고 설명합니다. 작업용 빈 디렉터리에서 실행하고 실제 생성 위치를 확인하여 절대 경로로 빌드에 넘깁니다. 위치를 추정해 오래된 JSON을 재사용하지 않습니다.
+- **정밀도:** 엔진과 확장의 `precision=single/double`이 같아야 합니다. double 엔진은 editor·export templates·godot-cpp·확장을 같은 정밀도로 빌드하고 해당 커스텀 엔진의 JSON을 사용합니다. GDScript `float`가 64-bit라는 사실은 기본 벡터/`real_t`가 double이라는 뜻이 아닙니다. 멀티플레이어 클라이언트/서버의 정밀도도 맞춥니다. [Large world coordinates](https://docs.godotengine.org/en/4.7/tutorials/physics/large_world_coordinates.html)
+- **C++:** 이 바인딩 핀은 C++17 플래그를 설정하며 예외 처리는 기본적으로 비활성화합니다. 확장·정적 godot-cpp·함께 링크하는 C++ 라이브러리의 컴파일러 ABI, C++ 런타임, 예외 정책과 아키텍처를 맞춥니다. GDExtension의 C 인터페이스가 임의의 C++ 바이너리 조합까지 호환시켜 주지는 않습니다. [핀의 컴파일러 플래그](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/tools/common_compiler_flags.py)
+- **플랫폼:** macOS arm64 라이브러리는 Windows·Linux·Android·iOS·Web용이 아닙니다. 각 대상 OS/CPU/SDK/디버그 구성의 산출물이 필요합니다. 최소 OS와 종속 라이브러리도 지원 범위에 포함합니다. macOS에서는 Xcode/Command Line Tools와 clang을 사용하며 `arm64`, `x86_64`, `universal`을 구분합니다. 엔진 전체 빌드의 Vulkan SDK 등 요구를 단순 확장 빌드의 필수조건으로 그대로 옮기지 않습니다. [플랫폼 빌드 안내](https://docs.godotengine.org/en/4.7/engine_details/development/compiling/index.html), [핀의 macOS 구현](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/tools/macos.py)
+
+## SCons 빌드와 로드 경로
+
+예제 레이아웃은 확장 루트 아래 `godot-cpp/`, `src/`, Godot 프로젝트 `project/`입니다. 기존 프로젝트의 `SConstruct` 또는 [공식 template](https://github.com/godotengine/godot-cpp-template)을 먼저 확인합니다. 루트 SConstruct가 godot-cpp의 SConstruct를 포함하고 확장 소스를 shared library로 링크해야 하며, **godot-cpp 정적 라이브러리만 빌드한 상태는 게임 확장 빌드 완료가 아닙니다.** [공식 입문](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/gdextension_cpp_example.html), [SCons 지침](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/build_system/scons.html)
+
+아래 명령은 해당 SConstruct와 대상 툴체인이 준비된 확장 루트에서 실행합니다. `godot` 명령은 핀으로 고른 editor 바이너리를 가리켜야 합니다.
+
+```sh
+scons --help api_version=4.7
+scons platform=macos arch=arm64 target=template_debug api_version=4.7 precision=single debug_symbols=yes optimize=none
+scons platform=macos arch=arm64 target=template_release api_version=4.7 precision=single
+scons platform=macos arch=arm64 target=template_debug api_version=4.7 compiledb=yes compile_commands.json
+```
+
+- `template_debug`는 editor와 debug export용입니다. release export에는 `template_release`를 별도 빌드합니다. `debug` feature와 네이티브 디버그 심볼은 별개이므로 breakpoint용 빌드에는 `debug_symbols=yes`를 명시합니다. `dev_build=yes`는 `.dev`, `precision=double`은 `.double`, `threads=no`는 `.nothreads`를 출력 suffix에 추가하므로 실제 산출물과 manifest 경로를 함께 맞춥니다. [핀의 대상·심볼·suffix 구현](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/tools/godotcpp.py)
+- `compile_commands.json`은 IDE가 실제 include·defines·표준을 읽도록 합니다. 헤더 생성이나 빌드 성공을 대신하는 검증은 아닙니다. 플랫폼/API/정밀도 변경 시 이전 생성물과 라이브러리를 섞지 않습니다.
+- 다음 manifest는 **위 arm64 구성만 제공하는 예**이며 SConstruct의 실제 출력 이름을 `libgame.macos.template_debug.arm64.dylib`와 `libgame.macos.template_release.arm64.dylib`로 맞춘 경우입니다. universal 배포나 다른 플랫폼 지원을 주장하지 않습니다.
+
+`project/bin/game.gdextension`:
+
+```ini
+[configuration]
+entry_symbol = "game_library_init"
+compatibility_minimum = "4.7.2"
+reloadable = false
+
+[libraries]
+macos.debug.arm64 = "./libgame.macos.template_debug.arm64.dylib"
+macos.release.arm64 = "./libgame.macos.template_release.arm64.dylib"
+```
+
+`compatibility_minimum="4.7.2"`는 이 예제의 **제품 지원 하한 선택**입니다. `api_version=4.7` 자체가 4.7.2를 요구한다는 의미가 아닙니다. 더 낮은 엔진을 지원하려면 실제 API와 동작을 확인하고 둘을 함께 설정합니다. 4.7.2 소스는 feature가 모두 충족되는 key 중 **tag 수가 가장 많은 항목**을 선택하고, 같은 tag 수에서는 먼저 발견한 항목을 유지합니다. 공식 manifest 설명의 top-to-bottom 문구보다 이 고정 소스 동작을 우선하며, key 중복·동률은 만들지 않습니다. [핀의 library matcher](https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/core/extension/gdextension_library_loader.cpp) manifest는 라이브러리 로드뿐 아니라 export에 포함할 대상 선택에도 사용됩니다. 필요한 외부 동적 라이브러리는 `[dependencies]`에 선언하고 macOS 앱에서는 `Contents/Frameworks` 배치를 확인합니다. [manifest 계약](https://docs.godotengine.org/en/4.7/engine_details/engine_api/gdextension/gdextension_file.html)
+
+**로드 순서:** 프로젝트 검색/import → `.gdextension` 발견 → feature에 맞는 라이브러리 로드 → `entry_symbol` 호출 → 초기화 수준별 클래스 등록 → scene/resource의 클래스 인스턴스화입니다. 누락된 library, 다른 CPU, 미해결 dependency, entry symbol 오타, 클래스 등록 누락을 이 순서로 조사합니다.
+
+hot reload는 기본 성공 조건으로 삼지 않습니다. v10 핀은 `use_hot_reload` 기본값이 false이므로 사용하려면 바인딩/확장에 `use_hot_reload=yes`와 manifest의 `reloadable=true`를 함께 적용하고 객체·스레드 정리 동작을 검증합니다. manifest만 켜면 충분하다는 이전 예제를 그대로 적용하지 않습니다. 불확실할 때는 editor와 실행 중 게임을 종료하고 재빌드·재실행합니다. [핀의 hot-reload 옵션](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/tools/godotcpp.py)
+
+## 등록·프로퍼티·시그널과 이름 계약
+
+작은 Resource 예제입니다. `src/CounterData.h`는 값을 저장하고 실제 변경 때 신호를 발행합니다. 소유 C++ 이름·배치는 [언어 공통 코딩 스타일](/language-style.md)을 따르며 `_bind_methods`, ABI 진입 심볼, 바인딩 문자열·엔진 API 이름은 계약대로 보존합니다.
+
+```cpp
+#pragma once
+
+#include <godot_cpp/classes/resource.hpp>
+#include <godot_cpp/core/class_db.hpp>
+
+#include <cstdint>
+
+class CounterData : public godot::Resource
+{
+    GDCLASS(CounterData, godot::Resource);
+
+public:
+    void SetValue(std::int64_t newValue)
+    {
+        if (mValue == newValue)
+        {
+            return;
+        }
+
+        mValue = newValue;
+        emit_changed();
+        emit_signal("value_changed", mValue);
+    }
+
+    std::int64_t GetValue() const
+    {
+        return mValue;
+    }
+
+protected:
+    static void _bind_methods()
+    {
+        godot::ClassDB::bind_method(godot::D_METHOD("set_value", "value"), &CounterData::SetValue);
+        godot::ClassDB::bind_method(godot::D_METHOD("get_value"), &CounterData::GetValue);
+        ADD_PROPERTY(godot::PropertyInfo(godot::Variant::INT, "value"), "set_value", "get_value");
+        ADD_SIGNAL(godot::MethodInfo("value_changed", godot::PropertyInfo(godot::Variant::INT, "value")));
+    }
+
+private:
+    std::int64_t mValue = 0;
+};
+```
+
+`src/RegisterTypes.cpp`:
+
+```cpp
+#include "CounterData.h"
+
+#include <godot_cpp/godot.hpp>
+
+namespace
+{
+void InitializeGame(godot::ModuleInitializationLevel level)
+{
+    if (level == godot::MODULE_INITIALIZATION_LEVEL_SCENE)
+    {
+        GDREGISTER_CLASS(CounterData);
+    }
+}
+}
+
+extern "C" GDExtensionBool GDE_EXPORT game_library_init(GDExtensionInterfaceGetProcAddress getProcAddress, GDExtensionClassLibraryPtr library, GDExtensionInitialization* initialization)
+{
+    godot::GDExtensionBinding::InitObject init(getProcAddress, library, initialization);
+    init.register_initializer(InitializeGame);
+    init.set_minimum_library_initialization_level(godot::MODULE_INITIALIZATION_LEVEL_SCENE);
+    return init.init();
+}
+```
+
+이 예제는 별도 전역 자원을 소유하지 않아 terminator를 등록하지 않습니다. 실제 확장에서 전역 자원·작업 스레드·콜백을 소유하면 `register_terminator`에 초기화 수준과 짝이 맞는 해제 함수를 등록합니다. 라이브러리 unload 전에 그 코드에 접근하는 작업이 끝나야 합니다. [핀의 초기화 API](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/include/godot_cpp/godot.hpp), [공식 등록 예제](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/gdextension_cpp_example.html)
+
+- `GDCLASS`와 `GDREGISTER_CLASS`의 타입·부모가 일치해야 합니다. Node/Resource 클래스는 보통 `MODULE_INITIALIZATION_LEVEL_SCENE`에서 등록합니다. 생성자에서 scene tree 존재나 실제 게임 실행을 가정하지 않습니다. editor·직렬화·문서 시스템도 등록 클래스를 생성할 수 있습니다. [Object 등록](https://docs.godotengine.org/en/4.7/engine_details/architecture/object_class.html#registering-object-classes)
+- 에디터에서 실행되면 안 되는 전투·시뮬레이션·네트워크 Node는 `GDREGISTER_RUNTIME_CLASS`로 등록할 수 있습니다. 에디터에서도 기능해야 하는 클래스는 `GDREGISTER_CLASS`로 등록하고, 편집 중 스레드·네트워크·상태 변경을 `Engine::get_singleton()->is_editor_hint()` 경계로 막습니다. 에디터 시각 확인과 런타임 성능 측정을 구분합니다. [등록 모드](https://docs.godotengine.org/en/4.7/engine_details/architecture/object_class.html#registering-object-classes), [핀의 등록 매크로](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/include/godot_cpp/core/class_db.hpp)
+- `BIND_CONSTANT`·`BIND_ENUM_CONSTANT`는 매크로 인수의 C++ 식을 문자열화해 script 이름으로 사용하고 정수 값을 요구합니다. C++ 내부 `enum class` 이름과 script 이름을 분리하려면 `ClassDB::bind_integer_constant`에 이름과 명시적 정수 변환 값을 전달합니다. 이미 배포한 상수 이름은 호환성 계약입니다. [핀의 constant binding](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/include/godot_cpp/core/class_db.hpp)
+- `_ready`, `_process`, `_physics_process` 등 엔진 override와 `_bind_methods`는 요구되는 이름·시그니처를 그대로 둡니다. C++ 내부 메서드 `SetValue`와 바인딩 문자열 `"set_value"`는 별개입니다. `D_METHOD`의 공개 이름, property·signal·NodePath, 이미 배포한 ABI entry symbol은 스크립트·scene·resource·manifest 소비자를 가진 계약입니다. 스타일 변경만으로 이름을 바꾸지 않습니다.
+- 외부에서 호출할 메서드는 `_bind_methods`에서 등록하고, property의 getter/setter 문자열은 등록 이름과 맞춥니다. `Callable(object, "method")` 같은 문자열 기반 연결도 바인딩이 필요합니다. 노출 인자·반환값은 Variant로 표현 가능한 타입을 사용합니다. STL 컨테이너나 임의 C++ 포인터를 그대로 공개 API/저장 포맷으로 삼지 않습니다. [프로퍼티·시그널](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/gdextension_cpp_example.html#adding-properties), [godot-cpp 타입 경계](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/core_types.html)
+- Inspector hint는 편집 UI 정보이며 입력 검증이나 서버 권한 검증을 대체하지 않습니다. 도메인 제약은 실제 setter/명령 처리 경계에 둡니다.
+
+## Scene 생명주기와 소유권
+
+| 대상 | 사실과 적용 지침 |
+|---|---|
+| 생성자 | 내부 값·순수 자원 초기화에 사용합니다. 자식 Node 탐색이나 tree 의존 처리는 `_ready` 등 적절한 단계로 옮깁니다. |
+| `_enter_tree` | 부모가 자식보다 먼저 호출됩니다. 다시 tree에 들어오면 재호출될 수 있는 연결·초기화를 고려합니다. |
+| `_ready` | 자식이 부모보다 먼저 호출됩니다. 제거 후 재추가만으로 재호출되지 않으며 필요하면 재진입 전에 `request_ready()`를 사용합니다. 풀링 객체 재설정을 `_ready` 재호출에 무조건 의존하지 않습니다. |
+| `_exit_tree` | 자식이 나간 뒤 부모가 호출됩니다. tree에 묶인 작업 취소·연결 정리를 수행하되 이것을 반드시 소멸했다는 뜻으로 취급하지 않습니다. |
+| `Node` | `memnew`로 생성하고 부모 아래에 연결하면 부모 해제 시 자식도 해제됩니다. 런타임 제거는 보통 `queue_free()`로 프레임 종료에 예약합니다. `remove_child()`만으로 메모리가 해제되지 않습니다. |
+| `RefCounted`·`Resource` | `Ref<T>`로 소유하며 마지막 강한 참조가 사라지면 해제됩니다. `Ref<T> resource; resource.instantiate();` 패턴을 사용할 수 있습니다. `memdelete`/`free`/`queue_free`로 수동 파괴하지 않습니다. 강한 참조 순환은 자동 수거되지 않습니다. |
+| 일반 `Object` | RefCounted가 아니면 자동 참조 카운트가 없습니다. 소유자가 `memnew`/`memdelete` 등 Godot 수명 규칙에 따라 한 번 해제하며 borrowed pointer에는 해제 책임이 없습니다. |
+
+근거: [Node 생명주기](https://docs.godotengine.org/en/4.7/classes/class_node.html), [queue_free/remove_child](https://docs.godotengine.org/en/4.7/classes/class_node.html#class-node-method-queue-free), [C++ Object 소유권](https://docs.godotengine.org/en/4.7/engine_details/architecture/object_class.html#object-ownership-and-casting), [RefCounted 순환 참조](https://docs.godotengine.org/en/4.7/classes/class_refcounted.html).
+
+- 부모-자식 메모리 수명과 `Node.owner`를 구분합니다. `owner`는 주로 PackedScene에 저장할 Node 범위를 정합니다. 에디터 도구가 생성한 자식을 scene에 저장하려면 `add_child()`뿐 아니라 적절한 조상 owner 설정이 필요합니다. [owner 계약](https://docs.godotengine.org/en/4.7/classes/class_node.html#class-node-property-owner)
+- Godot Object를 일반 `delete`나 기본 deleter의 `std::unique_ptr`로 감싸지 않습니다. 순수 C++ 비엔진 자원에는 RAII를 적용합니다.
+- `memnew`는 매크로이며 `memnew(MyNode)`처럼 사용합니다. 네임스페이스 함수로 오해해 `godot::memnew(MyNode)`로 쓰지 않습니다. [고정한 바인딩의 memory.hpp](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/include/godot_cpp/core/memory.hpp)
+- 장기 보관하는 비소유 Object 참조는 `ObjectID`를 저장하고 사용 시 `ObjectDB::get_instance` 등으로 다시 확인합니다. ID 조회는 스레드 간 생존을 보장하는 잠금이 아닙니다. 해제된 raw pointer에 메서드를 호출하여 유효성을 검사하지 않습니다. deferred 결과에도 대상의 생존·현재 scene/session generation을 확인합니다.
+
+## 물리·프레임·스레드 경계
+
+**사실:** `_process(double delta)`는 표시 프레임에 따라 실행되고 `_physics_process(double delta)`는 설정된 물리 주기로 실행됩니다. 기본 물리 주기는 60Hz이지만 프로젝트 설정값을 기준으로 합니다. [Node processing](https://docs.godotengine.org/en/4.7/classes/class_node.html#description)
+
+**구현 선택:** 물리 이동·충돌과 권위 시뮬레이션 갱신은 물리/서버 tick 경계에 두고, UI·카메라·시각 보간은 표시 경계에 둡니다. 같은 위치를 두 루프에서 경쟁 갱신하지 않습니다. delta의 단위·time scale·pause 정책을 명시하고 고정 tick만으로 여러 플랫폼의 물리가 결정적이라고 가정하지 않습니다. 공식 릴리스 정책도 Godot 물리 엔진을 결정적이라고 보장하지 않습니다. [호환성 정책](https://docs.godotengine.org/en/4.7/about/release_policy.html#what-are-the-criteria-for-compatibility-across-engine-versions)
+
+- **활성 SceneTree는 thread-safe하지 않습니다.** 워커는 가능한 한 독립 데이터 계산을 수행하고 결과를 동기화된 큐로 전달하여 메인 스레드에서 적용합니다. `call_deferred`/`set_deferred`는 적용 시점을 옮기는 수단이지 공유 데이터와 대상 수명 문제를 자동 해결하지 않습니다.
+- 트리에 붙지 않은 scene 조각을 워커에서 만드는 경우에도 공유 Resource·렌더링 Node·GPU 접근 제약이 남습니다. 여러 워커가 같은 Resource를 수정하지 않게 합니다. `Ref<T>`로 생존을 확보해도 그 객체의 동시 변경까지 안전해지는 것은 아닙니다.
+- 서버 API는 각 API와 프로젝트 설정을 확인합니다. 특히 rendering/physics의 별도 스레드 설정을 보지 않고 “모든 서버 호출은 항상 안전하다”고 일반화하지 않습니다. 프레임워크의 process thread group을 도입할 때도 임의의 다른 Node 접근을 허용한 것으로 해석하지 않습니다.
+- scene 종료·확장 unload에는 작업 취소/완료와 콜백 제거를 포함합니다. 메인 스레드가 join하면서 워커가 메인 스레드 처리를 기다리는 교착을 피합니다.
+
+근거: [4.7 Thread-safe APIs](https://docs.godotengine.org/en/4.7/tutorials/performance/thread_safe_apis.html), 일반 동시성 정책은 [코딩 스타일](/coding-style.md)을 따릅니다.
+
+## Resource·직렬화·성능·서버 권위
+
+- **Resource 경계:** Resource는 경로별 캐시로 공유될 수 있습니다. 한 인스턴스의 변경이 다른 scene에 전파되어도 되는지 먼저 결정합니다. 인스턴스별 데이터에는 적절한 복제 또는 `resource_local_to_scene`을 적용하고 nested Resource까지 원하는 공유/복제 범위인지 확인합니다. 사용자 Resource의 변경 통지가 필요하면 setter에서 `emit_changed()`를 호출합니다. [Resource 계약](https://docs.godotengine.org/en/4.7/classes/class_resource.html)
+- **저장 경계:** `ADD_PROPERTY`의 기본 usage에는 storage/editor가 포함되지만 임의 C++ 멤버가 모두 자동 저장되는 것은 아닙니다. `PROPERTY_USAGE_EDITOR`만 둔 값은 저장되지 않습니다. 저장할 의미 있는 값과 런타임 캐시·포인터·작업 상태를 분리하고 save→새 프로세스 load로 확인합니다. [property usage](https://docs.godotengine.org/en/4.7/engine_details/architecture/object_class.html#properties-set-get)
+- **네트워크 경계:** scene/resource 파일과 엔진 객체 포인터를 곧바로 외부 프로토콜로 취급하지 않습니다. 명시적 메시지 타입·스키마 버전·길이/범위·entity generation을 검증합니다. 프로퍼티 노출은 네트워크 복제나 서버 권한 검증이 아닙니다.
+- **성능 선택:** 먼저 CPU/GPU·메인 스레드·메모리·프레임/tick 지연을 실제 목표 기기에서 측정합니다. 핫패스에서 반복 Node 탐색, 문자열/Variant 변환, 작은 바인딩 호출, 불필요한 할당·복사를 줄입니다. `Packed*Array` 대량 접근은 `ptr()`/`ptrw()`로 경계 호출을 줄일 수 있으나 resize·copy-on-write 이후에도 포인터가 유효하다고 가정하지 않습니다. Variant를 거친 인자 수정이 호출자 배열에 그대로 반영된다고 가정하지 않습니다. [godot-cpp Packed arrays](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/core_types.html#packed-arrays)
+- **서버 선택:** Godot 4는 일반 바이너리의 `--headless` 또는 dedicated-server export를 사용할 수 있습니다. export에는 editor 바이너리가 필요하고 운영 서버에는 export template 기반 산출물을 사용합니다. `dedicated_server` feature와 시각 리소스 stripping은 패키징 선택이며 권위 검증을 제공하지 않습니다. 삭제한 자원을 server scene이 참조하지 않는지 확인합니다. [공식 dedicated server 지침](https://docs.godotengine.org/en/4.7/tutorials/export/exporting_for_dedicated_servers.html)
+- 클라이언트는 권위·예측·보간·표시 상태를 분리하고 서버는 입력 형식·권한·순서·불변조건 검증 후 accepted 상태만 저장/전파합니다. 자세한 기준은 [게임 네트워크 동기화](/game/network-sync.md), [게임 보안](/security/game.md), [클라이언트 체크리스트](/game/client-checklist.md), [서버 체크리스트](/game/server-checklist.md)를 재사용합니다.
+
+## macOS 네이티브 디버깅과 export
+
+C++ breakpoint는 GDScript 디버거와 별개입니다. 위 `debug_symbols=yes optimize=none` 확장을 빌드한 뒤 **확장을 로드하는 Godot 프로세스**를 LLDB/CodeLLDB로 실행합니다. 게임 C++를 디버깅할 때 editor만 attach하고 별도 게임 프로세스가 멈추기를 기대하지 않습니다. [Godot의 LLDB 설정 예제](https://docs.godotengine.org/en/4.7/engine_details/development/configuring_an_ide/visual_studio_code.html#debugging-the-project)
+
+`/Applications/Godot.app`에 고정 버전 공식 editor가 설치되어 있다면 원본 대신 **개발용 복사본**을 사용합니다. 공식 notarized 빌드는 debugger attach용 `com.apple.security.get-task-allow`를 기본으로 포함하지 않으므로 [4.7 macOS 디버깅 지침](https://docs.godotengine.org/en/4.7/engine_details/development/debugging/macos_debug.html)의 `editor.entitlements`로 복사본을 다시 서명하거나 직접 빌드한 debug editor를 사용합니다. 재서명본은 로컬 개발 전용이며 배포·배포 검증에 쓰지 않습니다. 다음은 그 복사본과 현재 경로의 `project/`를 사용하는 예입니다.
+
+```sh
+ditto /Applications/Godot.app ./tools/Godot-debug.app
+codesign -s - --deep --force --options=runtime --entitlements ./editor.entitlements ./tools/Godot-debug.app
+lldb -- ./tools/Godot-debug.app/Contents/MacOS/Godot --path ./project
+```
+
+LLDB에서 `breakpoint set --name game_library_init`, `run`, 정지 후 `image list`, `thread backtrace`로 entry 호출·실제 로드 library·네이티브 스택을 확인합니다. 게임 코드 breakpoint로 계속 진행하고 값을 바꾸며 관찰합니다. editor 플러그인 코드가 대상이면 실행 인자에 `--editor`를 넣습니다. [.app 내부 실행 파일과 CLI](https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html)
+
+- breakpoint가 안 잡히면 실행 프로세스, library 경로, CPU slice, 심볼/소스 대응, strip·최적화 여부를 차례로 확인합니다. `file`·`lipo -info`로 아키텍처를, `otool -L`로 dependency를 확인할 수 있습니다.
+- macOS 공식 export templates는 Universal 2입니다. 배포 앱이 지원하는 CPU마다 확장과 종속 라이브러리 slice도 있어야 합니다. arm64에서 editor 로드 성공만으로 Intel 지원을 주장하지 않습니다.
+- 실제 배포에서는 `.app`의 Frameworks 배치, 서명·notarization·필요한 library-validation entitlement를 확인합니다. exported app의 네이티브 디버깅을 위한 `Debugging` entitlement는 개발용으로만 켜고 production/notarization에서는 끕니다. Gatekeeper를 전역 비활성화하는 방식으로 문제를 숨기지 않습니다. [macOS export 계약](https://docs.godotengine.org/en/4.7/tutorials/export/exporting_for_macos.html)
+
+## 실행 가능한 smoke 절차
+
+**전제:** 실제 `project/project.godot`, 실행할 main scene, 빌드된 확장, 핀과 일치하는 export templates, `export_presets.cfg`의 `macOS` preset, 해당 CPU를 지원하는 라이브러리와 실제 산출물 이름이 준비되어 있어야 합니다. 앞의 arm64 전용 manifest 예제로 export하려면 preset의 `binary_format/architecture`를 `arm64`로 지정합니다. 4.7.2의 기본값은 `universal`이며 x86_64 라이브러리가 없으면 export가 경고만 남기므로 `No "x86_64" library found` 경고를 실패로 처리합니다. Universal 배포는 x86_64·arm64 또는 universal 라이브러리를 모두 제공합니다. [4.7.2 macOS 기본값](https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/platform/macos/export/export_plugin.cpp), [export matcher 경고](https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/editor/export/gdextension_export_plugin.h) 다음은 수행 지침이지 이 문서 작성 시 실행한 결과가 아닙니다.
+
+```sh
+godot --version
+godot --headless --path ./project --import
+godot --editor --path ./project
+godot --headless --path ./project --quit-after 120
+mkdir -p ./project/build
+godot --headless --path ./project --export-debug "macOS" build/Game-debug.app
+godot --headless --path ./project --export-release "macOS" build/Game.app
+open ./project/build/Game-debug.app
+open ./project/build/Game.app
+```
+
+`--quit-after 120`은 반복 횟수 한계이지 특정 물리 tick 수나 기능 완료를 보장하지 않습니다. export 출력의 상대 경로는 현재 shell이 아니라 `project.godot`가 있는 디렉터리 기준이며 출력 부모 디렉터리가 존재해야 합니다. 명령 오타가 무시될 수 있으므로 `--help`와 실행 로그도 확인합니다. [CLI 참조](https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html)
+
+- [ ] **버전/빌드:** 실제 `--version`, 엔진·바인딩 핀, API 대상, 정밀도, target, CPU, compiler/SDK와 export templates 조합을 기록합니다.
+- [ ] **import/load:** headless import 로그에서 확장 라이브러리·entry·API 오류가 없는지 확인합니다. 종료 코드 0만으로 로드 성공을 판정하지 않습니다.
+- [ ] **editor:** CounterData 같은 등록 클래스가 실제 생성 가능하고 Inspector property의 변경→저장→재시작 후 값이 보존되는지 확인합니다. Node 확장이면 scene에 배치하여 `_ready`와 게임 경로도 실행합니다.
+- [ ] **게임 동작:** 실제 확장 메서드를 호출하고 property/signal 소비자가 관찰하는 상태를 확인합니다. 물리 처리·입력·scene 전환·객체 제거 경로를 지나갑니다. headless 실행만으로 시각 출력·오디오·입력 검증을 대체하지 않습니다.
+- [ ] **수명/스레드:** scene 재진입, `queue_free` 뒤 deferred 결과, 워커 취소, Resource 공유/복제, 종료 시 누수·dangling 접근을 확인합니다.
+- [ ] **native debug:** entry와 게임 코드 breakpoint가 실제로 멈추고 올바른 library와 스택을 확인할 수 있어야 합니다.
+- [ ] **export:** debug와 release 앱을 각각 실행하여 라이브러리가 포함·로드되고 같은 기능이 동작하는지 확인합니다. 모든 지원 OS/CPU에서 별도 빌드·실행하며 Web/모바일은 해당 SDK와 export 제약까지 확인합니다.
+- [ ] **server:** 서버를 제공한다면 dedicated preset/headless 산출물에 실제 클라이언트를 연결하고 권위 상태·재접속·순서/손실 경계를 검증합니다. headless 시작만으로 서버 기능 검증을 완료하지 않습니다.
+- [ ] **성능:** 위 부하·release 비교·꼬리 지연·과부하·동작 보존 기준으로 실제 게임 코어를 측정합니다. C++ 빌드 성공이나 빈 headless 실행을 성능 개선의 증거로 삼지 않습니다.
+
+## 검증 범위와 공개 근거
+
+이 문서는 공식 4.7 문서와 위에 고정한 엔진/바인딩 릴리스·태그·소스를 읽어 작성한 공개 지식입니다. **게임 프로젝트 생성, 외부 저장소 설치/clone, C++ 빌드, editor/headless/export 실행, 디버거 실행은 수행하지 않았습니다.** 따라서 코드·명령 예제는 소스 계약을 근거로 한 적용 지침이며 플랫폼별 실행 성공 증거가 아닙니다. 실제 프로젝트에 적용할 때는 위 smoke 결과로 이 한계를 보완합니다.
+
+개인 선호나 내부 사례를 공개 기술 사실로 옮기지 않았습니다. 확인일 이후의 최신판 여부와 개별 플랫폼 조합의 지원 여부는 재검증 대상이며, 문서·릴리스 메타데이터가 어긋나면 차이를 명시하고 해당 핀의 소스를 우선 확인합니다.

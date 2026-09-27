@@ -5,7 +5,8 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 ## 룰
 * [정확성](/accuracy.md) - 확실성·검색 소진·버전 최신화·기간별 트렌드 근거·에스컬레이션·도달 가능 상태
 * [응답 원칙](/response-principles.md) - 앵커·비한정 예시 해석·범위 제한·함축성·보고 매체 선택·검토 후 통합 최종본
-* [코딩 스타일](/coding-style.md) - YAGNI·결정 사다리·네이밍·공개 API·아키텍처·서버 상태·외부 응답 계약
+* [코딩 스타일](/coding-style.md) - YAGNI·결정 사다리·언어 공통 스타일 정본·프로젝트 우선순위·언어 의미/포매터 예외·공개 API·아키텍처·서버 상태·외부 응답 계약
+* [언어 공통 코딩 스타일](/language-style.md) - PascalCase 타입/함수·mPascalCase 필드·camelCase 지역/인자·UPPER_SNAKE_CASE 상수/enum 값·C/C++/C#/Go/Python/JS/TS 예외·Good/Bad·요약표
 * [버그 수정 원칙](/bugfix.md) - 결함 클래스 수정·전방 영향 범위 분석·후방 의도 복구(롤백 차단)·회귀 방지·YAGNI 경계
 * [워크플로](/workflow.md) - 개발 흐름·수락 기준-증거 폐루프·작업 파일·산출물 보존·정본 검증·독립 검토·학습 판정 완료 보고
 * [OKF 학습 축적 루프](/learning/accumulation.md) - 실행 조건·로컬 기록과 공개 반영·기존 지식 재평가·검증·배포·완료 보고
@@ -23,6 +24,7 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 * [네트워크 동기화](/game/network-sync.md) - 권위 상태·시간/순서·예측/보정·복구·전달 의미론·검증
 * [클라이언트 체크리스트](/game/client-checklist.md) - 메모리·프레임·렌더링·수명·네트워크 상태·반응성·플랫폼
 * [서버 체크리스트](/game/server-checklist.md) - 메모리·동시성·네트워크·틱·권위 상태·복구·처리량
+* [Godot + C++ 개발](/game/godot-cpp.md) - 공식 릴리스·API 타깃·GDExtension/모듈 선택·물리/전투/네트워크·4X/MMORPG 성능·수명·빌드/실행 검증
 
 ## 도구
 * [omp 기본 도구](/tools/builtin.md) - 세션별 가용성·lsp·AST·browser facade·백그라운드 작업·TypeScript+Bun

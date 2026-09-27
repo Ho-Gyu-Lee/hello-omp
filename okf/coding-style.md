@@ -1,9 +1,9 @@
 ---
 type: Rule
 title: 코딩 스타일
-description: 간결성(YAGNI)·결정 사다리·네이밍·줄바꿈·공개 API·아키텍처·서버 상태와 외부 응답 계약.
-tags: [rule, coding-style, naming, architecture, api-design, server, response-contract]
-timestamp: 2026-09-26T00:00:00Z
+description: 간결성(YAGNI)·결정 사다리·언어 공통 스타일 정본·프로젝트 우선순위·언어 의미/포매터 예외·공개 API·아키텍처·서버 상태와 외부 응답 계약.
+tags: [rule, coding-style, cross-language, naming, architecture, api-design, server, response-contract]
+timestamp: 2026-09-27T00:00:00Z
 ---
 
 # 코딩 스타일
@@ -24,19 +24,16 @@ timestamp: 2026-09-26T00:00:00Z
 - 신뢰 경계 검증, 데이터 손실 처리, 보안, 접근성은 절대 줄이지 않는다.
 
 ## 네이밍 우선순위
-1. 프로젝트 기존 패턴 — 동일 디렉토리 코드 3-5개 샘플링 후 따름.
-2. 없으면 공통 컨벤션(언어 표준이 달라도 동일 적용):
-
-| 구분 | 스타일 | 예시 |
-|------|--------|------|
-| 클래스/구조체 | PascalCase | `GameSession` |
-| 함수/메서드 | PascalCase | `ProcessPacket()` |
-| private 필드 | `_` + camelCase | `_sessionId` |
-| 지역 변수/파라미터 | camelCase | `playerId` |
-| 상수 | SCREAMING_SNAKE_CASE | `MAX_PLAYERS` |
-| 인터페이스/트레이트 | `I` + PascalCase | `ISessionHandler` |
+1. 언어의 문법·공개성·자동 탐색 규칙과 외부 ABI·엔진 override·표준 라이브러리·OS API·generated code가 요구하는 이름을 보존한다. 이름만 맞추려고 공개 범위·직렬화 키·프로토콜 동작을 바꾸지 않는다.
+2. 프로젝트의 명시적 지침·포매터/린터를 따르고, 명시가 없으면 같은 영역의 기존 패턴을 동일 디렉토리 코드 3-5개로 확인해 따른다. 스타일만을 위한 unrelated formatting·rename은 하지 않는다.
+3. **모든 언어의 코드 작성·수정·리뷰에서 [언어 공통 코딩 스타일](/language-style.md)을 읽는다.** C/C++·C#·Go·Python·JS·TS는 비한정 예시다. 명시 규칙과 일관된 기존 패턴이 모두 없는 새 코드에는 이 정본의 기본값·언어별 예외를 적용하며, 생태계 관례만으로 네이밍을 덮어쓰지 않는다.
+4. [축적 지식](/learned/)의 추가 사용자·프로젝트별 지침이 있으면 적용 범위를 확인한다. 로컬 지침이 없는 머신에서도 공개 정본의 기본값은 유지한다. 같은 네이밍을 별도 폴백 표로 복제하지 않는다.
 
 서버 특화: `XxxPacket`, `XxxHandler`, `XxxManager`, `XxxSession`.
+
+## 언어 공통 규칙과 전용 규칙의 경계
+- 이름의 대소문자가 언어 의미를 바꾸면 접근·호출 계약을 우선한다. [Go](https://go.dev/ref/spec#Exported_identifiers)의 대문자 시작은 공개 여부를 결정하고, [Python 예약 식별자](https://docs.python.org/3/reference/lexical_analysis.html#reserved-classes-of-identifiers)와 [JS constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/constructor)는 특별한 의미가 있다. 네이밍만으로 helper를 공개하거나 프로토콜 메서드를 무효화하지 않는다.
+- 공통 네이밍과 포매팅을 분리한다. [gofmt](https://go.dev/doc/effective_go#formatting)·Python 들여쓰기·[JS 자동 세미콜론 삽입](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#automatic_semicolon_insertion) 등 언어 제약을 보존한다. C++ 표준·소유권·헤더·RTTI·Godot 수명 규칙을 다른 언어에 기계적으로 적용하지 않는다.
 
 ## 줄바꿈 (한 줄 우선)
 - 선언·시그니처·인자 목록·호출·체인·객체 초기화자는 한 줄로 둔다. 가독성 목적으로 폭을 맞춰 접지 않는다.
