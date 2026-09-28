@@ -15,6 +15,7 @@
 * **Learning**: [Godot + C++ 개발](/game/godot-cpp.md)에 고정 엔진 소스·실행 확인을 근거로 터치보다 먼저 전달되는 합성 mouse, 텍스트 컨트롤의 내부 스크롤바, non-toggle 버튼 feedback, 포커스 밖 key release와 새 press, 휠 press/release 쌍, CanvasLayer HUD의 viewport 크기와 지도 표시 사각형의 구분을 추가합니다. 논리 입력·Windows OS 입력 검증을 실제 모바일 기기 검증으로 확대하지 않습니다.
 * **Learning**: [게임 클라이언트 체크리스트](/game/client-checklist.md)에 로컬 Android AAR의 외부 의존성 명시, C# 컴파일과 최종 DEX 검증의 구분, 누락 클래스의 기기 로그·바이트코드·정의 대조와 양성 대조 기준을 추가. 공개 Android 문서를 근거로 AndroidX Core와 WebKit을 구분하며 프로젝트 식별자·자격증명·벤더 내부 구현은 기록하지 않는다.
 * **Learning**: [게임 클라이언트 체크리스트](/game/client-checklist.md)에 Unity Android 의존성 XML의 실제 EDM4U 주입 검증, 임포트·Resolve 프로세스 분리, Jetifier 템플릿 전제, 원본 캐시 대신 패키지 복사본 사용, AAR 호환성 하한과 배포 SHA-256·GUID 보존을 추가. Unity 2022.3.62f3·EDM4U 1.2.188의 확인 범위를 명시하고 일반 Gradle 소비 빌드와 자동 해석·AAR 복사 모드를 구분한다.
+* **Learning**: [Godot + C++ 개발](/game/godot-cpp.md)에 2D 카메라 배율의 길이/면적, 화면비 시야 상한과 동일 구도의 차이, 같은 유형 게임·HCI 연구의 적용 한계, 실제 변위 기반 애니메이션 재생률을 추가합니다. OS 입력 검증의 DOWN/UP 예외 안전성도 기록하며 특정 프로젝트의 줌·이속을 보편 최적값으로 일반화하지 않습니다.
 
 ## 2026-09-27
 * **Correction — 공개 범위는 아래 Publish로 대체**: [코딩 스타일](/coding-style.md)과 글로벌 지침의 개인 스타일 발견을 C/C++ 한정에서 모든 언어로 확장했다. 별도 네이밍 폴백 표의 중복·충돌을 제거하고 언어의 공개성·예약 이름·자동 탐색·포매터 계약과 C/C++·엔진 전용 규칙의 적용 경계를 분리했다.

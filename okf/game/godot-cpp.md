@@ -1,7 +1,7 @@
 ---
 type: Concept
 title: Godot와 C++ 게임 개발
-description: 공식 Godot·godot-cpp 버전 근거, 물리·전투·네트워크와 4X/MMORPG 성능 설계, 로컬 인게임/서버 이관 경계, 재사용 UI·동기 시그널 수명과 GDExtension 실행 검증 지침입니다.
+description: 공식 Godot·godot-cpp 버전 근거, 물리·전투·네트워크와 4X/MMORPG 성능 설계, 로컬 인게임/서버 이관 경계, 2D 시야·이동감, 재사용 UI·동기 시그널 수명과 GDExtension 실행 검증 지침입니다.
 tags: [game, godot, cpp, gdextension, physics, combat, networking, simulation, ui, build, ownership, performance]
 timestamp: 2026-09-28T00:00:00Z
 ---
@@ -284,11 +284,15 @@ extern "C" GDExtensionBool GDE_EXPORT game_library_init(GDExtensionInterfaceGetP
 - **눌림과 포커스 복귀:** [BaseButton의 `set_pressed_no_signal`](https://github.com/godotengine/godot/blob/ed1daf0bf/scene/gui/base_button.cpp)은 toggle mode가 아니면 눌림 상태를 바꾸지 않습니다. 수동 터치 버튼은 실제 보이는 feedback과 release/cancel 복구를 별도로 검증합니다. 포커스 차단으로 입력을 비울 때 앱 밖에서 key release를 놓칠 수 있으므로 복귀한 각 키의 새 non-echo press를 인정하고, 하나의 새 키로 다른 held key를 재활성화하지 않습니다.
 - **완전한 native 제스처 검증:** [Windows backend](https://github.com/godotengine/godot/blob/ed1daf0bf/platform/windows/display_server_windows.cpp)는 휠에도 press 뒤 release를 전달합니다. 스모크가 press만 주입하면 [Viewport의 mouse focus mask](https://github.com/godotengine/godot/blob/ed1daf0bf/scene/main/viewport.cpp)가 남아 다른 버튼 클릭까지 실패할 수 있습니다. 이 검증기 결함을 제품의 좌표 보정으로 해결하지 않습니다. 실제 OS 입력과 같은 이벤트 쌍·순서로 확인합니다.
 - **Canvas·지도 영역:** Control을 CanvasLayer 아래로 옮길 때 offset-only 레이아웃 override가 full-rect HUD를 0×0으로 만들지 않는지 실제 viewport rect와 대조합니다. 자식끼리의 중앙 정렬만으로는 화면 밖 UI를 잡지 못합니다. 지도 마커의 좌표도 TextureRect의 실제 aspect-fit/covered 표시 사각형과 일치시킵니다. 최소 변으로 fit한 마커를 큰 변으로 확대·crop하는 covered 텍스처 위에 올리지 않습니다.
+- **2D 시야와 이동감:** 직교 2D 카메라의 배율 `z`에서 고정 viewport의 표시 길이는 `1/z`, 평면 면적은 `1/z²`에 비례합니다. 물리 해상도·논리 viewport·카메라 배율·월드 단위를 구분하고, 아이소메트릭 투영의 방향별 화면 속도와 추적 카메라 지연을 함께 계산합니다. 화면비 확장으로 한 축의 시야가 늘어나는 경로도 검사합니다. 사용자 줌과 viewport 보정 후 실제 줌이 다르면 resize·카메라 경계·포인터 변환이 실제 값을 사용해야 합니다. 축별 최대 범위를 제한하는 정책은 동일 구도나 모든 화면비의 쾌적함을 보장하지 않습니다.
+- **동일 유형의 비교 근거:** 2D 아이소메트릭 조작을 조사할 때 원작의 스프라이트 클라이언트와 3D 리마스터, 월드 줌과 미니맵 줌, 픽셀 업스케일과 추가 월드 노출을 구분합니다. [2D 이동 표적 연구](https://opendl.ifip-tc6.org/db/conf/interact/interact2011-2/HajriFMI11.pdf)는 선형 궤적·마우스에서 크기/속도가 선택 난도에 미치는 근거이며, [터치 throughput 연구](https://www.yorku.ca/mack/hcii2015a.html)는 정적 표적의 속도·정확도 평가입니다. 이 수치나 VR 광학 흐름의 gain을 캐릭터 단위/s·최적 줌·모든 사용자의 반응 한계로 대입하지 않습니다. 사례의 출시/개발 상태와 연구의 적용 한계를 밝힙니다.
+- **이동 애니메이션:** 게임 속도를 바꾸면 실제 변위 속도와 클립의 재생률을 함께 확인합니다. 같은 방향/클립이라는 이유로 일찍 반환하면 아날로그 강도 변경을 놓칠 수 있습니다. 걷기 재생률은 해당 상태의 속도로 갱신하되 대기는 별도로 복원하고, 설정한 재생률을 렌더링 FPS나 발 미끄러짐 제거의 실측값으로 표현하지 않습니다.
 - 표시 API가 허용하는 최대 길이와 화면에 들어가는 길이는 다릅니다. `Label`의 기본 minimum-size 동작으로 긴 이름이 고정 HUD 프레임 밖으로 확장될 수 있으므로 clipping/ellipsis 또는 의도적인 wrapping을 지정합니다. 숫자의 finite/range 검사만으로 수치 문자열의 렌더링 폭이 제한되지는 않습니다. 최대 허용 이름·큰 수치·Unicode에서 실제 화면 경계를 확인합니다.
 - 중앙 정렬은 텍스트의 줄 높이·부모의 실제 영역과 함께 검증합니다. `MarginContainer` 같은 native container로 폰트 최소 크기를 전파하고, 배지·수치·제목마다 명시적인 영역을 둡니다. 이름처럼 한 줄인 필드는 `max_lines_visible=1`과 overflow 정책으로 줄바꿈 입력이 컨테이너를 무한히 키우지 않게 합니다. 숨긴 Container 자식은 표시 후 정렬되므로 실제로 창을 열고 layout을 기다린 상태에서 geometry를 검사합니다.
 - 정렬 정책은 텍스트의 역할별로 정합니다. 짧은 버튼·상태 수치의 중앙 정렬을 채팅 같은 읽기 본문까지 일괄 적용하지 않습니다. 채팅 발신 주체는 표시 이름 비교가 아닌 신뢰할 수 있는 발생 경로/메타데이터로 구분하고 색과 명시적 표기를 함께 사용합니다. `RichTextLabel`은 신뢰하는 서식만 push/pop하고 사용자 문자열은 `add_text()`로 넣어 BBCode로 해석하지 않으며, 동일 이름·서식처럼 보이는 문자열·Unicode·길이/기록 상한을 검사합니다.
 - [Button의 `alignment`](https://docs.godotengine.org/en/4.7/classes/class_button.html#class-button-property-alignment)는 텍스트용입니다. 아이콘 전용 버튼은 `icon_alignment`와 `vertical_icon_alignment`도 지정해야 합니다. 두 아이콘 축이 중앙이면 native text가 아이콘 위에 겹치므로 수량·캡션은 별도 영역으로 분리합니다. 텍스처 사각형의 중앙과 SVG/이미지 glyph의 alpha 경계 중앙도 구분하여 렌더링 픽셀로 확인합니다.
 - 클릭 판정 검사는 표시용 viewport 논리 좌표·물리 창 좌표·OS 화면 좌표를 구분합니다. `Viewport.push_input(event, true)`로 버튼의 논리 중심만 주입하면 stretch/DPI/창 위치 변환과 실제 마우스 경계 오류를 놓칠 수 있습니다. 실제 OS 입력으로 중앙·안쪽 모서리·바깥쪽을 검사하고, hover/focus 스타일의 확장 여백·장식 부모의 mouse filter·숨김 자식 상태도 확인합니다. 엔진 종료 코드가 0이어도 script error가 있거나 전체 성공 표시가 없으면 통과가 아닙니다.
+- OS 입력 검증기는 주입한 DOWN과 UP을 예외 안전한 정리 구간으로 묶습니다. 포커스·좌표 검증이 DOWN 뒤 실패해도 `finally`에서 포커스 검사 없이 해당 UP을 보내고, 실제 OS 눌림 상태와 게임의 release 수신을 관찰합니다. 이 보장은 일반 예외 경로에 한정하며 프로세스 강제 종료까지 보장한다고 주장하지 않습니다.
 - 검증 창에 크기·위치를 강제한 성공을 사용자 실행 조건의 성공으로 확대하지 않습니다. 에디터 내장/분리 game view와 별도 창, DPI, 실제 game client 원점, viewport/final transform, OS 커서, native 입력과 `gui_input` 위치를 실패가 발생한 조건에서 대조합니다. 테스트 기대 좌표와 입력 좌표를 같은 transform으로 산출한 결과만으로 화면 정합성을 보증하지 않으며 OS가 실제 표시한 픽셀 경계도 독립 확인합니다. 재현 조건이 특정되지 않았다면 임의의 픽셀 보정이나 해결 선언을 하지 않습니다.
 - UI 참고 자료는 출처의 공식 여부와 실제 화면 여부를 따로 판정합니다. 광고 합성·키아트·홍보 프레임에 삽입한 작은 게임 화면은 전체 플레이 HUD의 근거가 아닙니다. 직접 플레이 캡처의 판본·날짜·크롭/에뮬레이터 오버레이·원 저자 워터마크를 표시하고 지도/설명 도해는 보조자료로 구분합니다.
 - 월드와 HUD의 시각적 정합성은 UI 단독 캡처가 아니라 목표 월드 배경 위에서 실제 HUD를 실행하여 판단합니다. 기본 상태뿐 아니라 채팅·추가 액션·모달을 열어 글자 크기, 배경 대비, 겹침, 서로 다른 아트 재질을 비교합니다. 공개 참고 스크린샷으로 만든 컨셉 확인과 정식 에셋 통합·실제 게임 기능을 분리해 표시합니다.
