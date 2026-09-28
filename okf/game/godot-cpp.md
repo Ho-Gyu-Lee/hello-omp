@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: Godot와 C++ 게임 개발
-description: 공식 Godot·godot-cpp 버전 근거, 물리·전투·네트워크와 4X/MMORPG 코어 성능 설계, GDExtension 수명·빌드·실행 검증 지침입니다.
-tags: [game, godot, cpp, gdextension, physics, combat, networking, simulation, build, ownership, performance]
-timestamp: 2026-09-27T00:00:00Z
+description: 공식 Godot·godot-cpp 버전 근거, 물리·전투·네트워크와 4X/MMORPG 성능 설계, 로컬 인게임/서버 이관 경계, 재사용 UI·동기 시그널 수명과 GDExtension 실행 검증 지침입니다.
+tags: [game, godot, cpp, gdextension, physics, combat, networking, simulation, ui, build, ownership, performance]
+timestamp: 2026-09-28T00:00:00Z
 ---
 
 # Godot와 C++ 게임 개발
@@ -61,6 +61,29 @@ timestamp: 2026-09-27T00:00:00Z
 - hot data를 함께 순회하고 읽기 전용 설정과 가변 시뮬레이션 상태를 분리합니다. AoS/SoA·풀·SIMD는 접근 패턴과 측정 결과로 선택합니다. 재사용 entity ID에는 generation 등 수명 검증을 두고 삭제·재배치로 포인터/참조가 무효화되는 경계를 정합니다.
 - 물리·전투·AI·경제·복제·시각 갱신의 주기를 동일하게 강제하지 않습니다. 바꿀 때는 게임 의미·권위 상태·입력 적용 순서를 보존합니다. 고정 tick은 과부하를 해결하지 않으므로 입력/작업 큐 상한과 초과 시 거부·병합·복구 정책을 정의합니다. 재화·전투 명령을 성능 때문에 조용히 버리지 않습니다.
 - 병렬화는 읽기 snapshot, 작업별 쓰기 소유권, 합류/커밋 경계를 먼저 정합니다. 독립 계산 결과를 검증해 권위 상태에 적용하고 SceneTree는 아래 「물리·프레임·스레드 경계」의 계약을 지킵니다. lock-free·작업 분할·샤딩은 측정된 경합과 불변조건이 정당화할 때만 도입합니다.
+
+### 로컬 인게임과 서버 이관
+
+다음은 클라이언트 내부에서 게임을 먼저 실행하고 독립 서버로 이관할 때의 설계 기준입니다. 특정 프로젝트의 개발 순서를 모든 게임에 강제하거나 서버 기능이 이미 구현됐다고 주장하지 않습니다.
+
+- 콘텐츠 규칙과 상태는 엔진 비의존 코어에 두고 로컬 실행 호스트가 단일 소유자로 진행합니다. Godot 입력은 게임 의도로 변환하고 월드/HUD는 관찰 결과를 소비합니다. 명령 접수 성공과 게임 규칙의 수락 결과를 구분해 로컬 호출도 동기 UI 부수효과에 의존하지 않게 합니다.
+- 이관 경계는 실행 호스트·명령 전달·관찰 결과입니다. 코어가 필요로 하는 고정 스텝·난수 상태·콘텐츠 정의를 명시적으로 제공하고 운영체제 시계·Node 수명·렌더 delta에 게임 판정을 묶지 않습니다. 실제 두 번째 호스트가 필요하기 전에 빈 서버 인터페이스·가짜 RPC·DB를 선행 생성하지 않습니다.
+- 충돌·탐색·좌표·맵 정의도 이식 범위입니다. Godot physics/navigation 호출을 인터페이스로 감싼 것만으로 독립 서버 이식이 끝나지 않습니다. 필요한 엔진 비의존 판정과 공통 데이터를 사용하거나 동등한 backend의 서버 실행 비용을 명시합니다. 아이소메트릭 화면 좌표·카메라 transform과 게임의 월드 좌표를 구분합니다.
+- 로컬 결과는 관찰 가능한 필드와 명령 결과를 전달하고 내부 월드의 mutable 포인터를 노출하지 않습니다. 버퍼 수명·재진입·리셋 세대를 정하며 UI 카운트다운·애니메이션 이벤트를 게임 쿨다운·명중·보상 판정의 정본으로 사용하지 않습니다.
+- 온라인 전환은 전체 로컬 권위 월드 실행을 서버로 옮기는 것이지 두 월드를 동시에 정본으로 유지하는 것이 아닙니다. 클라이언트에 남길 예측 계산과 서버 전용 규칙·비공개 콘텐츠/난수 데이터를 구분합니다. 오프라인 결과·저장을 온라인 경제 상태로 신뢰하거나 연결 실패에 로컬 권위로 fallback하지 않습니다.
+- 이식성은 Godot 없는 코어 빌드/행동 검사, 같은 입력 시나리오의 로컬 호스트 결과, 실제 창의 입력/표시로 각각 검증합니다. 공통 소스·고정 스텝만으로 플랫폼 간 비트 결정성·네트워크 내구성·인증이 보장되지는 않습니다.
+
+### 관찰 수명·월드 로딩·모바일 표현 예산
+
+공식 자료 조회 기준은 2026-09-28입니다. 아래는 각 API 설명에 기반한 설계 기준이며 특정 MMORPG의 성능 달성이나 업계 채택률을 뜻하지 않습니다.
+
+- 관찰 범위에서 제외된 클라이언트 객체의 제거를 권위 엔티티의 사망/파괴와 구분합니다. 재진입 시 초기 관찰 상태로 복원하고 사망·보상 연출을 재실행하지 않습니다. 연결별 관찰 필터는 서버의 가시성/인가 경계이며 카메라 culling으로 대체하지 않습니다. [Unity Netcode for Entities 1.10.0의 Ghost relevancy](https://docs.unity.cn/Packages/com.unity.netcode%401.10/manual/optimization/optimize-ghosts.html)는 client despawn과 server entity 파괴가 다름을 명시합니다.
+- 표시 리소스 chunk, 게임 판정 데이터, 서버 소유 존/인스턴스, 연결별 AOI는 별도 경계입니다. 로딩/언로딩이 권위 상태를 임의 생성·삭제하지 못하게 하고, 월드/인스턴스·콘텐츠 버전·객체 세대로 늦은 결과를 검증합니다. 판정 데이터가 없으면 빈 지형으로 간주하지 않습니다. [World Partition](https://dev.epicgames.com/documentation/unreal-engine/world-partition-in-unreal-engine)은 gameplay Actor도 포함하는 셀 로딩 기능이지 서버 소유권 이전이나 정보 인가의 자동 구현이 아닙니다.
+- [Godot 배경 로딩](https://docs.godotengine.org/en/4.7/tutorials/io/background_loading.html)의 `load_threaded_get()`은 요청이 끝나지 않았으면 블로킹될 수 있으므로 완료 상태를 확인합니다. 데이터 로딩과 인스턴스화·GPU 반영 비용을 구분하고 [활성 SceneTree 변경](https://docs.godotengine.org/en/4.7/tutorials/performance/thread_safe_apis.html)은 메인 스레드에서 수명 검증 후 처리합니다.
+- [Godot 물리 보간](https://docs.godotengine.org/en/4.7/tutorials/physics/interpolation/physics_interpolation_introduction.html)은 로컬 물리 tick 사이의 표시를 다룹니다. 원격 snapshot 시간축은 다를 수 있으므로 두 보간을 같은 transform에 무조건 중복 적용하지 않고 별도 표시 정책을 정합니다.
+- 밀집 캐릭터·효과·이름표·로딩과 기기별 CPU/GPU·메모리·발열 후 지속 성능을 측정합니다. 시각 품질·표시 갱신 예산과 권위 시뮬레이션 tick/충돌/공격 규칙은 분리합니다. [Android ADPF best practices](https://developer.android.com/games/optimize/adpf/best-practices-adpf)(문서 수정 2026-02-26)는 콘텐츠별 세밀한 품질 조절과 실기기 검증을 권고하지만 특정 플러그인·렌더러의 자동 도입 근거는 아닙니다.
+
+
 
 ### 물리와 저수준 서버 API
 
@@ -226,6 +249,9 @@ extern "C" GDExtensionBool GDE_EXPORT game_library_init(GDExtensionInterfaceGetP
 - `BIND_CONSTANT`·`BIND_ENUM_CONSTANT`는 매크로 인수의 C++ 식을 문자열화해 script 이름으로 사용하고 정수 값을 요구합니다. C++ 내부 `enum class` 이름과 script 이름을 분리하려면 `ClassDB::bind_integer_constant`에 이름과 명시적 정수 변환 값을 전달합니다. 이미 배포한 상수 이름은 호환성 계약입니다. [핀의 constant binding](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/include/godot_cpp/core/class_db.hpp)
 - `_ready`, `_process`, `_physics_process` 등 엔진 override와 `_bind_methods`는 요구되는 이름·시그니처를 그대로 둡니다. C++ 내부 메서드 `SetValue`와 바인딩 문자열 `"set_value"`는 별개입니다. `D_METHOD`의 공개 이름, property·signal·NodePath, 이미 배포한 ABI entry symbol은 스크립트·scene·resource·manifest 소비자를 가진 계약입니다. 스타일 변경만으로 이름을 바꾸지 않습니다.
 - 외부에서 호출할 메서드는 `_bind_methods`에서 등록하고, property의 getter/setter 문자열은 등록 이름과 맞춥니다. `Callable(object, "method")` 같은 문자열 기반 연결도 바인딩이 필요합니다. 노출 인자·반환값은 Variant로 표현 가능한 타입을 사용합니다. STL 컨테이너나 임의 C++ 포인터를 그대로 공개 API/저장 포맷으로 삼지 않습니다. [프로퍼티·시그널](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/gdextension_cpp_example.html#adding-properties), [godot-cpp 타입 경계](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/core_types.html)
+- **시그널 반환값:** Godot 4.7.2의 `Object::emit_signalp`는 등록된 시그널이어도 해당 인스턴스에 연결 기록이 없으면 `ERR_UNAVAILABLE`, `set_block_signals(true)` 상태이면 `ERR_CANT_ACQUIRE_RESOURCE`를 반환합니다. 따라서 setter에서 `emit_signal(...) != OK`를 무조건 오류로 처리하면 정상적인 장면 초기화도 실패로 보고합니다. 상태·표시는 먼저 갱신하고, 알림이 선택적인 계약에서는 `!is_blocking_signals() && has_connections(signalName)`일 때 발행하며 실제 발행 오류는 별도로 처리합니다. `has_connections`는 시그널 존재도 검사하므로 오타를 정상 무수신 상태로 취급하지 않습니다. 미연결·연결·차단/해제·연결 해제 상태에서 값과 알림을 함께 검증합니다. [고정 엔진의 반환 경로](https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/core/object/object.cpp#L1185-L1211), [has_connections 검증](https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/core/object/object.cpp#L1613-L1630). 확인일: 2026-09-27.
+- **동기 시그널 재진입:** `hide()`·`show()`·포커스 이동도 연결된 사용자 콜백을 실행할 수 있습니다. 전환 도중 컨테이너 원소 포인터를 유지한 채 콜백이 `vector::push_back`을 실행하면 `ObjectID`를 사용해도 컨테이너 포인터의 무효화를 막지 못합니다. 등록·열기·닫기의 전환 구간 전체에서 중첩 변경을 거부하거나 명시적으로 직렬화하고, 사용자 콜백 뒤 Node는 ID로 다시 확인합니다. 가드가 숨김/삭제 알림을 억제했다면 가드 해제 시 유효성·표시·배경 입력·포커스 상태를 조정합니다.
+- **완료 알림과 작업 결과:** 전환 결과를 안정 상태 알림 전에 저장합니다. 실패 정리의 알림에서 사용자가 다른 창을 열 수 있으므로 알림 이후의 현재 창을 실패한 호출의 대상으로 간주해 다시 닫지 않습니다. 이미 열린 창 재포커스, 등록 중 콜백, 열기 실패 후 다른 창 연결까지 검증합니다. Godot 4.7.2의 실제 UI 객체로 중첩 표시 전환, 포커스 콜백 숨김, 해제와 연속 다이얼로그를 재현·회귀 검증했습니다.
 - Inspector hint는 편집 UI 정보이며 입력 검증이나 서버 권한 검증을 대체하지 않습니다. 도메인 제약은 실제 setter/명령 처리 경계에 둡니다.
 
 ## Scene 생명주기와 소유권
@@ -246,6 +272,24 @@ extern "C" GDExtensionBool GDE_EXPORT game_library_init(GDExtensionInterfaceGetP
 - Godot Object를 일반 `delete`나 기본 deleter의 `std::unique_ptr`로 감싸지 않습니다. 순수 C++ 비엔진 자원에는 RAII를 적용합니다.
 - `memnew`는 매크로이며 `memnew(MyNode)`처럼 사용합니다. 네임스페이스 함수로 오해해 `godot::memnew(MyNode)`로 쓰지 않습니다. [고정한 바인딩의 memory.hpp](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/include/godot_cpp/core/memory.hpp)
 - 장기 보관하는 비소유 Object 참조는 `ObjectID`를 저장하고 사용 시 `ObjectDB::get_instance` 등으로 다시 확인합니다. ID 조회는 스레드 간 생존을 보장하는 잠금이 아닙니다. 해제된 raw pointer에 메서드를 호출하여 유효성을 검사하지 않습니다. deferred 결과에도 대상의 생존·현재 scene/session generation을 확인합니다.
+
+## UI 재사용과 표시 경계
+
+- 공통 UI에는 레이아웃·포커스·모달·표시용 쿨다운·테마 계약만 둡니다. 게임 어댑터가 캐릭터·아이템·퀘스트 데이터와 요청을 소유하며 공통 모듈이 게임별 클래스나 `res://` 경로를 참조하지 않게 합니다. 클릭 요청과 서버가 수락한 쿨다운/피해/보상은 별도 계약입니다.
+- 반응형 UI는 논리 viewport와 실제 창 크기를 구분하고 anchor/container를 사용합니다. 플랫폼의 물리 안전 영역은 화면 transform의 역변환으로 UI 좌표에 적용하며 키보드 회피·입력 초점은 호스트 화면에서 검증합니다. Windows의 터치 에뮬레이션·가상 inset 검사를 실제 Android/iOS 노치·DPI·키보드·패키지 검증으로 표현하지 않습니다.
+- 여러 입력 장치를 지원할 때 장치 이벤트는 어댑터에서 방향·목적지 같은 게임 의도로 변환합니다. 직접 조작/경로 추종의 우선순위와 해제·취소를 명시하고, 비활성 입력원의 중립값이 다른 활성 이동 모드를 취소하지 않게 합니다. 화면 방향·포인터 좌표를 월드 좌표로 변환해도 입력 세기·최대 속도·충돌 규칙을 보존합니다.
+- 터치 포인터는 시작 영역의 UI/조이스틱/월드 소유권을 release/cancel까지 유지합니다. [InputEventScreenTouch](https://docs.godotengine.org/en/4.7/classes/class_inputeventscreentouch.html)의 `index`는 손가락을 구분하고 `canceled`는 해당 터치의 취소를 알립니다. 개별 cancel은 해당 index의 소유권·동작만 정리하고 다른 손가락의 조작을 중단하지 않습니다. UI에서 시작한 드래그가 월드 명령으로 새지 않게 하며, 포커스 상실·앱 비활성화·장면 전환의 전역 입력 정리와 개별 터치 취소를 구분합니다.
+- 일반 `Button`의 터치→mouse 변환은 다중 터치 gameplay 버튼의 대체가 아닙니다. [TouchScreenButton](https://docs.godotengine.org/en/4.7/classes/class_touchscreenbutton.html)은 다중 터치를 지원하지만 `Node2D`라 Control anchor가 없습니다. 실제 UI 배치·동시 입력 요구에 맞는 연결부를 선택하고 원본 터치와 합성 mouse가 동일 동작을 중복 실행하지 않게 합니다. 중복 방지만을 이유로 기존 UI를 깨뜨리는 전역 에뮬레이션 설정 변경을 하지 않습니다.
+- 표시 API가 허용하는 최대 길이와 화면에 들어가는 길이는 다릅니다. `Label`의 기본 minimum-size 동작으로 긴 이름이 고정 HUD 프레임 밖으로 확장될 수 있으므로 clipping/ellipsis 또는 의도적인 wrapping을 지정합니다. 숫자의 finite/range 검사만으로 수치 문자열의 렌더링 폭이 제한되지는 않습니다. 최대 허용 이름·큰 수치·Unicode에서 실제 화면 경계를 확인합니다.
+- 중앙 정렬은 텍스트의 줄 높이·부모의 실제 영역과 함께 검증합니다. `MarginContainer` 같은 native container로 폰트 최소 크기를 전파하고, 배지·수치·제목마다 명시적인 영역을 둡니다. 이름처럼 한 줄인 필드는 `max_lines_visible=1`과 overflow 정책으로 줄바꿈 입력이 컨테이너를 무한히 키우지 않게 합니다. 숨긴 Container 자식은 표시 후 정렬되므로 실제로 창을 열고 layout을 기다린 상태에서 geometry를 검사합니다.
+- 정렬 정책은 텍스트의 역할별로 정합니다. 짧은 버튼·상태 수치의 중앙 정렬을 채팅 같은 읽기 본문까지 일괄 적용하지 않습니다. 채팅 발신 주체는 표시 이름 비교가 아닌 신뢰할 수 있는 발생 경로/메타데이터로 구분하고 색과 명시적 표기를 함께 사용합니다. `RichTextLabel`은 신뢰하는 서식만 push/pop하고 사용자 문자열은 `add_text()`로 넣어 BBCode로 해석하지 않으며, 동일 이름·서식처럼 보이는 문자열·Unicode·길이/기록 상한을 검사합니다.
+- [Button의 `alignment`](https://docs.godotengine.org/en/4.7/classes/class_button.html#class-button-property-alignment)는 텍스트용입니다. 아이콘 전용 버튼은 `icon_alignment`와 `vertical_icon_alignment`도 지정해야 합니다. 두 아이콘 축이 중앙이면 native text가 아이콘 위에 겹치므로 수량·캡션은 별도 영역으로 분리합니다. 텍스처 사각형의 중앙과 SVG/이미지 glyph의 alpha 경계 중앙도 구분하여 렌더링 픽셀로 확인합니다.
+- 클릭 판정 검사는 표시용 viewport 논리 좌표·물리 창 좌표·OS 화면 좌표를 구분합니다. `Viewport.push_input(event, true)`로 버튼의 논리 중심만 주입하면 stretch/DPI/창 위치 변환과 실제 마우스 경계 오류를 놓칠 수 있습니다. 실제 OS 입력으로 중앙·안쪽 모서리·바깥쪽을 검사하고, hover/focus 스타일의 확장 여백·장식 부모의 mouse filter·숨김 자식 상태도 확인합니다. 엔진 종료 코드가 0이어도 script error가 있거나 전체 성공 표시가 없으면 통과가 아닙니다.
+- 검증 창에 크기·위치를 강제한 성공을 사용자 실행 조건의 성공으로 확대하지 않습니다. 에디터 내장/분리 game view와 별도 창, DPI, 실제 game client 원점, viewport/final transform, OS 커서, native 입력과 `gui_input` 위치를 실패가 발생한 조건에서 대조합니다. 테스트 기대 좌표와 입력 좌표를 같은 transform으로 산출한 결과만으로 화면 정합성을 보증하지 않으며 OS가 실제 표시한 픽셀 경계도 독립 확인합니다. 재현 조건이 특정되지 않았다면 임의의 픽셀 보정이나 해결 선언을 하지 않습니다.
+- UI 참고 자료는 출처의 공식 여부와 실제 화면 여부를 따로 판정합니다. 광고 합성·키아트·홍보 프레임에 삽입한 작은 게임 화면은 전체 플레이 HUD의 근거가 아닙니다. 직접 플레이 캡처의 판본·날짜·크롭/에뮬레이터 오버레이·원 저자 워터마크를 표시하고 지도/설명 도해는 보조자료로 구분합니다.
+- 월드와 HUD의 시각적 정합성은 UI 단독 캡처가 아니라 목표 월드 배경 위에서 실제 HUD를 실행하여 판단합니다. 기본 상태뿐 아니라 채팅·추가 액션·모달을 열어 글자 크기, 배경 대비, 겹침, 서로 다른 아트 재질을 비교합니다. 공개 참고 스크린샷으로 만든 컨셉 확인과 정식 에셋 통합·실제 게임 기능을 분리해 표시합니다.
+- 에디터 화면과 F5 양쪽에 필요한 미리보기는 별도 검증 러너에서만 적용하지 않습니다. [`editor` feature](https://docs.godotengine.org/en/4.7/tutorials/export/feature_tags.html)는 에디터 바이너리의 편집·게임 실행을 포함하지만 `Engine.is_editor_hint()`는 편집 문맥만 뜻합니다. 비배포 참고 자료는 리소스 루트 밖에서 읽고, 원래 저장 프로퍼티를 덮지 않는 owner 없는 표시 자식을 사용하면 [PackedScene의 소유권 기준](https://docs.godotengine.org/en/4.7/classes/class_node.html#class-node-property-owner)으로 저장에서 제외할 수 있습니다. 템플릿 실행을 명시적으로 제외하고 pack→instantiate에서 원본 참조 보존·임시 노드/이미지 부재를 검증합니다. 부모 텍스처 위에 aspect-fit 이미지를 덧그릴 때는 레터박스 영역에 원래 그림이 비치지 않도록 비저장 불투명 배경도 필요합니다.
+- godot-cpp v10의 가상 입력 메서드에서 `Ref<InputEvent>`를 사용하는 클래스는 등록 번역 단위에서도 타입이 완전하도록 해당 헤더에 `input_event.hpp`를 포함합니다. 확인한 MSVC 조합에서는 `const String + "literal"`이 String/StringName 오버로드 사이에서 모호했으므로 필요한 문자열 피연산자를 `String("literal")`로 명시합니다. 이 원칙을 외부 ABI 이름 변경이나 전체 스타일 재작성으로 확대하지 않습니다.
 
 ## 물리·프레임·스레드 경계
 
@@ -317,6 +361,6 @@ open ./project/build/Game.app
 
 ## 검증 범위와 공개 근거
 
-이 문서는 공식 4.7 문서와 위에 고정한 엔진/바인딩 릴리스·태그·소스를 읽어 작성한 공개 지식입니다. **게임 프로젝트 생성, 외부 저장소 설치/clone, C++ 빌드, editor/headless/export 실행, 디버거 실행은 수행하지 않았습니다.** 따라서 코드·명령 예제는 소스 계약을 근거로 한 적용 지침이며 플랫폼별 실행 성공 증거가 아닙니다. 실제 프로젝트에 적용할 때는 위 smoke 결과로 이 한계를 보완합니다.
+이 문서는 공식 4.7 문서와 위에 고정한 엔진/바인딩 릴리스·태그·소스를 근거로 하며, 각 항목에 명시한 Godot UI·시그널·직렬화 실행 관찰은 해당 사례의 검증 기록입니다. **개별 사례의 실행 관찰은 이 문서의 C++ 예제·빌드 조합·플랫폼별 editor/headless/export·디버거 절차 전체를 실행 검증했다는 뜻이 아닙니다.** 코드·명령 예제는 소스 계약을 근거로 한 적용 지침이며 플랫폼별 실행 성공 증거가 아닙니다. 실제 프로젝트에 적용할 때는 위 smoke 절차로 해당 조합과 동작을 별도 검증합니다.
 
 개인 선호나 내부 사례를 공개 기술 사실로 옮기지 않았습니다. 확인일 이후의 최신판 여부와 개별 플랫폼 조합의 지원 여부는 재검증 대상이며, 문서·릴리스 메타데이터가 어긋나면 차이를 명시하고 해당 핀의 소스를 우선 확인합니다.
