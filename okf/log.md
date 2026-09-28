@@ -12,6 +12,7 @@
 * **Learning**: [Godot + C++ 개발](/game/godot-cpp.md)에 장치 입력과 게임 의도의 분리, 직접 조작/목적지 경로 전환, 비활성 중립 입력의 간섭 방지, 터치별 포인터 소유권·취소·합성 mouse 중복 방지를 추가합니다. 일반 Button의 터치 에뮬레이션과 TouchScreenButton의 다중 터치·배치 계약을 구분하며 특정 프로젝트의 키/조작 선택은 공개 기본값으로 강제하지 않습니다.
 * **Correction / Learning**: [Godot + C++ 개발](/game/godot-cpp.md)에 별도 검증 화면과 실제 에디터/F5 적용의 구분, editor feature와 editor_hint 차이, 비배포 참고 자료의 owner 없는 표시 자식·직렬화 제외와 레터박스 배경을 추가합니다. 에디터 빌드 실행 및 surface pack/instantiate로 검증한 범위이며 실제 export 패키지 검증으로 확대하지 않습니다.
 * **Correction**: [Godot + C++ 개발](/game/godot-cpp.md)의 검증 범위를 정정합니다. 문서 말미의 일괄 미실행 선언을 항목별 UI·시그널·직렬화 실행 관찰과 예제·빌드 조합·플랫폼별 절차 전체의 검증을 구분하는 설명으로 대체합니다. 기존 개별 실행 기록을 전체 플랫폼의 실행 성공 보장으로 확대하지 않습니다.
+* **Learning**: [Godot + C++ 개발](/game/godot-cpp.md)에 고정 엔진 소스·실행 확인을 근거로 터치보다 먼저 전달되는 합성 mouse, 텍스트 컨트롤의 내부 스크롤바, non-toggle 버튼 feedback, 포커스 밖 key release와 새 press, 휠 press/release 쌍, CanvasLayer HUD의 viewport 크기와 지도 표시 사각형의 구분을 추가합니다. 논리 입력·Windows OS 입력 검증을 실제 모바일 기기 검증으로 확대하지 않습니다.
 
 ## 2026-09-27
 * **Correction — 공개 범위는 아래 Publish로 대체**: [코딩 스타일](/coding-style.md)과 글로벌 지침의 개인 스타일 발견을 C/C++ 한정에서 모든 언어로 확장했다. 별도 네이밍 폴백 표의 중복·충돌을 제거하고 언어의 공개성·예약 이름·자동 탐색·포매터 계약과 C/C++·엔진 전용 규칙의 적용 경계를 분리했다.
