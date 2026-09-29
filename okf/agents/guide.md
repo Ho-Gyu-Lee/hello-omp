@@ -3,7 +3,7 @@ type: Reference
 title: 에이전트 가이드
 description: 빌트인 에이전트와 모델 역할 전체 목록, 미배정 해석, 실사용 평가와 역할 배정·실행의 구분, 커스텀 에이전트 작성 기준.
 tags: [agents, subagents, routing, builtin]
-timestamp: 2026-09-26T00:00:00Z
+timestamp: 2026-09-29T00:00:00Z
 ---
 
 # 에이전트 가이드
@@ -74,5 +74,5 @@ OMP 18.3.2의 [모델 문서](omp://models.md)·[설정 문서](omp://settings.m
 - OMP는 원격 모델 카탈로그와 로컬 캐시를 사용한다. portable 설정은 실제 모델을 `provider/model-id`로 고정하되, ID를 설정했다는 사실만으로 가용성·계정 권한·호출 성공을 보장하지 않는다.
 - Opus가 필요한 명시적 역할·fallback에는 `anthropic/claude-opus-5-5`를 지정한다. `providers.anthropic.serverSideFallback=false`는 OMP의 Anthropic API server-side refusal fallback을 사용하지 않도록 유지한다. 이는 OMP의 오류/429 fallback과 다른 경로이며 서비스 전체의 fallback을 제어하는 설정으로 해석하지 않는다. 이 비활성 정책의 기존 근거는 [Anthropic refusal/fallback 문서](https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback)와 OMP 18.2.5 `src/session/settings-stream-fn.ts` 확인(2026-09-18)이며, 이번 전환은 서버 측 fallback을 활성화하지 않는다.
 - 명시한 11개 역할마다 다른 provider의 fallback 후보 1개를 설정한다(Codex 역할 → Claude Opus 5.5, `designer`·`slow`·`plan` → GPT-6 Astra xhigh, `vision` → GPT-6 Astra high, `advisor` → GPT-6 Sol high). `tiny`·`memory`는 Opus 5.5 low를 사용한다. 실제 전환은 모델·자격증명 가용성과 런타임의 실패·사용량 판정에 좌우된다. 동일 provider 후보를 연쇄 배치하지 않으며, 복구는 `retry.fallbackRevertPolicy=cooldown-expiry` 정책을 따른다.
-- `retry.modelFallback=true`, `retry.usageAwareFallback=true`, `retry.usageReservePolicy=auto`로 신뢰 가능한 coding-plan usage report에 매핑된 quota가 잔여 10% 이하일 때 적격 fallback 후보로 확인 프롬프트 없이 전환하도록 설정했다. 일반 configured API key와 unknown/unmapped usage는 선제 quota 전환 대상이 아니며, 사용할 수 있는 fallback이 없으면 전환을 보장하지 않는다.
+- `retry.modelFallback=true`, `retry.usageAwareFallback=true`, `retry.usageReservePolicy=auto`, `retry.usageReservePct=1`로 신뢰 가능한 coding-plan usage report에 매핑된 quota가 잔여 1% 이하일 때 적격 fallback 후보로 확인 프롬프트 없이 전환하도록 설정했다. 일반 configured API key와 unknown/unmapped usage는 선제 quota 전환 대상이 아니며, 사용할 수 있는 fallback이 없으면 전환을 보장하지 않는다.
 - 위임 기준은 [서브에이전트](/tools/subagents.md), 도구 우선순위는 [omp 기본 도구](/tools/builtin.md).
