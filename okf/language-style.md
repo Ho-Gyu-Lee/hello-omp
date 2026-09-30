@@ -248,7 +248,7 @@ Bad: 고정 상수 `MaxPlayers`, enum 값 `ConnectionState.Connected`, 상수 �
 - **함수는 읽을 수 있는 하나의 작업 단위로 둡니다.** 검증·준비·처리·결과 반영의 논리 단락을 구분하고, 다른 책임이나 반복되는 정책이 섞이면 기존 함수 또는 의미 있는 보조 함수로 분리합니다. 줄 수·중첩 깊이의 임의 상한, 문장마다 만드는 전달 함수, 큰 본문을 숨기기 위한 지역 람다·매크로로 대체하지 않습니다.
 - **주석은 코드에 없는 이유·계약을 적습니다.** 제약·단위·불변조건·외부 우회책의 근거는 남기되 문장을 그대로 읽어 주는 주석, 작업 과정·변경 이력, 주석 처리한 죽은 코드를 제품 코드에 쌓지 않습니다. 바꾼 코드와 인접 주석이 어긋나면 함께 수정합니다. 공개 API 문서·라이선스·도구 지시문과 이 가이드의 Good/Bad 표식은 유지합니다.
 - `switch`의 `case`·`default`는 switch 중괄호와 같은 깊이, 본문은 한 단계 들여씁니다. 여러 문장·블록을 가진 case 경로 사이는 빈 줄 하나로 구분하되, 본문 없는 연속 레이블은 같은 경로로 붙여 둡니다. 각 경로는 명시적으로 `break`·`return` 등으로 끝냅니다. 동작을 실행한 뒤 다음 case로 넘어가는 의도적인 fallthrough만 표기하며 C++17은 `[[fallthrough]];`를 사용합니다. C99는 프로젝트 공통 헤더의 `NS_FALLTHROUGH;` 하나를 사용합니다. 먼저 `#if defined(__has_attribute)`로 감싼 뒤 안쪽의 별도 `#if __has_attribute(fallthrough)`가 참이면 `__attribute__((fallthrough))`, 그 밖에는 빈 문장으로 확장합니다. 정의 존재 검사와 함수형 매크로 검사를 하나의 `&&` 식으로 합치지 않습니다. 기존 프로젝트 표기가 있으면 그것을 따릅니다. case별 지역 변수 수명에는 별도 블록을 둡니다. 닫힌 enum을 모두 다룰 때는 불필요한 `default`로 누락 경고를 숨기지 않습니다. 외부 정수·역직렬화 값처럼 유효하지 않은 값이 들어오는 경계는 따로 검증하거나 오류 경로를 둡니다.
-- 네임스페이스 내용에는 추가 들여쓰기를 하지 않습니다. 중첩 네임스페이스는 C++17의 `namespace Northstar::Net` 단일 정의를 기본으로 합니다. 프로젝트 표준이 C++17 미만일 때만 블록을 중첩합니다. 파일 내부 구현에는 익명 네임스페이스를 사용하고 헤더에는 익명 네임스페이스를 두지 않습니다.
+- **네임스페이스 블록마다 내용에 공백 4칸을 추가합니다.** 이름 있는 네임스페이스와 익명 네임스페이스 모두 같은 규칙이며, 중첩 블록은 깊이마다 4칸씩 누적합니다. 여는·닫는 중괄호는 선언과 같은 깊이에 두고 Allman을 유지합니다. 중첩 네임스페이스는 C++17의 `namespace Northstar::Net` 단일 정의를 기본으로 하며, 이는 하나의 블록이므로 내용은 한 단계만 들여씁니다. 프로젝트 표준이 C++17 미만일 때만 이름 있는 블록을 중첩합니다. C# 블록형 namespace에도 같은 들여쓰기를 적용하지만, 파일 범위 namespace에는 중괄호 블록이 없으므로 추가 들여쓰기를 하지 않습니다. 파일 내부 구현에는 익명 네임스페이스를 사용하고 헤더에는 익명 네임스페이스를 두지 않습니다.
 - 클래스는 `public`, 필요한 경우에만 `protected`, `private` 순서로 씁니다. 접근 지정자는 클래스 중괄호와 같은 깊이, 멤버는 한 단계 들여씁니다. public 타입·상수, 생성/소멸, 사용자가 호출하는 메서드, private 보조 메서드·상태 순으로 정리합니다. 메서드 선언과 데이터 멤버 선언을 뒤섞지 않으며 그 사이에는 빈 줄 하나를 둡니다. `protected` 데이터나 가상의 확장점을 미리 만들지 않습니다.
 - **멤버 변수는 타입이나 추가한 순서가 아니라 역할·불변조건으로 묶습니다.** 서로 함께 쓰거나 함께 유효해야 하는 값은 인접하게 두고 그룹 사이에 빈 줄 하나를 둡니다. 같은 그룹 안에서는 한 줄에 변수 하나를 연속 선언합니다. 예를 들어 의존 객체·설정값·이동 상태·전투 상태·캐시는 구분하되, 모든 클래스에 이 그룹을 만들거나 이 순서를 기계적으로 강제하지 않습니다.
 - 같은 접근 섹션의 고정 상수·정적 공유 상태·인스턴스 상태는 서로 구분합니다. 새 멤버는 계약이 허용하는 위치의 관련 그룹에 넣고 무조건 끝에 덧붙이지 않습니다. **모든 언어에서 재배치·중간 삽입 전에** 위치 기반 생성·집계 초기화, 필드 초기화 평가 순서, 직렬화·리플렉션·레이아웃 계약을 확인합니다. 끝에 추가하는 것도 자동으로 안전한 것은 아니며, 소비자·데이터 형식의 변경이 필요하면 단순 스타일 정리로 처리하지 않습니다. 역할이 이름만으로 분명하지 않은 그룹에만 짧은 설명 주석을 붙이며 장식용 구분선·빈 그룹·가독성만을 위한 새 래퍼 타입을 만들지 않습니다.
@@ -259,29 +259,29 @@ Bad: 고정 상수 `MaxPlayers`, enum 값 `ConnectionState.Connected`, 상수 �
 // Good
 namespace Northstar
 {
-void UpdatePlayer(PlayerController* player, bool isPaused)
-{
-    if (player == nullptr || isPaused)
+    void UpdatePlayer(PlayerController* player, bool isPaused)
     {
-        return;
+        if (player == nullptr || isPaused)
+        {
+            return;
+        }
+
+        const int playerId = player->GetPlayerId();
+        LogPlayer(playerId);
     }
 
-    const int playerId = player->GetPlayerId();
-    LogPlayer(playerId);
-}
-
-bool IsConnected(ConnectionState state)
-{
-    switch (state)
+    bool IsConnected(ConnectionState state)
     {
-    case ConnectionState::DISCONNECTED:
+        switch (state)
+        {
+        case ConnectionState::DISCONNECTED:
+            return false;
+        case ConnectionState::CONNECTED:
+            return true;
+        }
+
         return false;
-    case ConnectionState::CONNECTED:
-        return true;
     }
-
-    return false;
-}
 } // namespace Northstar
 
 // Bad
@@ -292,6 +292,28 @@ bool IsConnected(ConnectionState state)
 ```
 
 예제의 `LogPlayer`처럼 주변 시스템이 제공하는 이름은 용례를 위한 것이며 해당 기능을 새로 도입하라는 뜻이 아닙니다.
+
+네임스페이스 들여쓰기는 이름의 구성 요소 수가 아니라 실제 블록 깊이를 기준으로 합니다. 다음은 구현 파일의 예입니다.
+
+```cpp
+// Good: C++17 단일 정의는 한 단계, 내부 익명 블록은 한 단계 더 들여씁니다.
+namespace Northstar::Net
+{
+    namespace
+    {
+        constexpr int DEFAULT_PORT = 7777;
+    }
+}
+
+// Bad: 이름 있는 블록과 익명 블록의 내용 모두 들여쓰기가 빠졌습니다.
+namespace Northstar::Net
+{
+namespace
+{
+constexpr int DEFAULT_PORT = 7777;
+}
+}
+```
 
 제어문 간격 예시입니다. 호출 이름은 주변 시스템이 제공하는 동작을 나타냅니다.
 
@@ -654,7 +676,7 @@ size_t NsPacketGetHeaderSize(void);
 | 빈 줄 | 독립 제어문 사이·제어문 뒤 다음 문장·논리 단락·정의 사이 한 줄 | 연결부·닫는 중괄호 앞·연속 장식용 빈 줄 없음, 밀접한 문장마다 넣지 않음 |
 | 조건문·반복문 | 항상 블록, 안전한 조기 반환·continue, 복합 조건의 묶음 명시 | 중첩 삼항·부수 효과 은폐 금지, 조건 선언의 수명 보존 |
 | switch | case는 switch 블록 깊이, 복합 경로 사이 빈 줄, 명시적 종료 | 본문 없는 연속 레이블은 같은 경로 |
-| namespace 배치 | C++17 중첩 정의 기본, 내용 추가 들여쓰기 없음 | `namespace Northstar::Net` |
+| namespace 배치 | 이름 있는·익명 블록마다 내용 +4칸, 중괄호는 선언 깊이의 Allman | C++17 `namespace Northstar::Net`은 한 블록; C# 블록형도 동일, 파일 범위형은 추가 깊이 없음 |
 | 클래스 접근 순서 | public → 필요한 protected → private | public API 다음 private 상태 |
 | 멤버 배치 | 역할·불변조건별 그룹, 그룹 사이 빈 줄 하나 | 모든 언어의 재배치·중간 삽입 시 순서 계약 확인 |
 | C++ 멤버 순서·초기화 | 선언 순서 초기화·역순 소멸, 모든 생성 경로의 유효값 | 수명·ABI·직렬화·근거 있는 성능 배치 우선 |

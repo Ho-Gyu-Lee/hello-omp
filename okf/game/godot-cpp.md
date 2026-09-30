@@ -3,7 +3,7 @@ type: Concept
 title: Godot와 C++ 게임 개발
 description: 공식 Godot·godot-cpp 버전 근거, 물리·전투·네트워크와 4X/MMORPG 성능 설계, 로컬 인게임/서버 이관 경계, 2D 시야·이동감, 재사용 UI·동기 시그널 수명과 GDExtension 실행 검증 지침입니다.
 tags: [game, godot, cpp, gdextension, physics, combat, networking, simulation, ui, build, ownership, performance]
-timestamp: 2026-09-29T00:00:00Z
+timestamp: 2026-09-30T00:00:00Z
 ---
 
 # Godot와 C++ 게임 개발
@@ -79,6 +79,7 @@ timestamp: 2026-09-29T00:00:00Z
 
 - 콘텐츠 규칙과 상태는 엔진 비의존 코어에 두고 로컬 실행 호스트가 단일 소유자로 진행합니다. Godot 입력은 게임 의도로 변환하고 월드/HUD는 관찰 결과를 소비합니다. 명령 접수 성공과 게임 규칙의 수락 결과를 구분해 로컬 호출도 동기 UI 부수효과에 의존하지 않게 합니다.
 - 이관 경계는 실행 호스트·명령 전달·관찰 결과입니다. 코어가 필요로 하는 고정 스텝·난수 상태·콘텐츠 정의를 명시적으로 제공하고 운영체제 시계·Node 수명·렌더 delta에 게임 판정을 묶지 않습니다. 실제 두 번째 호스트가 필요하기 전에 빈 서버 인터페이스·가짜 RPC·DB를 선행 생성하지 않습니다.
+- 이관 대비 동기화 계약(예측·보정·재접속·결과 보존)을 로컬 호스트에서 검증하라는 요구는 두 번째 호스트의 구현 승인이 아닙니다. 서버 개발이 명시적으로 결정되기 전에는 별도 서버 프로세스·소켓 전송·wire codec/stream framing·접속 제한·서버 bench 도구를 만들지 않고, 프로세스 안의 논리 메시지 경계와 지연·지터 모의로 계약을 검증합니다. 이미 요청 밖으로 만들어졌다면 호환 shim 없이 제거하고 규칙 문서에 금지 범위를 남겨 다른 작업자가 재도입하지 않게 합니다.
 - 충돌·탐색·좌표·맵 정의도 이식 범위입니다. Godot physics/navigation 호출을 인터페이스로 감싼 것만으로 독립 서버 이식이 끝나지 않습니다. 필요한 엔진 비의존 판정과 공통 데이터를 사용하거나 동등한 backend의 서버 실행 비용을 명시합니다. 아이소메트릭 화면 좌표·카메라 transform과 게임의 월드 좌표를 구분합니다.
 - 로컬 결과는 관찰 가능한 필드와 명령 결과를 전달하고 내부 월드의 mutable 포인터를 노출하지 않습니다. 버퍼 수명·재진입·리셋 세대를 정하며 UI 카운트다운·애니메이션 이벤트를 게임 쿨다운·명중·보상 판정의 정본으로 사용하지 않습니다.
 - 온라인 전환은 전체 로컬 권위 월드 실행을 서버로 옮기는 것이지 두 월드를 동시에 정본으로 유지하는 것이 아닙니다. 클라이언트에 남길 예측 계산과 서버 전용 규칙·비공개 콘텐츠/난수 데이터를 구분합니다. 오프라인 결과·저장을 온라인 경제 상태로 신뢰하거나 연결 실패에 로컬 권위로 fallback하지 않습니다.
@@ -235,13 +236,13 @@ private:
 
 namespace
 {
-void InitializeGame(godot::ModuleInitializationLevel level)
-{
-    if (level == godot::MODULE_INITIALIZATION_LEVEL_SCENE)
+    void InitializeGame(godot::ModuleInitializationLevel level)
     {
-        GDREGISTER_CLASS(CounterData);
+        if (level == godot::MODULE_INITIALIZATION_LEVEL_SCENE)
+        {
+            GDREGISTER_CLASS(CounterData);
+        }
     }
-}
 }
 
 extern "C" GDExtensionBool GDE_EXPORT game_library_init(GDExtensionInterfaceGetProcAddress getProcAddress, GDExtensionClassLibraryPtr library, GDExtensionInitialization* initialization)
