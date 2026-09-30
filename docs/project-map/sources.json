@@ -1,0 +1,510 @@
+{
+  "schemaVersion": 1,
+  "project": "hello-omp",
+  "basis": "working-tree-manual-reconciliation",
+  "snapshotId": "28c6dcaf22a9",
+  "scope": {
+    "include": [
+      "AGENTS.md",
+      "README.md",
+      "setup.sh",
+      "setup.ps1",
+      ".gitattributes",
+      ".gitignore",
+      "config/*.conf",
+      "rules/*.md",
+      "scripts/*.ts",
+      "commands/*.md",
+      "extensions/*.js",
+      "extensions/*.ts",
+      "agents/*.md",
+      "okf/**/*.md",
+      "skills/*/SKILL.md",
+      "skills/*/UPSTREAM.md",
+      "skills/*/package.json",
+      "skills/*/skill-release.json"
+    ],
+    "exclude": [
+      "okf/learned/**",
+      "docs/project-map/**",
+      ".omp-artifacts/**",
+      "**/.DS_Store"
+    ]
+  },
+  "scopeNote": "공개 설치·지침·배포 계약. 개인 learned와 vendored Archify 내부 구현은 제외하며 배포 identity만 기록합니다.",
+  "viewRules": {
+    "overview": [
+      "**"
+    ],
+    "skill-deployment": [
+      "scripts/deploy-skills.ts",
+      "setup.sh",
+      "setup.ps1"
+    ]
+  },
+  "inputs": [
+    {
+      "path": ".gitattributes",
+      "mode": "sha256-text-lf",
+      "sha256": "bebda414769e43ea40a872b780a15ca867aad3f7a9459554af3c2754c5033893",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": ".gitignore",
+      "mode": "sha256-text-lf",
+      "sha256": "8fc90f91870a7e962ff1570785bde30497d43a20e83278662ae5308f7a9b02c0",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "mode": "sha256-text-lf",
+      "sha256": "c0fa4ad1f033dec09914596ea4a43869837709e2af5b9cd57fc75a739989fe43",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "README.md",
+      "mode": "sha256-text-lf",
+      "sha256": "e16d6dd63e0f348d4d92a46938f86166ad49a627cd378c79ae319c0efb3b15b5",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "commands/cleanup.md",
+      "mode": "sha256-text-lf",
+      "sha256": "687fdef8ed71cc1fa7abf4af2aa75a2ac5bf2c09c1eb6dbc518444b135b93622",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "commands/project-map.md",
+      "mode": "sha256-text-lf",
+      "sha256": "bc364c87d7716920bbfceed712a77b14a7b8572bf27a149d41f652a404e22e6f",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "config/settings.anthropic-pro.conf",
+      "mode": "sha256-text-lf",
+      "sha256": "6e42d53a65142647569d7aa44236342d06afe826703c2e6e1c77ab5bbe8de95e",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "config/settings.conf",
+      "mode": "sha256-text-lf",
+      "sha256": "bd2dc5f2deaa9733ee95d0ab5151c0c6d678a8ffb2a2839a58a97061a3f731fa",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "extensions/dangerous-tool-guard.js",
+      "mode": "sha256-text-lf",
+      "sha256": "a713e217227f7aa2d21c116a1e2cf4d2728138e0d94fb9af7767a7ce61f5b64c",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/accuracy.md",
+      "mode": "sha256-text-lf",
+      "sha256": "a5af1be9c569eb04d764378a50245a752ac3773bbcf486e0825f3c74465e2a95",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/agents/guide.md",
+      "mode": "sha256-text-lf",
+      "sha256": "e9b4026119050cc541bdf031bd2b4bc418a5f75d33edb8cf351dfd7bf7febae4",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/agents/index.md",
+      "mode": "sha256-text-lf",
+      "sha256": "0384b905b85374af2eda2f049bf307d480eae7176250723f80f241213d09f322",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/bugfix.md",
+      "mode": "sha256-text-lf",
+      "sha256": "30ee04e6761d6c8ac01363cfd14e8a55d3022b4b81d147c00c9e22df568140e6",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/coding-style.md",
+      "mode": "sha256-text-lf",
+      "sha256": "bbee8e75c9424f36569153d77d887486771ba630844d9a147abd915be7a55809",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/game/client-checklist.md",
+      "mode": "sha256-text-lf",
+      "sha256": "f615bba20ae16a16ac50720736526fe6d497e7519c128eff1e29f77e071fdb04",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/game/godot-cpp.md",
+      "mode": "sha256-text-lf",
+      "sha256": "e7129f9db205e40ceee9979d165c7e489f51979a4ca7646833abd97c480bc7d0",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/game/index.md",
+      "mode": "sha256-text-lf",
+      "sha256": "98e67d3787e5e9dbf63edec06df8f6b8c39883d8a5bb5f9d9554a7cb7af61426",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/game/network-sync.md",
+      "mode": "sha256-text-lf",
+      "sha256": "beba5623f9409ea8e337486c4b784d2297193d46b98ee60610408bb4a60f18f2",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/game/server-checklist.md",
+      "mode": "sha256-text-lf",
+      "sha256": "7cd64d316ac0f7f248c1e7f9c6068383de94ee0d5755b59eae072bdabb941abd",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/index.md",
+      "mode": "sha256-text-lf",
+      "sha256": "f09294fc0f12e74c798d8de26834f5f15746926ac91a29552097fc9ba368f4eb",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/language-style.md",
+      "mode": "sha256-text-lf",
+      "sha256": "95f1afcf99f3f2d804454e51b5cb9e4ab64e03492dc2df65038aa3728d7ad549",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/learning/accumulation.md",
+      "mode": "sha256-text-lf",
+      "sha256": "bc52cd44e726a7f7a8fd5d3072b59518116903d82838e951fd671959af7bc3fb",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/learning/index.md",
+      "mode": "sha256-text-lf",
+      "sha256": "4d897b6c0a17bb7be1df5473a4dfb614bac6e74389bb5967b4e07d87a93159a1",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/log.md",
+      "mode": "sha256-text-lf",
+      "sha256": "471bebc81aec1771a12b31915b3e74a6fe91d3aa5db2254e3915dbb5d63bb04c",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/project-navigation.md",
+      "mode": "sha256-text-lf",
+      "sha256": "9e11c4dd31c2434b873d3ec3f520b8b2b0db0806808dcdbd08bd2f5cd821626b",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/response-principles.md",
+      "mode": "sha256-text-lf",
+      "sha256": "c0aa5ff734c7ac49aeed061ee4f7c908427f1210eaeb11cadd0b9ce41ebb9e4c",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/security/game.md",
+      "mode": "sha256-text-lf",
+      "sha256": "e846cb601f8f0eca7ff1e0b1c03d21baf9cf05ce5d899be8260283e086419787",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/security/index.md",
+      "mode": "sha256-text-lf",
+      "sha256": "914dcaa0393da9a767c7d1fd659b5ab95a8c93c1dee81828049a13f0d27c066f",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/security/overview.md",
+      "mode": "sha256-text-lf",
+      "sha256": "d6ceada7fd200bc28f14257a7b15ef73e54c47bf7c033dd8d3e96a2a0f72d1d8",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/security/review-checklist.md",
+      "mode": "sha256-text-lf",
+      "sha256": "578ba4203c41cfeba99bde8e77eb540031c7984a4ca78482500971b0cf78e385",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/security/signing-canonicalization.md",
+      "mode": "sha256-text-lf",
+      "sha256": "6ced3bff13eac593cb83064de34f1f7a17deb3ea573890e997f3f2710a17d6be",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/tools/builtin.md",
+      "mode": "sha256-text-lf",
+      "sha256": "b6c37c405e4d2019237dbbbfcfa75962a656bac5ba4acebb43bc3938b3427337",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/tools/ecosystem-watch.md",
+      "mode": "sha256-text-lf",
+      "sha256": "d078433545ab4fae12190b74db7f552b68028293fa203ed785dbfa399d07832d",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/tools/index.md",
+      "mode": "sha256-text-lf",
+      "sha256": "39342e5f0d121e990171d28a356bddf09cde1c106f664598a301013a558cdc9d",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/tools/mcp.md",
+      "mode": "sha256-text-lf",
+      "sha256": "0bc32d19247d9031e2efa53317c35ee3f8dc6c969824bf4177e2ad2b80483bed",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/tools/skills.md",
+      "mode": "sha256-text-lf",
+      "sha256": "227747f9c0c20718ccf3771b78100429655e495280feb2c80f7db1709277b15b",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/tools/subagents.md",
+      "mode": "sha256-text-lf",
+      "sha256": "7754a4e57a14019f1c2acb3fa31f9421e964a4c3326627228422b56785cf232d",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "okf/workflow.md",
+      "mode": "sha256-text-lf",
+      "sha256": "5eac54b59accb20f4b10bb8cf67a4bae2466f4148d1c6480bca72b8f00311a22",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "rules/AGENTS.md",
+      "mode": "sha256-text-lf",
+      "sha256": "4b13f8a88d52f87ded630044913013b6b2d1462c169a8484f447a7e78390e95a",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "rules/WATCHDOG.md",
+      "mode": "sha256-text-lf",
+      "sha256": "dc9e6ada0fabb911bbee0c70505444d6219a374d372f7cf956b3b35c54f93d52",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "scripts/deploy-skills.ts",
+      "mode": "sha256-text-lf",
+      "sha256": "097d21bbe0d6dd397f7d29b230eb5489846a99f72116455caa1a7f2e9652dc31",
+      "views": [
+        "overview",
+        "skill-deployment"
+      ]
+    },
+    {
+      "path": "scripts/validate-okf.ts",
+      "mode": "sha256-text-lf",
+      "sha256": "03003fb854a03fd1bb92d58bb263775b8f003e5f7bb9bc50f1414fc8982cfd5b",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "setup.ps1",
+      "mode": "sha256-text-lf",
+      "sha256": "5a7e26382272e8f46d3f121cbdbfdecd5acaf464416b3779845f7199eb961992",
+      "views": [
+        "overview",
+        "skill-deployment"
+      ]
+    },
+    {
+      "path": "setup.sh",
+      "mode": "sha256-text-lf",
+      "sha256": "df998f81831f2acf42e9da2d075584742b796b1db6026c895e5a9e640fcd9bc0",
+      "views": [
+        "overview",
+        "skill-deployment"
+      ]
+    },
+    {
+      "path": "skills/archify/SKILL.md",
+      "mode": "sha256-text-lf",
+      "sha256": "26f9780f21fabf018792e1585f2ec1174756c6fd80200253b6c0ce9a724cbc74",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "skills/archify/UPSTREAM.md",
+      "mode": "sha256-text-lf",
+      "sha256": "ba4350bbd5051dd47d55ab3d5d35258b10fccf0b6704befc5d8e86587db4d6a8",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "skills/archify/package.json",
+      "mode": "sha256-text-lf",
+      "sha256": "dbf1082f0bed9a4a93b031fb9daf00d07e095b066f8e61a2d4070cd97ce2b60a",
+      "views": [
+        "overview"
+      ]
+    },
+    {
+      "path": "skills/archify/skill-release.json",
+      "mode": "sha256-text-lf",
+      "sha256": "93a31980e200d0749d887982eba8b6c3b33452a14e3a04d4e6969b9c42c7eacf",
+      "views": [
+        "overview"
+      ]
+    }
+  ],
+  "nodeOwners": {
+    "overview:project-docs": "overview",
+    "overview:project-policy": "policy",
+    "overview:bootstrap": "installation",
+    "overview:source-bundle": "installation",
+    "overview:skill-deployer": "skills",
+    "overview:archify": "skills",
+    "skill-deployment:entry": "skills",
+    "skill-deployment:get-entry": "skills",
+    "skill-deployment:is-within": "skills",
+    "skill-deployment:read-tree": "skills",
+    "skill-deployment:visit": "skills",
+    "skill-deployment:inspected-tree": "skills",
+    "skill-deployment:stage": "skills",
+    "skill-deployment:publish": "skills",
+    "skill-deployment:recovery": "skills",
+    "overview:navigation": "commands",
+    "overview:omp-runtime": "runtime",
+    "overview:guard": "runtime",
+    "overview:publication": "release"
+  },
+  "published": {
+    "overview": {
+      "json": "docs/project-map/overview.architecture.json",
+      "html": "docs/project-map/overview.html",
+      "jsonSha256": "92b3f297ff98b35ef049bfd023faecae198d214765845b0cf1c45d0d026f4474",
+      "htmlSha256": "70f354328dd4ea5d57e089123bec9b21f6c295f256a6e4c72b4579a1942a3484",
+      "stagedReceipt": ".omp-artifacts/project-navigation-20260930-c84b2a/overview/v3/evidence/map.finalize-summary.json",
+      "gates": {
+        "validate": "pass",
+        "deliver": "pass",
+        "check": "pass",
+        "browser-check": "pass"
+      },
+      "nativePublishedProvenance": false
+    },
+    "skill-deployment": {
+      "json": "docs/project-map/skill-deployment.architecture.json",
+      "html": "docs/project-map/skill-deployment.html",
+      "jsonSha256": "a3f2823efa9edd95bf8dc681069e9f925896d08efc16ff3fcb59d21fcc11631b",
+      "htmlSha256": "45fec86ca155bf2bb4b8d8c32b975d72b282f98ec01075e756c1a93be1dfbb78",
+      "stagedReceipt": ".omp-artifacts/project-navigation-20260930-c84b2a/skill-deployment/v2/evidence/map.finalize-summary.json",
+      "gates": {
+        "validate": "pass",
+        "deliver": "pass",
+        "check": "pass",
+        "browser-check": "pass"
+      },
+      "nativePublishedProvenance": false
+    }
+  },
+  "verification": {
+    "semantic": "manual source and registration/call-site reading",
+    "nativeCommitEvidence": false,
+    "normalizedInputFreshness": "recorded scope only; additions and removals included",
+    "runtimeLimit": "Windows/PowerShell and dangerous-tool-guard runtime not exercised in this task",
+    "browserSurface": "Chrome: sidebar/selected article/search/history/focus; 390–1920px boundary checks; no disclosure UI"
+  },
+  "planning": {
+    "canonical": "docs/project-map/index.html#roadmap",
+    "ids": [
+      "NAV-01",
+      "VERIFY-WIN-01",
+      "ADOPT-01"
+    ]
+  },
+  "geometry": {
+    "overview": {
+      "width": 1090,
+      "height": 778
+    },
+    "skill-deployment": {
+      "width": 1090,
+      "height": 548
+    }
+  }
+}

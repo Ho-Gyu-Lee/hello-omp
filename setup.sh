@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # omp portable setup — macOS / Linux
-# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents  6) commands
+# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents  6) commands  7) skills
 # Idempotent: safe to re-run. Honors PI_CODING_AGENT_DIR via `omp config path`.
 set -eu
 
@@ -47,6 +47,7 @@ if [ "${CONFIG_DIR_CMP}" = "${SCRIPT_DIR_CMP}" ]; then
   exit 1
 fi
 mkdir -p "${CONFIG_DIR}"
+bun "${SCRIPT_DIR}/scripts/deploy-skills.ts" --check "${CONFIG_DIR}"
 echo "omp config dir: ${CONFIG_DIR}"
 # absolute OKF path (slash-normalized) injected into AGENTS.md/agents so agents read it from any cwd
 OKF_ABS=$(printf '%s' "${CONFIG_DIR}/okf" | sed 's|\\|/|g')
@@ -80,7 +81,7 @@ case "${ANTHROPIC_PLAN}" in
     ;;
 esac
 
-echo "[1/6] applying model settings (${ANTHROPIC_PLAN})..."
+echo "[1/7] applying model settings (${ANTHROPIC_PLAN})..."
 apply_settings_file "${SCRIPT_DIR}/config/settings.conf"
 if [ "${ANTHROPIC_PLAN}" = "pro" ]; then
   echo "  applying Opus-only profile overrides..."
@@ -88,7 +89,7 @@ if [ "${ANTHROPIC_PLAN}" = "pro" ]; then
 fi
 
 # --- 2) global/advisor rules ---
-echo "[2/6] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
+echo "[2/7] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
 if [ -f "${CONFIG_DIR}/AGENTS.md" ] && [ ! -f "${CONFIG_DIR}/AGENTS.md.bak" ]; then
   cp "${CONFIG_DIR}/AGENTS.md" "${CONFIG_DIR}/AGENTS.md.bak"
 fi
@@ -100,7 +101,7 @@ fi
 cp "${SCRIPT_DIR}/rules/WATCHDOG.md" "${CONFIG_DIR}/WATCHDOG.md"
 
 # --- 3) OKF bundle (validate source, then clean redeploy) ---
-echo "[3/6] validating and deploying OKF bundle..."
+echo "[3/7] validating and deploying OKF bundle..."
 if ! bun "${SCRIPT_DIR}/scripts/validate-okf.ts" "${SCRIPT_DIR}/okf"; then
   echo "ERROR: OKF conformance validation failed" >&2
   exit 1
@@ -110,7 +111,7 @@ mkdir -p "${CONFIG_DIR}/okf"
 cp -R "${SCRIPT_DIR}/okf/." "${CONFIG_DIR}/okf/"
 
 # --- 4) extensions (auto-discovered from user agent dir) ---
-echo "[4/6] deploying extensions (if any)..."
+echo "[4/7] deploying extensions (if any)..."
 n=0
 for ext in "${SCRIPT_DIR}/extensions/"*.js "${SCRIPT_DIR}/extensions/"*.ts; do
   [ -f "$ext" ] || continue
@@ -127,7 +128,7 @@ fi
 
 
 # --- 5) agent overrides/custom agents (optional; built-in agents are default) ---
-echo "[5/6] deploying agent overrides/custom agents (if any)..."
+echo "[5/7] deploying agent overrides/custom agents (if any)..."
 for managed in reviewer.md plan.md; do
   managed_role=${managed%.md}
   managed_marker="# source: omp v16.3.8 bundled ${managed_role}; only thinkingLevel changed high -> xhigh."
@@ -151,7 +152,7 @@ else
 fi
 
 # --- 6) file slash commands (preserve unrelated user commands) ---
-echo "[6/6] deploying commands (if any)..."
+echo "[6/7] deploying commands (if any)..."
 n=0
 for cmd in "${SCRIPT_DIR}/commands/"*.md; do
   [ -f "$cmd" ] || continue
@@ -165,6 +166,10 @@ if [ "$n" -gt 0 ]; then
 else
   echo "  none"
 fi
+
+# --- 7) bundled skills (copy only; no upstream code execution) ---
+echo "[7/7] deploying bundled skills..."
+bun "${SCRIPT_DIR}/scripts/deploy-skills.ts" "${CONFIG_DIR}"
 
 echo ""
 echo "done. verifying modelRoles:"

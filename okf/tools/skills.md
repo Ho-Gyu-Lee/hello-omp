@@ -1,9 +1,9 @@
 ---
 type: Reference
 title: 스킬 사용
-description: 가용 스킬의 사용, 점진적 로딩, host별 호환성, 외부 스킬·플러그인의 도입과 실행 검토.
+description: 가용 스킬과 점진적 로딩, OMP 배포·발견 경로와 검증, 프로젝트 유지 지도의 요청 범위, host별 호환성과 외부 설치·실행 검토.
 tags: [tools, skills, compatibility, supply-chain]
-timestamp: 2026-09-28T00:00:00Z
+timestamp: 2026-09-30T00:00:00Z
 ---
 
 # 스킬 사용
@@ -19,6 +19,15 @@ omp는 스킬을 사용자/프로젝트 범위에서 발견·로드한다. 작�
 - [Agent Skills specification](https://agentskills.io/specification)은 `SKILL.md`의 메타데이터·본문과 필요할 때 읽는 `references/`·`scripts/`·`assets/`를 구분한다(조회: 2026-09-26). 핵심 절차만 본문에 두고 관련 자료만 추가로 읽는다. OKF concept을 통째로 복제하지 말고 정본을 참조한다.
 - `description`에는 적용 작업·입력 조건을 적는다. 계획·디버깅·리뷰·리서치·시각화는 작업 유형이지 설치된 스킬 이름 목록이 아니다.
 - 공통 `SKILL.md` 형식이 hooks·MCP 설정·모델 별칭·탐색 경로까지 호환되게 하지는 않는다. 대상 host의 설치본·가용 API를 확인한다. 사양의 `allowed-tools`는 실험적이고 구현별 지원이 다르며 OS 강제 샌드박스의 증거가 아니다.
+
+## OMP 배포·발견 계약
+- OMP 18.4.4의 native 사용자 스킬은 `<omp config path>/skills/<name>/SKILL.md`에서 발견된다. 설치본 `src/discovery/builtin.ts`의 `getAgentDir()` 기반 스캔과 `src/cli/config-cli.ts`의 경로 반환을 대조했다. 기본 프로필의 `PI_CODING_AGENT_DIR`도 적용되지만 이름 있는 프로필은 별도 경로를 사용한다. 같은 설치본의 `getConfigDirs("skills")`는 이 loader와 다른 경로 해석이므로 배포 근거로 혼용하지 않는다.
+- 사용자 `~/.agents/skills/`와 프로젝트 `.agents/skills/`도 탐색 대상이다. 반면 Claude/Codex 등의 사용자 경로는 `enabledProviders` opt-in 대상이므로 “표준 스킬을 설치했다”는 사실만으로 OMP 발견을 보장하지 않는다. 각 skills 루트에서 `<name>/SKILL.md` 한 단계 배치를 유지한다.
+- 요청 기반 자연어 사용에는 `description`에 명시적 사용 조건을 두고 본문에도 비요청 실행 금지를 적는다. `hide`/`disable-model-invocation`은 모델의 스킬 목록 노출을 숨길 뿐 직접 `/skill:<name>` 호출을 막지 않으며, 자연어 발견까지 원하면 숨기지 않는다. 메타데이터는 선택 지침이지 강제 실행 권한 경계가 아니다.
+- `omp skill list --json`으로 실제 `name`·`filePath`·충돌 경고를 확인한다. `skills.enabled`·`skills.enablePiUser`·포함/제외 목록·`disabledExtensions`가 발견을, `skills.enableSkillCommands`가 슬래시 명령 등록을 제한할 수 있다. 파일 복사 성공·loader 발견·실제 스킬 코드 실행은 서로 다른 검증 결과다. 근거: 설치본 `omp://skills.md`, `src/cli/skill-list.ts`(확인: 2026-09-30).
+- 외부 스킬 번들을 함께 배포할 때는 검토한 전체 배포물과 출처·revision·digest·라이선스를 보존한다. 참조 파일을 빼거나 패키지 설치를 묵시적으로 추가하지 않는다. 스킬의 출력 기본값은 [작업 산출물 경로](/workflow.md)에 맞추고, 업데이트 확인 비활성화를 모든 외부 통신 차단으로 설명하지 않는다. 원격 자산 URL 등 별도 통신 경로도 요청 범위에 포함되는지 확인한다.
+- 배포 전 소스와 대상의 실제 경로를 대조한다. 문자열 정규화만으로는 symlink/junction 별칭을 통한 원본 삭제를 막지 못하며, 삭제하는 하위 디렉터리의 실제 대상도 확인해야 한다. 교체 실패 시 기존본이 활성 경로로 복구됐는지 백업에 남았는지 구분하고, 복구까지 실패하면 최초 오류·복구 오류와 보존 경로를 함께 보고한다.
+- 승인된 프로젝트 유지 선언에 따른 지도 갱신은 [프로젝트 지도](/project-navigation.md)의 범위·단일 작성자·검증 후 게시 계약을 따른다. 스킬의 description·본문·설치 안내에 이 조건을 일관되게 반영하고, 일반 질의/읽기 전용 리뷰나 설치만으로 렌더링하지 않는다.
 
 ## 외부 스킬·플러그인 도입
 - 요청과의 관련성·기존 기본 도구/지식으로 충족되지 않는 필요를 먼저 확인한다. 인기·공식 조직명·마켓플레이스 등재·보안 스캔 통과는 안전성이나 실행 승인이 아니다.

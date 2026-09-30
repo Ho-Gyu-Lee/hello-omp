@@ -1,6 +1,7 @@
 # omp 다중 PC 자동 설정
 
 다른 로컬 PC(macOS/Windows)에 동일한 omp 환경을 재현하는 부트스트랩 스크립트.
+프로젝트를 어디서 수정해야 하는지 보려면 [프로젝트 지도·현재 상태](docs/project-map/index.html)를 연다. HTML은 근거 snapshot 기준이며 `/project-map status`로 실제 소스와의 차이를 확인한다.
 
 ## 구성
 
@@ -13,8 +14,12 @@ omp/
   rules/WATCHDOG.md        advisor 전용 지침 (한국어 노트, 코드·설정 키는 원문 유지)
   okf/                     OKF 지식 번들 (상세 룰·도메인 지식·도구 정책·축적 지식의 소스)
   scripts/validate-okf.ts  공유 OKF frontmatter/type 검증기
+  scripts/deploy-skills.ts 공유 스킬 배포기(동일본 생략·기존본 백업)
   extensions/              런타임 확장(예: dangerous-tool-guard)
   commands/                파일형 슬래시 명령(예: /cleanup)
+  skills/archify/           고정 Archify 배포본 + 요청 기반 OMP 사용 지침
+  AGENTS.md                이 레포에만 적용하는 프로젝트 지도 유지 선언
+  docs/project-map/        프로젝트 진입점·구조 지도·근거 manifest
   agents/                  (선택) 에이전트 override/custom — 기본은 빌트인, 현재 override 없음
 ```
 
@@ -63,6 +68,7 @@ $env:HELLO_OMP_ANTHROPIC_PLAN = 'pro'
 4. 확장 — `extensions/*.{js,ts}` → `<configdir>/extensions/` (OMP native extension auto-discovery 대상).
 5. 에이전트 override/custom(있을 때만) — `agents/*.md` → `<configdir>/agents/`. 없으면 빌트인을 쓰고, 이전에 이 레포가 관리하던 `reviewer`/`plan` override는 제거한다.
 6. 사용자 명령 — `commands/*.md` → `<configdir>/commands/`. 같은 이름의 관리 명령은 갱신하고 그 외 사용자 명령은 보존한다.
+7. 스킬 — `skills/<name>/` 전체 → `<configdir>/skills/<name>/`. Archify 3.0.1 배포본을 레포에 포함하므로 설치 중 다운로드·의존성 설치·Archify 실행은 없다. 동일본은 생략하고, 다른 기존본은 `<configdir>/.skill-backup-<고유값>/<name>/`에 보존한 뒤 교체한다. 다른 사용자 스킬은 건드리지 않으며 스킬 루트의 심볼릭 링크는 따라가지 않고 중단한다.
 
 `<configdir>`는 `omp config path`로 해석한다(OS 공통 `~/.omp/agent`, `PI_CODING_AGENT_DIR`로 재지정 가능).
 
@@ -73,6 +79,51 @@ $env:HELLO_OMP_ANTHROPIC_PLAN = 'pro'
 일반 작업만 요청하면 에이전트가 [학습 축적 기준](okf/learning/accumulation.md)에 따라 기록·공개 반영을 판단하고 검증·배포한 뒤 완료 보고에 `학습`·`공개 반영` 결과를 남긴다. 새 후보가 없는 단순 질의·사소한 편집은 제외한다. 개인 선호·내부 근거는 로컬에 유지하며 공개 가능한 교훈만 공통 concept에 반영한다. 이는 에이전트의 작업 완료 절차이지 백그라운드 수집기나 도구 수준의 강제 장치가 아니며, Git 스테이징·커밋·푸시의 승인이 아니다.
 
 코드 작업의 상세 기본값은 [언어 공통 코딩 스타일](okf/language-style.md), Godot·네이티브 게임 개발 지식은 [Godot와 C++ 게임 개발](okf/game/godot-cpp.md)이 정본이다. 두 문서는 Git 추적·setup 배포 대상이므로 로컬 `learned/` concept이 없는 새 clone에도 포함된다. 기존 프로젝트와 언어/외부 API 계약은 우선하며 게임 개발의 개인 맥락은 계속 로컬에 둔다.
+
+## Archify 사용
+
+`sh setup.sh` 또는 `.\setup.ps1`에 Archify 설치가 포함된다. 배포 대상은 활성 프로필의 `omp config path` 아래이며, 기본 프로필에서는 `~/.omp/agent/skills/archify/`다. 기존 안내의 `~/.agents/skills/`도 OMP의 탐색 경로지만, 이 레포는 다른 배포물과 함께 활성 설정 경로를 사용한다.
+
+설치 후 **새 OMP 세션**에서 다음처럼 요청한다.
+
+```text
+/skill:archify 이 저장소의 런타임 아키텍처를 인터랙티브 HTML로 만들어 주세요.
+```
+
+또는 자연어로 `Archify로 로그인 API의 호출 흐름을 시퀀스 다이어그램으로 만들어 주세요.`라고 요청한다. 일반 구현·리뷰·코드 설명에는 HTML을 무조건 생성하지 않는다. 단, 승인된 프로젝트 지도 유지 선언이 있는 프로젝트에서는 요청된 변경의 일부로 영향 받은 지도/상태를 갱신한다. 읽기 전용 리뷰·단순 질의는 렌더링하지 않는다. 이는 모델의 작업 지침이며 실행 권한을 강제하는 샌드박스나 백그라운드 watcher는 아니다.
+
+- **결과 위치:** 일회성 지도는 사용자 지정 → 프로젝트 산출물 경로 → `.omp-artifacts/<작업-ID>/` 순이다. 지속 지도는 선언된 정식 문서 경로를 사용하며 후보·검증 영수증·이전본만 작업 디렉터리에 둔다. 모든 gate 통과 뒤 JSON/HTML을 바이트 그대로 게시하고 hash 일치를 확인한다. `.delivery.json` 등 native 증거는 검증한 staging 위치에 유지한다.
+- **실행 전제:** Node.js ≥18, 브라우저 검증에는 Chrome/Chromium이 필요하다. setup은 이 실행 환경을 자동 설치하거나 다이어그램을 생성하지 않는다.
+- **외부 통신:** 스킬 지침은 매 실행에 `ARCHIFY_UPDATE_CHECK_DISABLED=1`을 요구한다. 업데이트 확인만 끄는 값이며, 외부 로고 URL 접근까지 차단하지 않는다. 기본은 내장 로고/로고 없음이고 외부 접근은 사용자 요청 범위를 확인한다.
+- **버전·라이선스:** 고정 commit·배포 ZIP SHA-256·로컬 수정 내역은 [UPSTREAM.md](skills/archify/UPSTREAM.md)에 기록한다. 코드의 MIT와 폰트·개별 로고의 별도 조건을 구분한다. 자동 업데이트는 하지 않는다.
+- **기존본·실패 복구:** 교체에 성공하면 다른 기존 스킬 전체를 위 백업 경로에 보존한다. 교체에 실패하고 활성 경로가 비어 있으면 기존본을 자동 복구하며, 이때 기존본은 백업 경로가 아니라 활성 경로에 있다. 복구를 생략하거나 실패하면 기존본을 백업에 유지하고 오류에 실제 복구 상태·경로를 표시한다. 실패한 준비본은 `<configdir>/.skill-stage-<고유값>/`에 보존한다. 남은 백업·준비본은 자동 삭제하지 않으며 수동 복구 시 오류에 표시된 위치와 현재 스킬을 함께 확인한다.
+
+설치 확인은 `omp skill list --json`의 `archify`와 `filePath`를 확인한다. OMP 18.4.4 설치본에서 이 경로와 `PI_CODING_AGENT_DIR` 적용을 확인했다. 스킬을 숨기거나 제외한 사용자 설정은 setup이 강제로 해제하지 않는다. 목록에 없다면 `skills.enabled`, `skills.enablePiUser`, `skills.ignoredSkills`, `skills.includeSkills`, `disabledExtensions`를 확인하고, 슬래시 명령에는 `skills.enableSkillCommands`도 필요하다. 같은 이름의 다른 스킬이 있으면 실제 선택 경로와 namespaced 이름을 확인한다. 발견 성공은 Archify의 렌더링·브라우저 검증 성공과 구분한다.
+
+## 프로젝트 목차·상태를 유지하며 작업하기
+
+다른 프로젝트에서 새 세션을 열고 아래 명령을 한 번 요청하면, 그 프로젝트의 실제 코드/설정에 맞춰 지도를 만들고 자동 로딩되는 프로젝트 지침에 유지 범위·진입점·근거 경로를 기록한다. 기존 문서가 있으면 재사용하며 사용자 파일을 덮어쓰지 않는다.
+
+```text
+/project-map
+/project-map status
+```
+
+빈 입력은 생성/갱신과 지속 관리 요청이고, `status`는 소스와 지도의 차이·구현/검증 상태·확정 계획·차단 조건·제안을 읽기 전용으로 확인한다. 일회성만 원하거나 유지를 중지하려면 그 범위를 명시한다. 설치만으로 모든 프로젝트에 지도를 만들지는 않는다. 세부 계약은 [프로젝트 지도와 작업 동기화](okf/project-navigation.md), 호출 지침은 [project-map 명령](commands/project-map.md)이다.
+
+| 시점 | 에이전트 동작 | 사용자 참여 |
+|---|---|---|
+| 변경 시작 | 기존 drift 확인, 바꿀 영역·책임·연결·검증을 짧게 공유 | 기본은 알림 후 진행 |
+| 구현·검증 | 실제 호출/등록/조건을 확인하고 구현·스모크 검증 | 실질적인 선택·필수 승인만 묶어 확인 |
+| 완료 | 영향 받은 지도/상태만 검증 후 게시, 유지한 경계와 남은 항목 보고 | 필요할 때 같은 진입점에서 확인 |
+
+지도는 전체 책임 → 상세 영역 → 실제 파일·핵심 함수로 연결한다. 모든 로직이나 public 함수만 나열하지 않으며 고정 노드/함수 상한도 없다. 구현/검증, 현재/계획, 실제 호출/설정·배포·지침 관계를 구분한다. 일반 로직 수정에 매번 Delta를 생성하거나 사용자의 사전 승인을 요구하지 않는다.
+
+같은 화면의 계획에는 `확정된 할 일 / 검토할 제안`, 변경할 지도 영역·심볼, 미착수/진행/차단/완료 상태, 의존성·선행 조건, 관찰 가능한 완료 기준을 둔다. 완료된 내용만 모으거나 계획된 기능을 현재 구현처럼 그리지 않는다. 기존 이슈/계획이 정본이면 링크하며, 계획에 올렸다는 이유로 요청 밖 작업을 자동 실행하지 않는다.
+
+개발 중에는 미커밋 코드도 실제 작업 트리와 대조하되 **커밋 근거 미검증**으로 표시한다. Archify의 native source 검증은 고정 commit의 바이트만 검증하므로 이를 작업 트리 검증으로 포장하거나 문서화를 위해 자동 커밋하지 않는다. 정적 HTML의 근거 snapshot, manifest의 신선도, 렌더·브라우저 검증과 실제 프로그램 검증은 다른 결과다.
+
+이 레포는 루트 [AGENTS.md](AGENTS.md)의 선언에 따라 유지하며 [진입점](docs/project-map/index.html)에서 전체 구조, 스킬 배포 상세, 책임/심볼 목차, 확인된 상태와 남은 계획을 볼 수 있다. 개인 learned 지식·사용자 인증·다른 프로젝트 내용은 포함하지 않는다. 다른 프로젝트의 상태를 이 레포의 OKF에 복제하지 않는다.
 
 ## 작업 파일 위치와 실행 언어
 
@@ -112,7 +163,7 @@ OMP 18.3.2와 공식 변경을 대조해 도구 가용성·browser facade·백�
 
 ## 안전한 테스트 (실제 설정 미변경)
 `OMP_PROFILE=default`와 `PI_CODING_AGENT_DIR`을 같은 작업 디렉터리 아래의 격리된 배포 경로로 지정한다. 이름 있는 OMP 프로필은 `PI_CODING_AGENT_DIR`을 무시하므로 동일 환경의 `omp config path`가 의도한 격리 경로인지 먼저 확인하고, 다르면 중단한다. 아래 예시는 이 레포 루트에서 실행하며, `<작업-ID>`는 목적과 충돌 방지 식별자를 조합한 실제 값으로 바꾸고 같은 검증 작업에서 재사용한다. 검증 배포본은 자동 삭제하지 않는다.
-`PI_CODING_AGENT_DIR`은 이 레포 루트와 달라야 한다. setup은 소스 OKF 삭제를 막기 위해 레포 루트를 config dir로 쓰면 중단한다.
+`PI_CODING_AGENT_DIR`은 이 레포 루트와 달라야 한다. setup은 설정·복사·삭제 전에 공통 Bun 사전 검사로 소스/배포 OKF·스킬 경로의 실제 겹침을 차단한다. 심볼릭 링크·junction으로 같은 경로를 가리키는 경우도 포함하며, 레포 아래의 정상적인 `.omp-artifacts/` 검증 경로는 허용한다. 전체 setup의 트랜잭션을 보장하지는 않으므로 다른 단계에서 실패하면 이미 완료된 설정·배포는 남는다.
 격리용 환경 변수는 아래처럼 자식 셸 또는 `try/finally` 범위로 제한한다. 실제 배포 전에는 원래 환경에서 `omp config path`가 의도한 사용자 설정 경로인지 다시 확인한다.
 OMP 18.3.2에서도 task-agent 사용자 탐색은 `PI_CODING_AGENT_DIR`이 바꾸는 설정 경로와 구별된다. 따라서 격리 경로에 복사한 custom agent의 발견·실행까지 검증됐다고 보지 않는다. custom agent는 프로젝트 `.omp/agents/` 또는 활성 기본/이름 있는 프로필의 실제 탐색 경로에서 검증하고, 테스트를 위해 전역 agents 경로에 복사하지 않는다. 기본 빌트인에는 영향이 없다. 근거: [v18.3.2 `src/task/discovery.ts`](https://github.com/can1357/oh-my-pi/blob/v18.3.2/packages/coding-agent/src/task/discovery.ts)의 `getConfigDirs("agents", { project: false })`와 설치본 `omp://config-usage.md`의 Canonical roots(재확인: 2026-09-26).
 ```sh

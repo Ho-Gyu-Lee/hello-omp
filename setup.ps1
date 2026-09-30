@@ -1,6 +1,6 @@
 #requires -version 5
 # omp portable setup - Windows (PowerShell 5.1+)
-# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents  6) commands
+# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents  6) commands  7) skills
 # Idempotent: safe to re-run. Honors PI_CODING_AGENT_DIR via `omp config path`.
 $ErrorActionPreference = 'Stop'
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -32,6 +32,8 @@ if ([string]::Equals($scriptFull, $configFull, [System.StringComparison]::Ordina
   exit 1
 }
 New-Item -ItemType Directory -Force $ConfigDir | Out-Null
+& bun (Join-Path $ScriptDir 'scripts\deploy-skills.ts') --check $ConfigDir
+if ($LASTEXITCODE -ne 0) { Write-Error "setup path preflight failed"; exit $LASTEXITCODE }
 Write-Host "omp config dir: $ConfigDir"
 # absolute OKF path (slash-normalized) injected into AGENTS.md/agents so agents read it from any cwd
 $okfAbs = (Join-Path $ConfigDir 'okf') -replace '\\', '/'
@@ -65,7 +67,7 @@ if ($anthropicPlan -notin @('default', 'max', 'pro')) {
   exit 1
 }
 
-Write-Host "[1/6] applying model settings ($anthropicPlan)..."
+Write-Host "[1/7] applying model settings ($anthropicPlan)..."
 Set-OmpSettings (Join-Path $ScriptDir 'config\settings.conf')
 if ($anthropicPlan -eq 'pro') {
   Write-Host "  applying Opus-only profile overrides..."
@@ -73,7 +75,7 @@ if ($anthropicPlan -eq 'pro') {
 }
 
 # --- 2) global/advisor rules ---
-Write-Host "[2/6] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
+Write-Host "[2/7] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
 $agentsMd = Join-Path $ConfigDir 'AGENTS.md'
 if ((Test-Path $agentsMd) -and -not (Test-Path "$agentsMd.bak")) { Copy-Item $agentsMd "$agentsMd.bak" -Force }
 Copy-Item (Join-Path $ScriptDir 'rules\AGENTS.md') $agentsMd -Force
@@ -83,7 +85,7 @@ if ((Test-Path $watchdogMd) -and -not (Test-Path "$watchdogMd.bak")) { Copy-Item
 Copy-Item (Join-Path $ScriptDir 'rules\WATCHDOG.md') $watchdogMd -Force
 
 # --- 3) OKF bundle (validate source, then clean redeploy) ---
-Write-Host "[3/6] validating and deploying OKF bundle..."
+Write-Host "[3/7] validating and deploying OKF bundle..."
 $okfSrc = Join-Path $ScriptDir 'okf'
 $okfValidator = Join-Path $ScriptDir 'scripts\validate-okf.ts'
 & bun $okfValidator $okfSrc
@@ -93,7 +95,7 @@ if (Test-Path $okfDst) { Remove-Item $okfDst -Recurse -Force }
 Copy-Item $okfSrc $okfDst -Recurse -Force
 
 # --- 4) extensions (auto-discovered from user agent dir) ---
-Write-Host "[4/6] deploying extensions (if any)..."
+Write-Host "[4/7] deploying extensions (if any)..."
 $extensionsDir = Join-Path $ScriptDir 'extensions'
 $srcExtensions = @()
 if (Test-Path $extensionsDir) {
@@ -112,7 +114,7 @@ if ($srcExtensions.Count -gt 0) {
 
 
 # --- 5) agent overrides/custom agents (optional; built-in agents are default) ---
-Write-Host "[5/6] deploying agent overrides/custom agents (if any)..."
+Write-Host "[5/7] deploying agent overrides/custom agents (if any)..."
 $agentsDst = Join-Path $ConfigDir 'agents'
 $managedAgents = @('reviewer.md', 'plan.md')
 foreach ($managed in $managedAgents) {
@@ -141,7 +143,7 @@ if ($srcAgents.Count -gt 0) {
 }
 
 # --- 6) file slash commands (preserve unrelated user commands) ---
-Write-Host "[6/6] deploying commands (if any)..."
+Write-Host "[6/7] deploying commands (if any)..."
 $commandsDir = Join-Path $ScriptDir 'commands'
 $srcCommands = @()
 if (Test-Path -LiteralPath $commandsDir) {
@@ -157,6 +159,11 @@ if ($srcCommands.Count -gt 0) {
 } else {
   Write-Host "  none"
 }
+
+# --- 7) bundled skills (copy only; no upstream code execution) ---
+Write-Host "[7/7] deploying bundled skills..."
+& bun (Join-Path $ScriptDir 'scripts\deploy-skills.ts') $ConfigDir
+if ($LASTEXITCODE -ne 0) { Write-Error "skill deployment failed"; exit $LASTEXITCODE }
 
 Write-Host ""
 Write-Host "done. verifying modelRoles:"
