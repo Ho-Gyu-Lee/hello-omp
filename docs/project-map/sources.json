@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": "hello-omp",
   "basis": "working-tree-manual-reconciliation",
-  "snapshotId": "94ffa2f26dab",
+  "snapshotId": "12006f6fb616",
   "scope": {
     "include": [
       "AGENTS.md",
@@ -198,7 +198,7 @@
     {
       "path": "okf/index.md",
       "mode": "sha256-text-lf",
-      "sha256": "373c447db7868341b24c80781ebfc3e64bed071968e4cc515e7d00db433dfc94",
+      "sha256": "6e627446914a91cbd0c8a63d881a74a91bae1e304a31d05bfeba6285319be860",
       "views": [
         "overview"
       ]
@@ -342,7 +342,7 @@
     {
       "path": "okf/workflow.md",
       "mode": "sha256-text-lf",
-      "sha256": "67a9e2098c5ab08023f5e154d8bc1dc9becc3113438256a038ac1241e50c8319",
+      "sha256": "072d3f894fe2359f82dad7c8ad78b1e078623804cc87edb30a131a8068f578f9",
       "views": [
         "overview"
       ]
@@ -485,9 +485,9 @@
   "verification": {
     "semantic": "manual source and registration/call-site reading",
     "nativeCommitEvidence": false,
-    "normalizedInputFreshness": "all pending source changes reviewed; three pre-existing unchanged inputs remain explicitly unreconciled",
-    "runtimeLimit": "Windows setup and persisted model role exercised; install failure/recovery, forced quota fallback, vision comparison and game execution not exercised",
-    "browserSurface": "Chrome: sidebar/selected article/search/history/focus; 390–1920px boundary checks; no disclosure UI"
+    "normalizedInputFreshness": "partial: workflow and index reconciled; inherited coding-style/language-style/security-game drift and three pre-existing local edits preserved; overlapping coding-style/log input hashes not refreshed",
+    "runtimeLimit": "this update: macOS default setup, 21 managed settings, 37 local OKF files and native Archify discovery checked; model inference, Windows, Kotlin and external lint plugins not exercised",
+    "browserSurface": "this update: Chrome policy/release text, single selected article, sidebar and search navigation observed; no viewport overflow; screenshots retained in videoGuidanceUpdate.evidenceRoot"
   },
   "modelProfileUpdate": {
     "observedAt": "2026-10-05",
@@ -503,6 +503,23 @@
     "evidenceRoot": ".omp-artifacts/model-roles-20261005-7a91",
     "deploymentEvidenceRoot": ".omp-artifacts/model-roles-20261005-7a91/publish",
     "diagramStatus": "topology unchanged; existing JSON/HTML raw hashes match; no new render or native commit verification"
+  },
+  "videoGuidanceUpdate": {
+    "observedAt": "2026-10-05",
+    "source": "https://youtu.be/3JCgiVYlLFo",
+    "sourceReview": "complete transcript and description; primary instruction/skill/rule, Oxlint, Kotlin and TypeScript documents; no video playback or external code execution",
+    "reconciledScope": "coding-style simplicity and standard-function/type/omission semantics; workflow verification section; index summaries; video-only changelog entry",
+    "preservedLocalChanges": ["okf/coding-style.md", "okf/log.md", "okf/security/review-checklist.md"],
+    "publishedGuidanceBasis": "selected index snapshot excludes pre-existing local edits; full-file hashes identify bytes, not a new semantic review of unchanged sections",
+    "publishedGuidanceSha256TextLf": {
+      "okf/coding-style.md": "0b3db97721647ad58a61e71415110c977c1cc092bd6981ba6562460719bae18f",
+      "okf/workflow.md": "072d3f894fe2359f82dad7c8ad78b1e078623804cc87edb30a131a8068f578f9",
+      "okf/index.md": "6e627446914a91cbd0c8a63d881a74a91bae1e304a31d05bfeba6285319be860",
+      "okf/log.md": "8ea9d113fcbafa30ff4dc0b65833dc519273802fc69f5dcaa7d6c7cd70834899"
+    },
+    "verification": "22 public and 29 local concepts pass conformance; 150 related internal links resolve; active setup exits 0; 21 settings and 37 local OKF files match",
+    "evidenceRoot": ".omp-artifacts/video-learning-20261005-a7d3e9",
+    "diagramStatus": "no topology change; existing diagram JSON/HTML retained; no render or native commit verification"
   },
   "planning": {
     "canonical": "docs/project-map/index.html#roadmap",

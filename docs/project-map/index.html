@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="project-map-snapshot" content="변경 검토 94ffa2f26dab · 기존 미대조 3개">
+  <meta name="project-map-snapshot" content="부분 대조 12006f6fb616 · 기존 변경 별도 보존">
   <title>Overview · hello-omp</title>
   <style>
     :root { color-scheme: light; --ink: #26364b; --muted: #62738b; --line: #e3e8ef; --accent: #5145cd; --soft: #eeedff; --sidebar: #f8fafc; --nav: clamp(148px, 18vw, 242px); }
@@ -173,6 +173,7 @@
       <tr><td>검증 증거·확인 한계</td><td><a href="#release">Release</a></td></tr>
     </tbody></table></div>
     <p><strong>계획은 현재 구현과 분리합니다.</strong> 지도 갱신은 한 명이 통합하며, 읽기 전용 요청은 파일을 바꾸지 않습니다.</p>
+    <p><strong>AI 생성 코드 검토:</strong> 줄 수보다 검토할 판단·개념을 줄이고, 표준 기능의 복사·중복 키·동등성 계약을 확인합니다. 타입 단언과 정적 검사 통과는 런타임 검증을 대신하지 않습니다. <a href="../../okf/coding-style.md">코딩 기준</a> · <a href="../../okf/workflow.md">검증 기준</a></p>
     <p class="map-context">필수 승인은 유지합니다. 지도 유지는 설치·외부 공개·커밋 권한이 아닙니다. <a href="../../okf/project-navigation.md">정책 정본</a> · <a href="../../AGENTS.md">적용 범위</a></p>
   </article>
 
@@ -210,7 +211,7 @@
     <h2>모델 프로필 변경</h2>
     <p><code>smol</code>·<code>commit</code>은 GPT-6.1 Sol medium, advisor의 OpenAI fallback은 GPT-6.1 Sol high로 소스를 갱신했습니다. 기본·Opus 전용 프로필과 허용 목록을 함께 맞췄습니다.</p>
     <p>Astra·Luna·Opus 5.5·Fable 5.1, 추론 강도, quota·승인·advisor 정책은 유지합니다. <a href="../../okf/agents/guide.md#2026-10-05-모델-선정-근거">공식·사용자 평가와 전체 역할표</a></p>
-    <p class="note"><strong>로컬 적용을 검증했습니다.</strong> 사용자 승인 후 프로세스 한정 <code>RemoteSigned</code>로 <code>setup.ps1</code>을 실행했습니다. 영구 실행 정책은 변경하지 않았습니다. 관리 설정·배포 파일을 대조하고 오버레이 없는 <code>@smol</code> 호출이 GPT-6.1 Sol로 실행되는지 확인했습니다.</p>
+    <p class="note"><strong>macOS 활성 기본 프로필에 적용했습니다.</strong> <code>sh setup.sh</code> 실행 후 관리 설정 21개와 로컬 OKF 37개 파일의 일치를 확인했습니다. 기존 미커밋 지침은 로컬 배포에 포함하지만 영상 학습 커밋에서는 제외합니다. 모델 실호출과 Windows 실행은 이번 검증에 포함하지 않습니다.</p>
     <p><strong>순서:</strong> 사전 검사 → 설정 → 규칙 → OKF → 확장 → agents → commands → skills</p>
     <p class="map-context">설치는 Archify 실행이 아닙니다. 전체 setup은 트랜잭션이 아닙니다. <a href="#release">실행 근거</a></p>
   </article>
@@ -257,19 +258,20 @@
 
   <article class="doc-page" id="release" data-page data-title="Release" data-group="Project records" data-terms="검증 배포 릴리스 브라우저 fingerprint source hash manifest native provenance" data-nodes="overview:publication" hidden>
     <p class="breadcrumb">Project records / Release</p><h1>Release</h1><p class="lead">무엇을 실행해서 확인했는지 구분합니다.</p>
-    <dl class="meta"><div><dt>Status</dt><dd id="release-status">변경 검토 · Windows 적용·모델 호출 통과</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
+    <dl class="meta"><div><dt>Status</dt><dd id="release-status">영상 지침 반영 · macOS 배포 대조 통과</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
     <div class="inline-links"><a href="#architecture?node=publication">전체 위치</a></div>
     <div class="table-scroll"><table><thead><tr><th>대상</th><th>검증 상태</th></tr></thead><tbody>
-      <tr><td>OMP 18.6.1 모델 프로필</td><td>두 프로필의 11개 역할·각 fallback 해석 통과 · 저장된 @smol 실제 read 왕복 통과</td></tr>
-      <tr><td>전역 설정·OKF 배포</td><td>관리 설정 21개 · OKF 33개 파일 · 규칙 2개 · 명령 2개 · 확장 1개 소스 일치</td></tr>
-      <tr><td>macOS 설치·명령/스킬 발견</td><td id="state-install">격리/활성 setup · native 발견 통과</td></tr>
-      <tr><td>전체·스킬 배포 관계도</td><td id="state-map">4개 gate · 게시 hash 일치 · 하단 확인</td></tr>
-      <tr><td>좌측 메뉴·검색·함수 연결</td><td id="state-ui">탐색·검색·이력 통과 · 가로 잘림 없음</td></tr>
-      <tr><td>Windows / PowerShell</td><td>활성 setup·배포 대조 통과 · <a href="#roadmap">복구 등 남은 검증</a></td></tr>
+      <tr><td>영상 학습 지침</td><td>공식 원문 대조 · 공개 인덱스 22개 / 로컬 29개 concept 형식 검사 통과 · 관련 내부 링크 150개 확인</td></tr>
+      <tr><td>macOS 전역 설정·OKF 배포</td><td>관리 설정 21개 · 로컬 OKF 37개 파일 소스 일치</td></tr>
+      <tr><td>macOS 설치·스킬 발견</td><td id="state-install">활성 setup 재실행 통과 · 배포된 Archify native 발견 확인</td></tr>
+      <tr><td>전체·스킬 배포 관계도</td><td id="state-map">기존 4개 gate 기록 유지 · 이번 구조 변경·재렌더링 없음</td></tr>
+      <tr><td>좌측 메뉴·검색·본문</td><td id="state-ui">Chrome에서 Policy/Release 표시·메뉴·검색 이동 통과 · 화면 가로 잘림 없음</td></tr>
+      <tr><td>Windows / 모델 실호출</td><td>기존 snapshot의 실행 기록 · 이번 작업에서는 미실행 · <a href="#roadmap">남은 검증</a></td></tr>
     </tbody></table></div>
     <p><a href="sources.json">근거 manifest</a> · 소스 수동 대조 · 신선도 fingerprint · 게시 raw hash</p>
-    <p class="map-context">적용 근거: <a href="../../.omp-artifacts/model-roles-20261005-7a91/publish/local-deployment.json">배포 대조</a> · <a href="../../.omp-artifacts/model-roles-20261005-7a91/publish/live-smol-probe.json">저장된 역할 실호출</a> · <a href="../../.omp-artifacts/model-roles-20261005-7a91/native-profile-checks.json">두 프로필 해석</a>. macOS 설치·관계도 gate 기록은 기존 snapshot의 증거입니다. 강제 429 fallback·이미지 입력 비교·게임 실행은 미실행이며 문서 검토와 구분합니다.</p>
+    <p class="map-context">이번 적용 근거: <a href="../../.omp-artifacts/video-learning-20261005-a7d3e9/verification.json">macOS 배포·공개 지침 검사</a>. 영상은 전체 자막·설명과 원문을 대조했으며 영상 화면 재생·Kotlin 실행·외부 린터 설치는 하지 않았습니다. 다른 PC의 기존 <a href="../../.omp-artifacts/model-roles-20261005-7a91/publish/local-deployment.json">Windows 배포</a>·<a href="../../.omp-artifacts/model-roles-20261005-7a91/publish/live-smol-probe.json">모델 실호출</a> 기록은 이번 macOS 검증과 구분합니다.</p>
     <p class="map-context">커밋 근거는 미검증입니다. 정본은 통과한 staging 결과의 복사본이며 영수증은 원래 경로에 보존합니다. 다른 PC의 실행 성공을 보장하지 않습니다.</p>
+    <p class="map-context">신선도는 부분 대조입니다. 기존 <code>coding-style · language-style · security/game</code>의 미대조 fingerprint와 로컬 미커밋 <code>coding-style · log · security/review-checklist</code>를 보존했습니다. 겹치는 파일 전체 hash를 덮지 않고 이번 공개 변경의 별도 인덱스 hash를 manifest에 기록합니다. 관계도 구조는 바뀌지 않았습니다.</p>
     <p class="map-context"><a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/layout-verification.json">화면 경계 검사</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/discovery-active.json">명령·선언 발견</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/overview/v3/evidence/map.finalize-summary.json">전체 지도 검증</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/skill-deployment/v2/evidence/map.finalize-summary.json">상세 지도 검증</a></p>
   </article>
 
@@ -283,6 +285,7 @@
       <tr><td>작업 트리 / 커밋 근거 분리</td><td>개발 중 내용 표시 · 자동 커밋 안 함</td></tr>
       <tr><td>검증 후 게시</td><td>실패 후보로 정본을 교체하지 않음</td></tr>
       <tr><td>구 Sol 역할만 6.1로 갱신</td><td>공식 후속·독립 코딩 개선 근거 · 난제·시각 역할의 일괄 교체 근거는 부족</td></tr>
+      <tr><td>영상의 원칙만 기존 지침에 통합</td><td>간결성·최소 구현·증거 우선은 유지 · 의미·타입 계약과 검사 경계 보강 · 외부 규칙집 설치·언어 교체 없음</td></tr>
     </tbody></table></div>
     <p class="map-context"><a href="../../okf/log.md">공통 지침 변경 이력</a></p>
   </article>

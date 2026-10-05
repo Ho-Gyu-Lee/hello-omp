@@ -1,15 +1,16 @@
 ---
 type: Rule
 title: 코딩 스타일
-description: 간결성(YAGNI)·결정 사다리·언어 공통 스타일 정본·프로젝트 우선순위·언어 의미/포매터 예외·공개 API·아키텍처·서버 상태와 외부 응답 계약.
+description: 간결성(YAGNI)·검토 비용·결정 사다리와 표준 기능의 의미 계약·언어 공통 스타일 정본·프로젝트 우선순위·언어 의미/포매터 예외·공개 API·아키텍처·서버 상태와 외부 응답 계약.
 tags: [rule, coding-style, cross-language, naming, architecture, api-design, server, response-contract]
-timestamp: 2026-09-29T00:00:00Z
+timestamp: 2026-10-05T00:00:00Z
 ---
 
 # 코딩 스타일
 
 ## 간결성 (Over-Engineering 금지)
 - 요청하지 않은 파일/추상화/기능 추가 금지. 가장 직접적인 해결, 요청 범위만 수정.
+- 간결성은 줄 수 목표가 아니라 사람이 이해·검증해야 할 판단과 유지할 개념을 줄이는 기준이다. 추가한 파일·분기·추상화가 어느 요구나 불변조건에 필요한지 설명할 수 있어야 한다. 짧아졌어도 숨은 동작·공유 상태·계약 누락이 늘면 단순화가 아니다.
 - YAGNI는 기능 범위에만 적용된다. 버그 수정 깊이에는 적용하지 않는다 — 증상 하나가 아니라 결함 클래스 전체를 고친다. 상세는 [버그 수정 원칙](/bugfix.md).
 - 새 작업용 스크립트는 TypeScript+Bun으로 통일하되 제품 코드·영구 테스트는 프로젝트 언어를 유지한다. 실행 언어·예외 기준은 [omp 기본 도구](/tools/builtin.md), 작업 파일 위치는 [워크플로](/workflow.md)를 따른다.
 
@@ -22,6 +23,9 @@ timestamp: 2026-09-29T00:00:00Z
 6. 간단한 식·기존 호출로 끝나는가? 불필요한 분기·추상화를 추가하지 않는다. 여러 문장이나 블록을 한 줄로 압축하라는 뜻은 아니다.
 7. 그제서야 동작하는 최소한만 쓴다.
 - 신뢰 경계 검증, 데이터 손실 처리, 보안, 접근성은 절대 줄이지 않는다.
+- 표준 라이브러리·컴파일러 생성 기능도 요구와 의미가 맞을 때 재사용한다. 중복 키 처리, 순서, 얕은/깊은 복사, 동등성 대상, 가변 객체 공유와 할당 비용을 확인한다. 예를 들어 Kotlin의 [`associateBy`](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/associate-by.html)는 같은 키의 마지막 원소를 남기며, [`data class`](https://kotlinlang.org/docs/data-classes.html)의 기본 생성 동등성은 주 생성자 속성 기준이고 `copy()`는 참조를 공유하는 얕은 복사다. 자동 생성은 구현량을 줄이지 요구의 의미 판단을 없애지 않는다. 이 원칙을 이유로 기존 프로젝트의 언어·런타임을 교체하지 않는다.
+- JS/TS 표현을 단순화해도 필드 생략과 `undefined` 대입은 바꾸지 않는다. [`exactOptionalPropertyTypes` 문서](https://www.typescriptlang.org/tsconfig/exactOptionalPropertyTypes.html)처럼 `key in object` 등의 관찰 결과가 다르므로 조건부 spread를 정리할 때도 원래 존재 조건을 보존한다. 이를 특정 표현식의 전면 금지로 일반화하지 않는다.
+- 이미 아는 타입을 `any`·`unknown`·모호한 `object`로 넓힌 뒤 단언으로 되돌려 검사만 통과시키지 않는다. [TypeScript 타입 단언](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions)은 런타임 검증을 추가하지 않는다. 외부 입력 경계의 `unknown`과 필요한 `typeof`·type guard는 유지하고, 검증한 도메인 값을 내부 계약으로 전달한다. 필수 단언은 실제 불변조건을 근거로 하며 주석만으로 안전성을 증명하지 않는다.
 
 ## 네이밍 우선순위
 1. 언어의 문법·공개성·자동 탐색 규칙과 외부 ABI·엔진 override·표준 라이브러리·OS API·generated code가 요구하는 이름을 보존한다. 이름만 맞추려고 공개 범위·직렬화 키·프로토콜 동작을 바꾸지 않는다.
