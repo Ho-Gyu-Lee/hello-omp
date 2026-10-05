@@ -27,7 +27,9 @@ omp/
 
 전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있어야 한다. 선택된 역할과 교차-provider fallback을 사용하려면 해당 provider의 유효 인증이 필요하며, 기본 프로필 전체를 의도대로 사용하려면 OpenAI Codex와 Anthropic을 모두 인증한다. 모델 인증은 OAuth/환경 변수로 별도 설정하며 이 스크립트 범위 밖이다.
 
-기본 규칙은 상급 모델을 우선 사용한다. OpenAI 주 역할 `default`·`task`는 GPT-6 Astra xhigh를 사용한다. 경량 `smol`·`commit`은 GPT-6 Sol medium, `tiny`·`memory`는 GPT-6 Luna low로 명시한다. Anthropic `designer`·`slow`·`plan`은 Claude Opus 5.5 xhigh, `advisor`는 Opus 5.5 high, `vision`은 Claude Fable 5.1 high다. 교차-provider fallback은 Codex 역할 → Opus 5.5, `designer`·`slow`·`plan`·`vision` → Astra, `advisor` → GPT-6 Sol high다. `memory`에도 Opus 5.5 low 체인을 명시해 `default` 체인의 추론 강도를 상속하지 않게 한다. `enabledModels`는 Astra·GPT-6 Sol·GPT-6 Luna·Opus 5.5·Fable 5.1의 전체 목록이며 모든 주 모델과 fallback 후보가 포함되어야 한다. `extendedContext=true`를 유지한다. 모델 선택에 폐기된 컨텍스트 제한을 근거로 적용하지 않으며, 실제 컨텍스트와 가용성은 사용 중인 provider·모델 카탈로그·설정으로 확인한다.
+관리 소스의 기본 규칙은 상급 모델을 우선 사용한다. OpenAI 주 역할 `default`·`task`는 GPT-6 Astra xhigh를 사용한다. 경량 `smol`·`commit`은 GPT-6.1 Sol medium, `tiny`·`memory`는 GPT-6 Luna low로 명시한다. Anthropic `designer`·`slow`·`plan`은 Claude Opus 5.5 xhigh, `advisor`는 Opus 5.5 high, `vision`은 Claude Fable 5.1 high다. 교차-provider fallback은 Codex 역할 → Opus 5.5, `designer`·`slow`·`plan`·`vision` → Astra, `advisor` → GPT-6.1 Sol high다. `memory`에도 Opus 5.5 low 체인을 명시해 `default` 체인의 추론 강도를 상속하지 않게 한다. `enabledModels`는 Astra·GPT-6.1 Sol·GPT-6 Luna·Opus 5.5·Fable 5.1의 전체 목록이며 모든 주 모델과 fallback 후보가 포함되어야 한다. `extendedContext=true`를 유지한다. 모델 선택에 폐기된 컨텍스트 제한을 근거로 적용하지 않으며, 실제 컨텍스트와 가용성은 사용 중인 provider·모델 카탈로그·설정으로 확인한다.
+
+GPT-6.1 Sol 교체의 공식·독립 실사용 근거와 유지한 모델의 판단은 [에이전트 가이드](okf/agents/guide.md#2026-10-05-모델-선정-근거)에 있다. 소스 파일 변경은 실행 중인 전역 설정의 적용을 뜻하지 않는다. 설치·적용 상태와 검증 한계는 [프로젝트 지도](docs/project-map/index.html#installation)에서 구분한다.
 
 `modelRoles`는 에이전트 등록이나 자동 실행 설정이 아니다. 공유 프로필의 `designer`는 Claude Opus 5.5 xhigh에 배정한 사용자 정의 모델 별칭이며, 설치본에 같은 이름의 빌트인 에이전트는 없다. UI/UX 구현을 일반 `task`에 위임하면 Astra가 사용되고, `@designer`는 명시적 모델 선택이나 이를 참조하는 커스텀 에이전트에서 사용한다. 가용 에이전트와 역할의 구분은 [에이전트 가이드](okf/agents/guide.md)를 따른다.
 
@@ -40,7 +42,7 @@ omp/
 | 기본(구독 공통) | 환경 변수 없음 또는 `HELLO_OMP_ANTHROPIC_PLAN=max` | `designer`·`slow`·`plan`·`advisor`와 Codex fallback은 Opus 5.5, `vision`은 Fable 5.1 |
 | Opus 전용(선택형) | `HELLO_OMP_ANTHROPIC_PLAN=pro` | Anthropic 주 모델은 `vision`을 포함해 Opus 5.5, Fable은 허용 목록에서 제외 |
 
-`pro`는 이 저장소의 선택형 프로필 이름이며 Pro 구독의 모델 권한을 판정하는 값이 아니다. [Anthropic 공식 안내](https://www.anthropic.com/claude/fable)는 Fable 5.1을 Pro에도 제공한다고 명시한다(확인: 2026-09-18). Pro라는 이유만으로 Opus 전용을 선택하지 않으며, 기본 프로필을 사용할 수 있다. Opus 전용은 Fable을 제외하려는 경우에만 명시적으로 선택한다. 실제 계정·연동 경로의 가용성은 별도로 확인한다.
+`pro`는 이 저장소의 선택형 프로필 이름이며 Pro 구독의 모델 권한을 판정하는 값이 아니다. [Anthropic 플랜 안내](https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan)에 따르면 Fable 5.1은 유료 플랜에서 제공되지만 Pro·Team standard는 첫 사용부터 별도 usage credits가 필요하다. Max·premium 좌석의 Fable 한도는 기존 주간 한도 안의 일부이며 추가 quota가 아니고, 다른 Claude 모델보다 한도를 더 빨리 소모한다(확인: 2026-10-05). Fable 별도 과금을 허용하지 않을 Pro/standard 계정은 Opus 전용을 선택한다. 기본 프로필을 사용할 때도 실제 계정·연동 경로의 권한과 과금을 확인한다.
 
 선택형 프로필은 `modelRoles`와 `enabledModels` 두 키만 덮어쓴다. `retry.fallbackChains`는 기본 프로필에서 상속하므로 OpenAI로의 교차-provider 전환은 유지된다. 배열은 병합이 아니라 전체 교체이므로 프로필을 바꿀 때 상속된 fallback 후보까지 해당 허용 목록에 포함되는지 확인한다.
 

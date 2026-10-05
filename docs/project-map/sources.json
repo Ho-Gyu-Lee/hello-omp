@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": "hello-omp",
   "basis": "working-tree-manual-reconciliation",
-  "snapshotId": "28c6dcaf22a9",
+  "snapshotId": "94ffa2f26dab",
   "scope": {
     "include": [
       "AGENTS.md",
@@ -70,7 +70,7 @@
     {
       "path": "README.md",
       "mode": "sha256-text-lf",
-      "sha256": "e16d6dd63e0f348d4d92a46938f86166ad49a627cd378c79ae319c0efb3b15b5",
+      "sha256": "6a06626d190c1d1b77d51a36630b35fc0837a91f2f7ec45c2ff39abe3169ce82",
       "views": [
         "overview"
       ]
@@ -94,7 +94,7 @@
     {
       "path": "config/settings.anthropic-pro.conf",
       "mode": "sha256-text-lf",
-      "sha256": "6e42d53a65142647569d7aa44236342d06afe826703c2e6e1c77ab5bbe8de95e",
+      "sha256": "d41ef265982416b9bb577b86193a32b44db766b0861e392b338c7a5e14533bf7",
       "views": [
         "overview"
       ]
@@ -102,7 +102,7 @@
     {
       "path": "config/settings.conf",
       "mode": "sha256-text-lf",
-      "sha256": "bd2dc5f2deaa9733ee95d0ab5151c0c6d678a8ffb2a2839a58a97061a3f731fa",
+      "sha256": "a28e924d2acd34f5e043abc2cfeca060b82a89c6b49e90b4bc29bb4d3ed26ad0",
       "views": [
         "overview"
       ]
@@ -126,7 +126,7 @@
     {
       "path": "okf/agents/guide.md",
       "mode": "sha256-text-lf",
-      "sha256": "e9b4026119050cc541bdf031bd2b4bc418a5f75d33edb8cf351dfd7bf7febae4",
+      "sha256": "5bc62f0f0924d376da93a382ee7830f56135d5c2f8427f2b53b2221ab0f7e313",
       "views": [
         "overview"
       ]
@@ -166,7 +166,7 @@
     {
       "path": "okf/game/godot-cpp.md",
       "mode": "sha256-text-lf",
-      "sha256": "e7129f9db205e40ceee9979d165c7e489f51979a4ca7646833abd97c480bc7d0",
+      "sha256": "a4874bfa1f84f72c32e4ae9ca59b7b75b48a4a4e84acddbddc2839e267a708b1",
       "views": [
         "overview"
       ]
@@ -174,7 +174,7 @@
     {
       "path": "okf/game/index.md",
       "mode": "sha256-text-lf",
-      "sha256": "98e67d3787e5e9dbf63edec06df8f6b8c39883d8a5bb5f9d9554a7cb7af61426",
+      "sha256": "8e4be72bdf4e41cf0b350e3d1c3dd6faa1ac1885c6492fc590c3b16babc118c3",
       "views": [
         "overview"
       ]
@@ -182,7 +182,7 @@
     {
       "path": "okf/game/network-sync.md",
       "mode": "sha256-text-lf",
-      "sha256": "beba5623f9409ea8e337486c4b784d2297193d46b98ee60610408bb4a60f18f2",
+      "sha256": "039d172220e444fd88964193e160a8ce409dd41207533d2f9f4b8b77b52624b0",
       "views": [
         "overview"
       ]
@@ -198,7 +198,7 @@
     {
       "path": "okf/index.md",
       "mode": "sha256-text-lf",
-      "sha256": "f09294fc0f12e74c798d8de26834f5f15746926ac91a29552097fc9ba368f4eb",
+      "sha256": "373c447db7868341b24c80781ebfc3e64bed071968e4cc515e7d00db433dfc94",
       "views": [
         "overview"
       ]
@@ -230,7 +230,7 @@
     {
       "path": "okf/log.md",
       "mode": "sha256-text-lf",
-      "sha256": "471bebc81aec1771a12b31915b3e74a6fe91d3aa5db2254e3915dbb5d63bb04c",
+      "sha256": "530b13ab035797308d1947e0c59c7665b0f612ff0d7106c5858c7a3cd1903d48",
       "views": [
         "overview"
       ]
@@ -238,7 +238,7 @@
     {
       "path": "okf/project-navigation.md",
       "mode": "sha256-text-lf",
-      "sha256": "9e11c4dd31c2434b873d3ec3f520b8b2b0db0806808dcdbd08bd2f5cd821626b",
+      "sha256": "80e3f4571895e401bbf872507069b13e9dd37afef3f534cc52cdf36c67a1822f",
       "views": [
         "overview"
       ]
@@ -270,7 +270,7 @@
     {
       "path": "okf/security/overview.md",
       "mode": "sha256-text-lf",
-      "sha256": "d6ceada7fd200bc28f14257a7b15ef73e54c47bf7c033dd8d3e96a2a0f72d1d8",
+      "sha256": "48c01b83e4c4cf8f4bb268f73ad4ea17e57f0e6ab25babb08f5e55e0aeed5f9c",
       "views": [
         "overview"
       ]
@@ -294,7 +294,7 @@
     {
       "path": "okf/tools/builtin.md",
       "mode": "sha256-text-lf",
-      "sha256": "b6c37c405e4d2019237dbbbfcfa75962a656bac5ba4acebb43bc3938b3427337",
+      "sha256": "5441f12ee37dd8cac015fc87cc40228a8c6de43fac6fcb8e36835436d9f97690",
       "views": [
         "overview"
       ]
@@ -334,7 +334,7 @@
     {
       "path": "okf/tools/subagents.md",
       "mode": "sha256-text-lf",
-      "sha256": "7754a4e57a14019f1c2acb3fa31f9421e964a4c3326627228422b56785cf232d",
+      "sha256": "80412d2e2ddea6ea626399a35e41bc1a8e9a3c3c0771d9dac366bc72ebb18b05",
       "views": [
         "overview"
       ]
@@ -342,7 +342,7 @@
     {
       "path": "okf/workflow.md",
       "mode": "sha256-text-lf",
-      "sha256": "5eac54b59accb20f4b10bb8cf67a4bae2466f4148d1c6480bca72b8f00311a22",
+      "sha256": "67a9e2098c5ab08023f5e154d8bc1dc9becc3113438256a038ac1241e50c8319",
       "views": [
         "overview"
       ]
@@ -485,16 +485,32 @@
   "verification": {
     "semantic": "manual source and registration/call-site reading",
     "nativeCommitEvidence": false,
-    "normalizedInputFreshness": "recorded scope only; additions and removals included",
-    "runtimeLimit": "Windows/PowerShell and dangerous-tool-guard runtime not exercised in this task",
+    "normalizedInputFreshness": "all pending source changes reviewed; three pre-existing unchanged inputs remain explicitly unreconciled",
+    "runtimeLimit": "Windows setup and persisted model role exercised; install failure/recovery, forced quota fallback, vision comparison and game execution not exercised",
     "browserSurface": "Chrome: sidebar/selected article/search/history/focus; 390–1920px boundary checks; no disclosure UI"
+  },
+  "modelProfileUpdate": {
+    "observedAt": "2026-10-05",
+    "ompVersion": "18.6.1",
+    "reconciledInputs": ["README.md", "config/settings.anthropic-pro.conf", "config/settings.conf", "okf/agents/guide.md", "okf/game/godot-cpp.md", "okf/game/index.md", "okf/game/network-sync.md", "okf/index.md", "okf/log.md", "okf/project-navigation.md", "okf/security/overview.md", "okf/tools/builtin.md", "okf/tools/subagents.md", "okf/workflow.md"],
+    "preExistingUnreviewedChanges": ["okf/coding-style.md", "okf/language-style.md", "okf/security/game.md"],
+    "logScope": "pending entries reviewed; published grace history preserved with explicit correction",
+    "sourceStatus": "reviewed and corrected",
+    "globalSettingsStatus": "applied with user-approved process-scoped RemoteSigned; 21 managed settings match",
+    "deployedOkfStatus": "33 files match the source bundle",
+    "verification": "both profiles: 11 roles and 11 cross-provider fallbacks resolve; persisted @smol completed a read-tool round-trip on GPT-6.1 Sol without an overlay; source OKF conformance and 200 local documentation links passed",
+    "verificationLimits": "not a comparative quality benchmark; forced quota fallback, image input and game runtime not exercised",
+    "evidenceRoot": ".omp-artifacts/model-roles-20261005-7a91",
+    "deploymentEvidenceRoot": ".omp-artifacts/model-roles-20261005-7a91/publish",
+    "diagramStatus": "topology unchanged; existing JSON/HTML raw hashes match; no new render or native commit verification"
   },
   "planning": {
     "canonical": "docs/project-map/index.html#roadmap",
     "ids": [
       "NAV-01",
       "VERIFY-WIN-01",
-      "ADOPT-01"
+      "ADOPT-01",
+      "MODEL-01"
     ]
   },
   "geometry": {
