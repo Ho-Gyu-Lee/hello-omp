@@ -1,9 +1,9 @@
 ---
 type: Reference
 title: omp 기본 도구
-description: 세션별 도구 가용성, OMP 내장 도구·browser facade·백그라운드 작업, TypeScript+Bun 실행과 MCP 대체 매핑.
+description: 세션별 도구 가용성, OMP 내장 도구·browser facade·백그라운드 작업, IDE·원격 빌드 환경 경계, TypeScript+Bun 실행과 MCP 대체 매핑.
 tags: [tools, builtin, lsp, ast, browser, background, typescript, bun]
-timestamp: 2026-10-05T00:00:00Z
+timestamp: 2026-10-08T00:00:00Z
 ---
 
 # omp 기본 도구
@@ -26,6 +26,7 @@ omp는 배터리 포함 — 코딩 워크플로 대부분이 내장 도구로 �
 
 ## 실행·디버깅·자동화
 - `bash` — 기존 CLI·프로젝트 명령 실행. `eval` — 파일이 필요 없는 계산·변환·자동화는 `language: "js"`로 Bun에서 실행한다.
+- IDE·터미널·WSL/원격 빌드의 환경변수와 경로 해석 주체를 구분한다. 별도 셸의 `export`가 IDE에서 시작한 빌드에도 전달된다고 가정하지 않는다. [Visual Studio의 CMake preset 처리](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs)는 변수 확장 후 CMake를 호출하므로, target 의존성 경로는 target 환경에 명시하거나 `${sourceDir}`의 toolchain 진입 파일 안에서 실제 빌드 호스트 환경으로 결정한다. 미설정 변수를 `/scripts/...` 같은 유효하지 않은 절대 경로로 확장하지 않으며, 잘못 지정된 명시 경로를 다른 설치본으로 조용히 대체하지 않는다.
 - `debug` — DAP 디버거(lldb/dlv/debugpy) 스테핑·브레이크포인트.
 - `eval`의 `browser` facade — 활성화된 경우 `browser.open`으로 탭을 열고 관찰·상호작용·시각 확인 후 닫는다. 정적 URL은 `read`가 우선이다. 독립 Puppeteer 도구로 가정하지 않으며 실제 API는 `xd://eval/browser`를 읽는다. relay/CDP는 사용자의 실제 로그인 세션일 수 있으므로 대상 탭·행동 권한을 구분한다.
   - 로컬 `file://` 문서는 파일 간 접근 허용 플래그 없이 확인한다. 문서 스크립트가 다른 로컬 파일을 읽어야 할 때만 `allow_file_access`를 쓰며, 이 launch flag는 이미 실행 중인 공유 브라우저에 적용할 수 없으므로 설치된 Chrome 등을 `app.path`로 지정한 전용 브라우저에서 열고 확인 후 `close`한다(OMP 18.6.1 계약 확인). 플래그를 켠 결과를 기본 브라우저 조건의 동작 증거로 쓰지 않는다. 교차 origin인 `file://` iframe 내부 측정은 `tab.frame(<iframe 선택자>)`의 `evaluate` 등을 우선 사용한다.

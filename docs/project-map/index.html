@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="project-map-snapshot" content="부분 대조 12006f6fb616 · 기존 변경 별도 보존">
+  <meta name="project-map-snapshot" content="부분 대조 7bf0fd624c04 · 기존 미대조 입력 2개 유지">
   <title>Overview · hello-omp</title>
   <style>
     :root { color-scheme: light; --ink: #26364b; --muted: #62738b; --line: #e3e8ef; --accent: #5145cd; --soft: #eeedff; --sidebar: #f8fafc; --nav: clamp(148px, 18vw, 242px); }
@@ -132,7 +132,7 @@
   <article class="doc-page" id="overview" data-page data-title="Overview" data-group="Project" data-terms="전체 요약 상태 프로젝트 목차" data-nodes="overview:project-docs">
     <p class="breadcrumb">hello-omp / Project</p><h1>Overview</h1>
     <p class="lead">OMP 설정과 작업 지침을 여러 PC에 같은 방식으로 배포합니다.</p>
-    <dl class="meta"><div><dt>Status</dt><dd id="publication-state">변경 검토 · 로컬 적용 검증</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
+    <dl class="meta"><div><dt>Status</dt><dd id="publication-state">지식 검토·정정 · OKF 배포 대조 통과</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
     <div class="inline-links"><a href="#architecture?node=project-docs">전체 위치</a></div>
     <div class="cards">
       <div class="card"><h3><a href="#architecture">구조</a></h3><p>공유 소스 → 설치 → OMP → 작업·문서</p></div>
@@ -146,7 +146,7 @@
       <tr><td>스킬 설치·복구</td><td><code>scripts/deploy-skills.ts</code></td><td><a href="#skills">Skills</a></td></tr>
       <tr><td>사용자 명령</td><td><code>commands/</code></td><td><a href="#commands">Commands</a></td></tr>
     </tbody></table></div>
-    <footer>현재 변경한 설정·지침을 검토했습니다. 변경 대상 밖의 기존 미대조 입력 3개는 <a href="sources.json">manifest</a>에 남깁니다. 관계도 구조·게시 파일은 유지합니다.</footer>
+    <footer>공개 지식 변경 10개를 검토·정정하고 로컬 OKF 배포를 대조했습니다. 검토 대상 밖의 기존 미대조 입력 2개는 <a href="sources.json">manifest</a>에 남깁니다. 설정과 관계도 구조·게시 파일은 유지합니다.</footer>
   </article>
 
   <article class="doc-page" id="requirements" data-page data-title="Requirements" data-group="Planning" data-terms="요구사항 수락 기준 완료 검증" hidden>
@@ -174,6 +174,7 @@
     </tbody></table></div>
     <p><strong>계획은 현재 구현과 분리합니다.</strong> 지도 갱신은 한 명이 통합하며, 읽기 전용 요청은 파일을 바꾸지 않습니다.</p>
     <p><strong>AI 생성 코드 검토:</strong> 줄 수보다 검토할 판단·개념을 줄이고, 표준 기능의 복사·중복 키·동등성 계약을 확인합니다. 타입 단언과 정적 검사 통과는 런타임 검증을 대신하지 않습니다. <a href="../../okf/coding-style.md">코딩 기준</a> · <a href="../../okf/workflow.md">검증 기준</a></p>
+    <p><strong>게임·도구 지식:</strong> 제품 선택과 공통 불변조건을 구분하고 트리거 재시도·카메라 제약·리소스 캐시·runtime 교체의 실패 경계를 명시합니다. <a href="../../okf/game/network-sync.md">네트워크</a> · <a href="../../okf/game/godot-cpp.md">Godot</a> · <a href="../../okf/game/server-checklist.md">서버</a> · <a href="../../okf/tools/mcp.md">MCP</a></p>
     <p class="map-context">필수 승인은 유지합니다. 지도 유지는 설치·외부 공개·커밋 권한이 아닙니다. <a href="../../okf/project-navigation.md">정책 정본</a> · <a href="../../AGENTS.md">적용 범위</a></p>
   </article>
 
@@ -258,20 +259,20 @@
 
   <article class="doc-page" id="release" data-page data-title="Release" data-group="Project records" data-terms="검증 배포 릴리스 브라우저 fingerprint source hash manifest native provenance" data-nodes="overview:publication" hidden>
     <p class="breadcrumb">Project records / Release</p><h1>Release</h1><p class="lead">무엇을 실행해서 확인했는지 구분합니다.</p>
-    <dl class="meta"><div><dt>Status</dt><dd id="release-status">영상 지침 반영 · macOS 배포 대조 통과</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
+    <dl class="meta"><div><dt>Status</dt><dd id="release-status">지식 검토·정정 · Windows OKF 배포 대조 통과</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
     <div class="inline-links"><a href="#architecture?node=publication">전체 위치</a></div>
     <div class="table-scroll"><table><thead><tr><th>대상</th><th>검증 상태</th></tr></thead><tbody>
-      <tr><td>영상 학습 지침</td><td>공식 원문 대조 · 공개 인덱스 22개 / 로컬 29개 concept 형식 검사 통과 · 관련 내부 링크 150개 확인</td></tr>
-      <tr><td>macOS 전역 설정·OKF 배포</td><td>관리 설정 21개 · 로컬 OKF 37개 파일 소스 일치</td></tr>
-      <tr><td>macOS 설치·스킬 발견</td><td id="state-install">활성 setup 재실행 통과 · 배포된 Archify native 발견 확인</td></tr>
-      <tr><td>전체·스킬 배포 관계도</td><td id="state-map">기존 4개 gate 기록 유지 · 이번 구조 변경·재렌더링 없음</td></tr>
-      <tr><td>좌측 메뉴·검색·본문</td><td id="state-ui">Chrome에서 Policy/Release 표시·메뉴·검색 이동 통과 · 화면 가로 잘림 없음</td></tr>
-      <tr><td>Windows / 모델 실호출</td><td>기존 snapshot의 실행 기록 · 이번 작업에서는 미실행 · <a href="#roadmap">남은 검증</a></td></tr>
+      <tr><td>공개 지식 변경</td><td>독립 검토 3개 영역 · 지적 정정 · 인덱스 사본의 공개 22개 concept·내부 링크 268개 검사 통과</td></tr>
+      <tr><td>Windows OKF 배포</td><td>로컬 25개 concept 검사 · 배포 파일 33개 소스 일치</td></tr>
+      <tr><td>기존 설정 보존</td><td id="state-install">setup.ps1의 OKF 단계만 실행 · 관리 설정 21개 유지 · 전체 설치 미실행</td></tr>
+      <tr><td>전체·스킬 배포 관계도</td><td id="state-map">게시 JSON/HTML 4개 hash 일치 · 구조 변경·재렌더링 없음 · 기존 gate 기록 유지</td></tr>
+      <tr><td>좌측 메뉴·검색·본문</td><td id="state-ui">기존 동작 유지 · 이번 변경은 지식 링크·검증 상태 문구 · <a href="../../.omp-artifacts/knowledge-publish-20261008-a91c/browser.json">브라우저 관찰 기록</a></td></tr>
+      <tr><td>검증 범위 밖</td><td>게임·모바일 실기기·MCP runtime 교체·모델 실호출 미실행 · <a href="#roadmap">기존 설치 검증 공백</a></td></tr>
     </tbody></table></div>
     <p><a href="sources.json">근거 manifest</a> · 소스 수동 대조 · 신선도 fingerprint · 게시 raw hash</p>
-    <p class="map-context">이번 적용 근거: <a href="../../.omp-artifacts/video-learning-20261005-a7d3e9/verification.json">macOS 배포·공개 지침 검사</a>. 영상은 전체 자막·설명과 원문을 대조했으며 영상 화면 재생·Kotlin 실행·외부 린터 설치는 하지 않았습니다. 다른 PC의 기존 <a href="../../.omp-artifacts/model-roles-20261005-7a91/publish/local-deployment.json">Windows 배포</a>·<a href="../../.omp-artifacts/model-roles-20261005-7a91/publish/live-smol-probe.json">모델 실호출</a> 기록은 이번 macOS 검증과 구분합니다.</p>
+    <p class="map-context">이번 적용 근거: <a href="../../.omp-artifacts/knowledge-publish-20261008-a91c/verification.json">공개 번들·링크 검사</a> · <a href="../../.omp-artifacts/knowledge-publish-20261008-a91c/deployment.json">Windows OKF 배포·설정 보존</a> · <a href="../../.omp-artifacts/knowledge-publish-20261008-a91c/camera-counterexample.json">카메라 제약 수치 반례</a>. 공식 문서·소스 대조와 지식 배포 검증이며 게임 동작이나 다른 PC의 검증을 대신하지 않습니다. 개별 과거 실행 기록은 manifest의 해당 항목에 보존합니다.</p>
     <p class="map-context">커밋 근거는 미검증입니다. 정본은 통과한 staging 결과의 복사본이며 영수증은 원래 경로에 보존합니다. 다른 PC의 실행 성공을 보장하지 않습니다.</p>
-    <p class="map-context">신선도는 부분 대조입니다. 기존 <code>coding-style · language-style · security/game</code>의 미대조 fingerprint와 로컬 미커밋 <code>coding-style · log · security/review-checklist</code>를 보존했습니다. 겹치는 파일 전체 hash를 덮지 않고 이번 공개 변경의 별도 인덱스 hash를 manifest에 기록합니다. 관계도 구조는 바뀌지 않았습니다.</p>
+    <p class="map-context">신선도는 부분 대조입니다. 이번 공개 지식 변경 10개는 hash를 갱신했으며 기존 <code>coding-style · language-style</code>의 미대조 fingerprint 2개는 이번 내용 검토 대상 밖이라 유지합니다. 현재 파일의 내용 검토 없이 hash만 맞추지 않았습니다. 관계도 구조는 바뀌지 않았습니다.</p>
     <p class="map-context"><a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/layout-verification.json">화면 경계 검사</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/discovery-active.json">명령·선언 발견</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/overview/v3/evidence/map.finalize-summary.json">전체 지도 검증</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/skill-deployment/v2/evidence/map.finalize-summary.json">상세 지도 검증</a></p>
   </article>
 

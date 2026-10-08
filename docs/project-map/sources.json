@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": "hello-omp",
   "basis": "working-tree-manual-reconciliation",
-  "snapshotId": "12006f6fb616",
+  "snapshotId": "7bf0fd624c04",
   "scope": {
     "include": [
       "AGENTS.md",
@@ -166,7 +166,7 @@
     {
       "path": "okf/game/godot-cpp.md",
       "mode": "sha256-text-lf",
-      "sha256": "a4874bfa1f84f72c32e4ae9ca59b7b75b48a4a4e84acddbddc2839e267a708b1",
+      "sha256": "acfeca5c9758422c75e7de96a2518738a27de4c41d0fa60befdd0554191fbfde",
       "views": [
         "overview"
       ]
@@ -174,7 +174,7 @@
     {
       "path": "okf/game/index.md",
       "mode": "sha256-text-lf",
-      "sha256": "8e4be72bdf4e41cf0b350e3d1c3dd6faa1ac1885c6492fc590c3b16babc118c3",
+      "sha256": "212812d29c0533144700ed3a11dd777c02dea76f3a0b19a8bdc46cc8f57dc633",
       "views": [
         "overview"
       ]
@@ -182,7 +182,7 @@
     {
       "path": "okf/game/network-sync.md",
       "mode": "sha256-text-lf",
-      "sha256": "039d172220e444fd88964193e160a8ce409dd41207533d2f9f4b8b77b52624b0",
+      "sha256": "2fa766e46a3ec86387227727afddebd370401054511e7b25ba470f0a340910b3",
       "views": [
         "overview"
       ]
@@ -190,7 +190,7 @@
     {
       "path": "okf/game/server-checklist.md",
       "mode": "sha256-text-lf",
-      "sha256": "7cd64d316ac0f7f248c1e7f9c6068383de94ee0d5755b59eae072bdabb941abd",
+      "sha256": "a6c44229c26d74619720b1ed1b844071b25ea9e2d5f33cf97e063b5cc8bb4d81",
       "views": [
         "overview"
       ]
@@ -198,7 +198,7 @@
     {
       "path": "okf/index.md",
       "mode": "sha256-text-lf",
-      "sha256": "6e627446914a91cbd0c8a63d881a74a91bae1e304a31d05bfeba6285319be860",
+      "sha256": "80157f7d696de1071490c4e312b2d8952f01cb7fe14c7d47ebdc6ed2096aafe8",
       "views": [
         "overview"
       ]
@@ -230,7 +230,7 @@
     {
       "path": "okf/log.md",
       "mode": "sha256-text-lf",
-      "sha256": "530b13ab035797308d1947e0c59c7665b0f612ff0d7106c5858c7a3cd1903d48",
+      "sha256": "791e6f2a51e20eddcfba181ac122530e2ee354761ee4e8fc89252ea9ee2589e1",
       "views": [
         "overview"
       ]
@@ -254,7 +254,7 @@
     {
       "path": "okf/security/game.md",
       "mode": "sha256-text-lf",
-      "sha256": "e846cb601f8f0eca7ff1e0b1c03d21baf9cf05ce5d899be8260283e086419787",
+      "sha256": "281374ef4a4d8e991cc4f0f34dcfca1663b7e8832727ca1f37cad3cbb476aa3b",
       "views": [
         "overview"
       ]
@@ -294,7 +294,7 @@
     {
       "path": "okf/tools/builtin.md",
       "mode": "sha256-text-lf",
-      "sha256": "5441f12ee37dd8cac015fc87cc40228a8c6de43fac6fcb8e36835436d9f97690",
+      "sha256": "4644056f7f382df4daf1aca6d4b8c192c8cedcff6f11a7b2017138b1d1856348",
       "views": [
         "overview"
       ]
@@ -310,7 +310,7 @@
     {
       "path": "okf/tools/index.md",
       "mode": "sha256-text-lf",
-      "sha256": "39342e5f0d121e990171d28a356bddf09cde1c106f664598a301013a558cdc9d",
+      "sha256": "e9a804d773e3497e2a1922a847687dfa5fbb1ecc26a5f51174c2f7e92a292d61",
       "views": [
         "overview"
       ]
@@ -318,7 +318,7 @@
     {
       "path": "okf/tools/mcp.md",
       "mode": "sha256-text-lf",
-      "sha256": "0bc32d19247d9031e2efa53317c35ee3f8dc6c969824bf4177e2ad2b80483bed",
+      "sha256": "eeb6a45eb5006eb452b3f9727af28bfdea0803c405521fa9f2ec9ee7bd2fb447",
       "views": [
         "overview"
       ]
@@ -483,11 +483,21 @@
     }
   },
   "verification": {
-    "semantic": "manual source and registration/call-site reading",
+    "semantic": "this update: manual and independent review of 10 changed public OKF documents; source links and policy boundaries reconciled",
     "nativeCommitEvidence": false,
-    "normalizedInputFreshness": "partial: workflow and index reconciled; inherited coding-style/language-style/security-game drift and three pre-existing local edits preserved; overlapping coding-style/log input hashes not refreshed",
-    "runtimeLimit": "this update: macOS default setup, 21 managed settings, 37 local OKF files and native Archify discovery checked; model inference, Windows, Kotlin and external lint plugins not exercised",
-    "browserSurface": "this update: Chrome policy/release text, single selected article, sidebar and search navigation observed; no viewport overflow; screenshots retained in videoGuidanceUpdate.evidenceRoot"
+    "normalizedInputFreshness": "partial: 10 changed OKF inputs reconciled; inherited coding-style/language-style drift outside this content review retains its previous hashes",
+    "runtimeLimit": "this update: Windows setup.ps1 OKF stage only; 25 local concepts validated, 33 deployed files match, 21 managed settings preserved; complete setup, game/mobile runtime and MCP replacement not executed",
+    "browserSurface": "index status and knowledge links updated; current browser evidence belongs to knowledgePublication.evidenceRoot; diagram renderer and native commit evidence not rerun"
+  },
+  "knowledgePublication": {
+    "observedAt": "2026-10-08",
+    "reconciledInputs": ["okf/game/godot-cpp.md", "okf/game/index.md", "okf/game/network-sync.md", "okf/game/server-checklist.md", "okf/index.md", "okf/log.md", "okf/security/game.md", "okf/tools/builtin.md", "okf/tools/index.md", "okf/tools/mcp.md"],
+    "preservedUnreviewedDrift": ["okf/coding-style.md", "okf/language-style.md"],
+    "sourceStatus": "three independent review domains; blocking findings corrected; minor camera edge clarification incorporated",
+    "verification": "staged public bundle: 22 concepts and 268 internal links pass; local bundle: 25 concepts and 33 deployed files match; 21 managed settings unchanged",
+    "deploymentScope": "existing setup.ps1 OKF statements only; custom advisor.syncBacklog preserved; no full setup or model/configuration changes",
+    "evidenceRoot": ".omp-artifacts/knowledge-publish-20261008-a91c",
+    "diagramStatus": "topology unchanged; four published JSON/HTML raw hashes match; no rendering or native commit verification"
   },
   "modelProfileUpdate": {
     "observedAt": "2026-10-05",

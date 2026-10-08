@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 게임 서버 기능/성능 체크리스트
-description: Gateway·단일 로직 소유자 분리, 큐·팬아웃·틱 예산, 메모리·동시성·권위 상태·영속화·복구 체크리스트.
+description: Gateway·단일 로직 소유자 분리, 콘텐츠 판정 데이터 공개 경계, 큐·팬아웃·틱 예산, 상시 운영 메모리·할당 계측·동시성·권위 상태·영속화·복구 체크리스트.
 tags: [game, server, performance, networking, checklist, gateway, single-writer]
-timestamp: 2026-09-27T00:00:00Z
+timestamp: 2026-10-08T00:00:00Z
 ---
 
 # 게임 서버 기능/성능 체크리스트
@@ -19,6 +19,7 @@ timestamp: 2026-09-27T00:00:00Z
 - [ ] 권위 이전: old/new authority·handoff generation·commit 시점·in-flight message 처리 정책 명시
 - [ ] 전달/혼잡: 메시지별 전달·순서·중복·만료 의미를 정의하고 느린 연결에 coalesce·drop·backpressure·disconnect 정책 적용
 - [ ] 가시성/관심 관리: 플레이어별 전송 대상을 서버에서 계산하고 observer 변화 때 누락·과다 전파 없이 수렴
+- [ ] 콘텐츠 판정 데이터: 몬스터 스폰 영역·수·리스폰 주기처럼 서버가 판정하는 테이블은 클라이언트 배포 맵·연결 데이터와 분리해 서버만 로드한다. 공개 계약(출현 타이머 UI 등)에 없는 다음 리스폰 시각·스폰 상태는 클라이언트에 복제하지 않는다. 테이블 검증 실패는 빈 월드나 기본값으로 대체하지 않고 해당 월드 진입을 막는다(fail-closed). 근거: 서버 에뮬레이터 [TrinityCore의 `creature` 표](https://trinitycore.info/database/335/world/creature)는 스폰 위치·`spawntimesecs`(리스폰 초)·`wander_distance`를 서버 world DB에 둔다(조회 2026-10-07, 특정 상용 서비스의 내부 구현을 주장하지 않음). 복제 범위는 [게임 보안](/security/game.md)의 "알 권한이 있는 정보만 서버에서 선별해 전송" 원칙으로 정한다
 - [ ] 검증: 결정적 알고리즘 테스트와 codec·검증·dispatch를 지나는 통합 테스트, 손실·역순·재접속·장시간 누적 시나리오 보유
 
 ## Gateway와 단일 로직 스레드의 분리
@@ -38,9 +39,20 @@ timestamp: 2026-09-27T00:00:00Z
 - [ ] I/O 콜백은 큐에 완료 결과를 넣고 로직 스레드가 적용한다. 요청 ID·세션/객체 generation·상태 버전을 확인해 역순 DB 완료, 로그아웃 후 완료, 다른 존으로 이동한 객체의 낡은 결과를 차단한다.
 - [ ] 비동기 작업에는 불변 snapshot이나 수명이 보장된 메시지를 전달한다. 작업자가 변경 중인 월드 객체를 읽게 하지 않는다. 풀링 버퍼는 모든 소비자의 사용 종료 전에 재사용하지 않는다.
 
+## 상시 운영 메모리와 계측
+
+- [ ] 초기화·접속/TLS 수립·정상 메시지·오류/종료의 할당을 분리한다. packet buffer 외에도 queue node·문자열·JSON·codec parser 상태·비동기 operation·TLS 내부를 포함한다. 풀의 존재나 `reserve`를 무할당·총량 제한의 증거로 삼지 않는다.
+- [ ] 풀 고갈의 heap fallback과 반환 블록 보관량도 상한을 가진다. 처리 대기 중인 live bytes, 반환된 cache, 소유권을 잃은 누수를 구분하며 raw pointer/크기를 지운 뒤 반환하는 순서를 만들지 않는다. callback 취소 요청이 아니라 마지막 사용과 deallocate까지 저장소 수명을 유지한다.
+- [ ] codec의 입력 byte 상한뿐 아니라 내부 count/type/depth를 객체 생성 전에 검사한다. 호출별 편의 API가 parser stack·객체 tree를 새로 할당하면 소유자별 재사용 parser와 bounded visitor/sink를 검토하고, 오류 다음 정상 메시지에서 상태 초기화를 검증한다.
+- [ ] TLS 유휴 buffer 반납은 반복 할당과 연결별 점유 메모리의 선택이다. [OpenSSL mode 문서](https://docs.openssl.org/3.6/man3/SSL_CTX_set_mode/)의 `SSL_MODE_RELEASE_BUFFERS`와 전송 wrapper가 실제 설정하는 값을 확인한다. 보관을 선택해도 연결 상한·최종 SSL 해제는 유지하며 SSL 객체 자체 재사용이나 allocator 교체와 혼동하지 않는다.
+- [ ] Asio의 [associated allocator](https://think-async.com/Asio/asio-1.30.2/doc/asio/overview/core/allocation.html)가 [즉시 완료](https://think-async.com/Asio/asio-1.30.2/doc/asio/overview/composition/immediate_completion.html)·composed operation·executor 전달에서도 보존되는지 고정 소스로 확인한다. type erasure가 모든 allocator property를 전달한다고 가정하지 않으며, inline 재귀를 허용해 할당만 줄이지 않는다.
+- [ ] 무할당 계측에는 알려진 양성 할당을 검출하는 대조를 둔다. `operator new`만 세면 `malloc`·`aligned_alloc`·TLS C 할당을 놓칠 수 있다. Asio 1.32/Linux 검증에서 캐시를 끄는 경우 `ASIO_DISABLE_STD_ALIGNED_ALLOC`까지 적용해 기본 경로가 계측한 `operator new`로 이어지는지 확인하거나 aligned 할당을 별도로 판정한다. 캐시 비활성 분기의 [upstream 수정](https://github.com/chriskohlhoff/asio/commit/57bf938c7dc1f6ea1e224fb74e274e397edebcd1)은 재현 가능한 의존성 패치로 관리하고 설치 헤더를 직접 고치지 않는다.
+- [ ] 측정 thread·warmup·peer 수·요청 순서·누락한 라이브러리 경로를 명시한다. I/O 소유자 하나와 프로세스 전체 thread 하나는 다르다. 접속/종료 반복·느린 수신자·고갈·취소에서 FD와 live/retained 메모리를 확인하며, RSS가 그대로인 관측이나 제한된 무할당 결과를 단편화 없음·전체 프로세스 무할당·운영 CCU 보장으로 확대하지 않는다.
+
 ## 큐·브로드캐스트·성능
 
 - [ ] 수신·명령·DB 완료·송신 큐에 메시지 수와 바이트 상한을 둔다. 큐 깊이뿐 아니라 가장 오래된 메시지의 대기, 유입/소비율, 세션별 점유·공정성, 거부/대체/연결 종료를 관측한다.
+- [ ] `accept`의 descriptor/메모리 부족과 일시 네트워크 오류 때문에 이미 성립한 연결까지 종료하지 않는다. 소유자에 한 개의 유한 재시도 대기를 두어 busy loop를 막고 종료 때 취소한다. 시작 시 연결 상한에 reactor·로그·수용/거절용 FD 여유를 더해 OS soft limit을 확인하며, 실행 중 한도 변화·고갈 뒤 복구도 검사한다. 근거: [Linux accept(2)](https://man7.org/linux/man-pages/man2/accept.2.html)의 pending network errors와 EMFILE/ENFILE/ENOBUFS/ENOMEM 구분.
 - [ ] 큐가 빌 때까지 무제한으로 처리하지 않는다. 틱의 입력/완료 소비 예산과 과부하 정책을 정해 입력 폭주가 이동·AI·다른 세션을 굶기지 않게 한다. 클라이언트가 요청한 입력 시간의 누적도 서버가 허용한 시뮬레이션 시간 안으로 제한한다.
 - [ ] 교체 가능한 상태 snapshot은 계약에 맞게 병합할 수 있지만 구매·보상·발사 같은 의미 있는 명령/이벤트를 임의 삭제하지 않는다. delta baseline과 생성/제거 순서를 깨뜨리는 병합도 금지한다. 처리 불가능한 명령은 명시적으로 거부하거나 복구 가능한 실패로 처리한다.
 - [ ] 콘텐츠 측이 정한 공개 범위·수신 대상을 Gateway가 팬아웃한다. AOI 멤버십 변경/권한 철회와 송신 대기의 정합성을 유지한다. 개인별 비공개 필드를 공용 방송 버퍼에 섞지 않는다.

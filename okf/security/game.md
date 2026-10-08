@@ -3,7 +3,7 @@ type: Rule
 title: 게임 클라/서버 보안
 description: 서버 권위·예측/보정·커맨드·경제·정보 가시성·세션/통신·클라이언트 보안.
 tags: [security, game, server-authority, client, server, networking]
-timestamp: 2026-09-26T00:00:00Z
+timestamp: 2026-10-07T00:00:00Z
 ---
 
 # 게임 클라/서버 보안
@@ -43,6 +43,8 @@ timestamp: 2026-09-26T00:00:00Z
 - 리플레이 공격 방지: session generation·sequence·command ID·허용 window를 검증하고 재접속 후 이전 generation 패킷을 자동 수락하지 않는다.
 - 세션 재개 증명은 만료·회전·폐기가 가능해야 하며 로그에 남기지 않는다. 재개 시 identity·권한·replay window를 다시 결합하고 이전 연결과 동시 재개의 정책을 명시한다.
 - 패킷 위변조 탐지와 전송 기밀성은 검증된 프로토콜을 사용한다. 비정상 연결·resume·resync 요청은 rate limit하고 자원 상한을 둔다.
+- 공개망에서 bearer 재개 토큰은 서버 identity가 검증된 암호화 채널로만 전달합니다. TCP에는 TLS를 사용하고, 신뢰 인증서 경로와 사전에 정한 서비스 이름을 [RFC 9525](https://www.rfc-editor.org/info/rfc9525/)에 따라 검증합니다. 접속 IP나 서버가 제시한 이름을 기대 identity로 바꾸지 않으며 실패 시 평문·검증 해제 fallback을 금지합니다. token 회전은 분실된 재개 응답·중복 요청과 소비자의 수락 계약까지 함께 다룹니다.
+- TLS session resumption·QUIC migration은 게임 명령의 중복 실행을 막지 않습니다. [TLS 1.3 RFC 9846 §8](https://www.rfc-editor.org/rfc/rfc9846.html#section-8)은 0-RTT와 애플리케이션 재시도를 별개의 replay 원인으로 다룹니다. early data는 기본 비활성으로 두며 별도 안전성 계약 없이 구매·전투·소유권을 바꾸는 세션 resume 같은 상태 변경 메시지를 보내지 않습니다. 0-RTT를 끄더라도 일반 재시도의 멱등성·미확정 결과 처리는 유지합니다.
 
 ## 정보 가시성·관전자
 - interest management는 성능 최적화이고 fog of war·비공개 상태는 인가 경계다. 플레이어가 알 권한이 있는 정보만 서버에서 선별해 전송한다.
