@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: omp 기본 도구
-description: 세션별 도구 가용성, OMP 내장 도구·browser facade·백그라운드 작업, IDE·원격 빌드 환경 경계, TypeScript+Bun 실행과 MCP 대체 매핑.
+description: 세션별 도구 가용성, OMP 내장 도구·browser facade·백그라운드 작업, IDE·원격 빌드 환경 경계, UTF-8이 아닌 파일 편집, TypeScript+Bun 실행과 MCP 대체 매핑.
 tags: [tools, builtin, lsp, ast, browser, background, typescript, bun]
 timestamp: 2026-10-08T00:00:00Z
 ---
@@ -36,6 +36,10 @@ omp는 배터리 포함 — 코딩 워크플로 대부분이 내장 도구로 �
 - [OMP 18.3.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.3.0)의 `wait`·`proc://`·`agent://` 경로를 사용한다. 이전 `hub` 호출을 복제하지 않으며 정확한 인자는 현재 세션 문서가 정본이다.
 - 작업 결과·메시지는 자동 전달을 사용하고 할 일이 남아 있으면 진행한다. 외부 결과만 기다려야 할 때 `wait`를 사용하며 상태 조회를 반복하지 않는다.
 - 에이전트 협의는 `write agent://<id>`, 프로세스 입력은 `write proc://<id>`, 중단은 명시적인 `proc://<id>/kill` 대상이다. 실행 중인 실제 식별자를 사용하며 URI만으로 권한이나 파괴적 작업 승인이 생기지 않는다.
+
+## UTF-8이 아닌 파일 편집
+- `edit`는 UTF-8이 아닌 파일(예: CP949 주석이 섞인 소스) 편집을 거부할 수 있다. 이때 파일 전체를 UTF-8로 다시 저장하지 않는다. 인코딩 변경은 무관한 줄까지 바꾸고 컴파일러·도구의 해석을 바꿀 수 있다.
+- 바꿀 줄이 ASCII이면 `eval`의 `js`에서 파일을 Latin-1 바이트 그대로 읽고, 정확히 한 번 일치하는 줄만 치환해 같은 방식으로 쓴다. 쓴 뒤 비ASCII 바이트 열이 전과 같은지 확인한다. 바꿀 줄에 비ASCII 문자가 있으면 먼저 원래 인코딩을 확인하고 그 인코딩으로 처리한다.
 
 ## 작업용 스크립트와 실행 언어
 - 적용 대상은 에이전트가 새로 작성하는 작업용 자동화·분석·재현·스모크 스크립트다. **저장 파일은 TypeScript(`.ts`), 실행은 `bun <파일.ts>`**로 통일한다. 저장 위치는 [워크플로](/workflow.md)의 작업 디렉터리를 따른다. 기존 제품 코드·영구 테스트·빌드 도구를 TypeScript로 이식하라는 뜻은 아니다.

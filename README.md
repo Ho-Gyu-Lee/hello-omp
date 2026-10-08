@@ -9,7 +9,6 @@
 omp/
   setup.sh / setup.ps1     OS별 부트스트랩 (얇음)
   config/settings.conf                     공유 기본 소스: 선택한 OpenAI/Anthropic 모델·fallback·advisor
-  config/settings.anthropic-pro.conf       선택형 Opus 전용 프로필: Anthropic 선택에서 Fable을 제외하고 Opus 5.5 사용
   rules/AGENTS.md          글로벌 룰 (기본 룰 + OKF/도구 정책)
   rules/WATCHDOG.md        advisor 전용 지침 (한국어 노트, 코드·설정 키는 원문 유지)
   okf/                     OKF 지식 번들 (상세 룰·도메인 지식·도구 정책·축적 지식의 소스)
@@ -20,51 +19,41 @@ omp/
   skills/archify/           고정 Archify 배포본 + 요청 기반 OMP 사용 지침
   AGENTS.md                이 레포에만 적용하는 프로젝트 지도 유지 선언
   docs/project-map/        프로젝트 진입점·구조 지도·근거 manifest
-  agents/                  (선택) 에이전트 override/custom — 기본은 빌트인, 현재 override 없음
+  agents/                  (선택) 에이전트 정의 — 빌트인 유지, 모델만 설정 키로 배정
 ```
 
 ## 사용
 
-전제: 대상 PC에 omp와 Bun이 설치되어 있고 PATH에 있어야 한다. 선택된 역할과 교차-provider fallback을 사용하려면 해당 provider의 유효 인증이 필요하며, 기본 프로필 전체를 의도대로 사용하려면 OpenAI Codex와 Anthropic을 모두 인증한다. 모델 인증은 OAuth/환경 변수로 별도 설정하며 이 스크립트 범위 밖이다.
+전제: 대상 PC에 **OMP 18.8.0 이상**과 Bun이 설치되어 있고 PATH에 있어야 한다. setup은 새 설정 키 지원을 쓰기 전에 검사하고 자동 업그레이드하지 않는다. 선택된 역할과 교차-provider fallback을 사용하려면 해당 provider의 유효 인증이 필요하다. 역할 설정은 구독 구매·인증 방식·월 지출 한도를 바꾸지 않는다. 지원되는 인증·과금 경로는 [에이전트 가이드](okf/agents/guide.md#구독과-인증의-경계)를 확인한다.
 
-관리 소스의 기본 규칙은 상급 모델을 우선 사용한다. OpenAI 주 역할 `default`·`task`는 GPT-6 Astra xhigh를 사용한다. 경량 `smol`·`commit`은 GPT-6.1 Sol medium, `tiny`·`memory`는 GPT-6 Luna low로 명시한다. Anthropic `designer`·`slow`·`plan`은 Claude Opus 5.5 xhigh, `advisor`는 Opus 5.5 high, `vision`은 Claude Fable 5.1 high다. 교차-provider fallback은 Codex 역할 → Opus 5.5, `designer`·`slow`·`plan`·`vision` → Astra, `advisor` → GPT-6.1 Sol high다. `memory`에도 Opus 5.5 low 체인을 명시해 `default` 체인의 추론 강도를 상속하지 않게 한다. `enabledModels`는 Astra·GPT-6.1 Sol·GPT-6 Luna·Opus 5.5·Fable 5.1의 전체 목록이며 모든 주 모델과 fallback 후보가 포함되어야 한다. `extendedContext=true`를 유지한다. 모델 선택에 폐기된 컨텍스트 제한을 근거로 적용하지 않으며, 실제 컨텍스트와 가용성은 사용 중인 provider·모델 카탈로그·설정으로 확인한다.
+관리 소스는 **고난도 개발과 보조 업무를 구분한 역할별 추론 구성**이다. 메인·계획·구현·정밀 검토(`default`·`plan`·`task`·`slow`)는 `xhigh`, 디자인·화면 분석·advisor는 `high`, 탐색·커밋(`smol`·`commit`)은 `medium`, 제목·메모리는 `low`다. 모델 분담은 Opus 판단·디자인 / Sol 구현·보조 / Astra 전문 검토이며, 판단 Opus↔Astra·실행 Sol→Sonnet·경량 Luna→Haiku의 fallback 대상과 7개 선택 목록은 유지한다. 각 fallback의 추론 강도도 해당 역할에 맞춘다. [전체 역할표](okf/agents/guide.md#현재-역할과-운영-경계)를 따른다.
 
-GPT-6.1 Sol 교체의 공식·독립 실사용 근거와 유지한 모델의 판단은 [에이전트 가이드](okf/agents/guide.md#2026-10-05-모델-선정-근거)에 있다. 소스 파일 변경은 실행 중인 전역 설정의 적용을 뜻하지 않는다. 설치·적용 상태와 검증 한계는 [프로젝트 지도](docs/project-map/index.html#installation)에서 구분한다.
+`extendedContext=true`와 잔여 1% 자동 fallback 정책은 유지한다. 신뢰 가능한 coding-plan 사용량이 잔여 1% 이하일 때 적격 후보로 전환하며, 일반 API key·API 크레딧 잔액·사용량 미확인·후보 불가에서는 보장하지 않는다. 회사별 역할 배분은 주 경로 정책이지 사용량 50:50 또는 월 지출 상한을 강제하는 장치가 아니다.
 
-`modelRoles`는 에이전트 등록이나 자동 실행 설정이 아니다. 공유 프로필의 `designer`는 Claude Opus 5.5 xhigh에 배정한 사용자 정의 모델 별칭이며, 설치본에 같은 이름의 빌트인 에이전트는 없다. UI/UX 구현을 일반 `task`에 위임하면 Astra가 사용되고, `@designer`는 명시적 모델 선택이나 이를 참조하는 커스텀 에이전트에서 사용한다. 가용 에이전트와 역할의 구분은 [에이전트 가이드](okf/agents/guide.md)를 따른다.
+공식 모델 목록·독립 실사용·실패 신고와 OMP 설정 사례의 채택 판단은 [에이전트 가이드](okf/agents/guide.md#2026-10-08-모델-선정-근거)에 있다. 소스·저장 설정·실제 실행 모델을 구분하며, 설치·적용 상태와 검증 한계는 [프로젝트 지도](docs/project-map/index.html#installation)에서 확인한다.
+
+`modelRoles`는 에이전트 등록이나 자동 실행 설정이 아니다. `designer`는 Opus high의 사용자 정의 별칭이며 같은 이름의 빌트인 에이전트는 없다. 메인 Opus가 디자인 방향·대안·수락 기준을 결정하고 구현을 Sol `task`에 위임한다. `commit`은 OMP 커밋 생성 기능의 역할이며, 일반 대화에서 커밋을 언급했다고 메인 모델이 자동으로 `commit` 역할로 바뀌지는 않는다.
+
+주력 게임 클라이언트·서버 개발은 어렵다고 전제하지만 탐색·커밋·제목 같은 보조 업무까지 동일한 난도로 취급하지 않는다. 자동 난도 승격을 새로 구현하거나 모든 역할을 xhigh로 강제하지 않고, 모델·역할별 기본값으로 품질과 불필요한 추론을 구분한다. 높은 effort가 항상 정확하거나 미적 품질·재미를 보장하는 것은 아니므로 실제 화면·플레이·실행 근거로 확인한다. [게임·서버·디자인 사용 경로](okf/agents/guide.md#게임서버디자인-사용-경로)를 따른다.
 
 비동기 advisor는 작업 중 위험 감시를 위해 기본 활성(`advisor.enabled=true`)이다. 보안·영속 데이터·서버 권위·동시성 정합성에 영향을 주는 위험 변경은 구현 전에 설계·불변조건·영향 범위·복구 가능성을 독립 검토한다. 완료 전 독립 검토도 별도로 유지하며 `reviewer`·`security-reviewer`의 결과와 이미 수신한 advisor 지적을 판단·반영·재검증하고 통합 최종본을 전달한다. advisor가 켜져 있다는 사실이나 `syncBacklog`를 최종 검토 완료의 증거로 삼지 않으며, 출력 정리만을 위해 감시를 끄지 않는다.
 
-기본 작성 경로(Astra)와 `reviewer`의 `@slow`(Opus 5.5)는 다른 계열이다. `designer`·`plan` 또는 fallback으로 Anthropic이 작성한 산출물은 Astra 등 반대 계열로 검토 모델을 명시적으로 선택해야 한다. 정적 역할 배정은 이 조건을 자동 분기하지 않으며, 검토가 작성 계열로 fallback되면 교차 모델 독립 검토를 충족한 것으로 세지 않는다. `security-reviewer`는 부모 모델을 상속하므로 `slow` 변경만으로 검토 모델이 바뀌지 않는다.
+기본 메인(Opus)과 `reviewer`·`security-reviewer`(Astra)는 다른 계열이다. **독립 검토가 필요한 산출물의 실제 작성 모델이 OpenAI인 경우**(서브·메인 fallback 포함), 같은 OpenAI 검토만으로 교차 모델 검토를 충족하지 않는다. 해당 검토는 [일회성 CLI overlay](okf/agents/guide.md#교차-모델-독립-검토)를 사용해 fresh-context Anthropic reviewer로 실행한다. 전역 `/agents`·`omp config set`을 작업 중 임의 변경하지 않는다. OMP 18.8.2부터 `task`·eval 위임의 호출별 `model` 인자는 없으며, 역할표가 작성 모델에 맞춰 검토자를 자동 교체하지 않는다. fallback도 실제 실행 모델로 확인한다.
 
-| 프로필 | 선택 | Anthropic 라우팅 |
-|---|---|---|
-| 기본(구독 공통) | 환경 변수 없음 또는 `HELLO_OMP_ANTHROPIC_PLAN=max` | `designer`·`slow`·`plan`·`advisor`와 Codex fallback은 Opus 5.5, `vision`은 Fable 5.1 |
-| Opus 전용(선택형) | `HELLO_OMP_ANTHROPIC_PLAN=pro` | Anthropic 주 모델은 `vision`을 포함해 Opus 5.5, Fable은 허용 목록에서 제외 |
-
-`pro`는 이 저장소의 선택형 프로필 이름이며 Pro 구독의 모델 권한을 판정하는 값이 아니다. [Anthropic 플랜 안내](https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan)에 따르면 Fable 5.1은 유료 플랜에서 제공되지만 Pro·Team standard는 첫 사용부터 별도 usage credits가 필요하다. Max·premium 좌석의 Fable 한도는 기존 주간 한도 안의 일부이며 추가 quota가 아니고, 다른 Claude 모델보다 한도를 더 빨리 소모한다(확인: 2026-10-05). Fable 별도 과금을 허용하지 않을 Pro/standard 계정은 Opus 전용을 선택한다. 기본 프로필을 사용할 때도 실제 계정·연동 경로의 권한과 과금을 확인한다.
-
-선택형 프로필은 `modelRoles`와 `enabledModels` 두 키만 덮어쓴다. `retry.fallbackChains`는 기본 프로필에서 상속하므로 OpenAI로의 교차-provider 전환은 유지된다. 배열은 병합이 아니라 전체 교체이므로 프로필을 바꿀 때 상속된 fallback 후보까지 해당 허용 목록에 포함되는지 확인한다.
+Fable 5.1은 고난도 작업의 **명시 선택 후보**다. `/model anthropic/claude-fable-5-1:xhigh`로 선택하며, 기본 역할이나 자동 fallback의 대상으로 배정하지 않는다. 명시 선택한 Fable 세션도 오류·quota 상황에서는 런타임 fallback으로 다른 모델에 전환될 수 있다. 품질 상향을 위한 선택과 오류·quota에 따른 복구를 구분하고 모델 간 성능·토큰 단가·구독 소모가 같다고 가정하지 않는다. 단일 프로필을 유지하며 실제 계정의 접근 권한·한도·과금은 별도로 확인한다.
 
 ```sh
-# macOS / Linux — 기본(구독 공통)
+# macOS / Linux
 sh setup.sh
-
-# macOS / Linux — Opus 전용을 선택할 경우
-HELLO_OMP_ANTHROPIC_PLAN=pro sh setup.sh
 ```
 
 ```powershell
-# Windows — 기본(구독 공통)
-.\setup.ps1
-
-# Windows — Opus 전용을 선택할 경우
-$env:HELLO_OMP_ANTHROPIC_PLAN = 'pro'
+# Windows
 .\setup.ps1
 ```
 
 ## 배포 순서 (스크립트가 수행)
-1. 롤별 모델·도구 설정 — `config/settings.conf`를 적용하고, `HELLO_OMP_ANTHROPIC_PLAN=pro`이면 `config/settings.anthropic-pro.conf`를 이어서 적용.
+1. 롤별 모델·도구 설정 — 단일 `config/settings.conf`를 적용한다. OMP 18.8 이상의 `title.generator=tiny`로 제목도 OpenAI 경량 역할을 사용한다.
 2. 글로벌·advisor 룰 — `rules/AGENTS.md`·`rules/WATCHDOG.md` → `<configdir>/` (각 기존 파일은 최초 1회 .bak 백업). `WATCHDOG.md`는 advisor 시스템 지침에 추가되며 노트의 설명·근거·권고를 한국어 존댓말로 지정한다. 코드·설정 키·severity 값은 원문을 유지한다.
 3. OKF 번들 — `scripts/validate-okf.ts`로 소스 concept의 YAML frontmatter와 non-empty `type`을 검증한 뒤 `okf/` → `<configdir>/okf/`로 클린 재배포. `AGENTS.md`에는 배포본 경로와 이 레포의 소스 `okf/` 경로를 함께 주입한다.
 4. 확장 — `extensions/*.{js,ts}` → `<configdir>/extensions/` (OMP native extension auto-discovery 대상).
@@ -76,7 +65,7 @@ $env:HELLO_OMP_ANTHROPIC_PLAN = 'pro'
 
 영속 학습은 이 레포의 소스 `okf/`에 누적한 뒤 setup 재실행으로 배포한다. `<configdir>/okf/`는 배포본이므로 직접 수정해도 다음 클린 재배포 때 사라진다.
 이 레포 디렉터리가 영속 학습 원장이다. 소스에 접근할 수 없으면 배포본만 수정하지 않고 학습 차단으로 보고한다. 비민감 후보를 접근 가능한 메모리에 임시 보존해도 소스 OKF 반영 완료는 아니다.
-배포한 글로벌 지침과 기본 설정을 적용하려면 새 세션을 시작한다. 실행 중 세션의 advisor 상태가 영속 기본값과 같다고 가정하지 않으며, `/advisor status`로 상태를 확인하고 꺼져 있으면 `/advisor on`으로 켠다. 이 명령은 세션 상태만 바꾸며 영속 기본값은 `config/settings.conf`와 배포된 설정이 결정한다.
+배포한 글로벌 지침 전체를 적용하려면 새 세션을 시작한다. OMP 18.8.3은 라우팅 파일 변경을 다시 읽어 다음 서브에이전트·fallback에 적용하지만, 실행 중인 정상 메인 모델이나 기존 서브에이전트를 바꾸지는 않는다. 새 기본 모델로 시작하려면 `omp`, 현재 대화만 전환하려면 `/model anthropic/claude-opus-5-5:xhigh`를 사용한다. 기존 대화를 resume하면 저장된 모델·추론 강도가 복원될 수 있다. advisor는 `/advisor status`로 실행 상태를 확인하며 꺼져 있으면 `/advisor on`으로 켠다.
 
 일반 작업만 요청하면 에이전트가 [학습 축적 기준](okf/learning/accumulation.md)에 따라 기록·공개 반영을 판단하고 검증·배포한 뒤 완료 보고에 `학습`·`공개 반영` 결과를 남긴다. 새 후보가 없는 단순 질의·사소한 편집은 제외한다. 개인 선호·내부 근거는 로컬에 유지하며 공개 가능한 교훈만 공통 concept에 반영한다. 이는 에이전트의 작업 완료 절차이지 백그라운드 수집기나 도구 수준의 강제 장치가 아니며, Git 스테이징·커밋·푸시의 승인이 아니다.
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="project-map-snapshot" content="부분 대조 7bf0fd624c04 · 기존 미대조 입력 2개 유지">
+  <meta name="project-map-snapshot" content="부분 대조 sync-20261008-eac098f8 · 46bf5de + 로컬 변경 병합 · 기존 미대조 입력 2개 유지">
   <title>Overview · hello-omp</title>
   <style>
     :root { color-scheme: light; --ink: #26364b; --muted: #62738b; --line: #e3e8ef; --accent: #5145cd; --soft: #eeedff; --sidebar: #f8fafc; --nav: clamp(148px, 18vw, 242px); }
@@ -132,7 +132,7 @@
   <article class="doc-page" id="overview" data-page data-title="Overview" data-group="Project" data-terms="전체 요약 상태 프로젝트 목차" data-nodes="overview:project-docs">
     <p class="breadcrumb">hello-omp / Project</p><h1>Overview</h1>
     <p class="lead">OMP 설정과 작업 지침을 여러 PC에 같은 방식으로 배포합니다.</p>
-    <dl class="meta"><div><dt>Status</dt><dd id="publication-state">지식 검토·정정 · OKF 배포 대조 통과</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
+    <dl class="meta"><div><dt>Status</dt><dd id="publication-state">원격 지식·로컬 모델 프로필 병합 · Windows 적용 대조 통과</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
     <div class="inline-links"><a href="#architecture?node=project-docs">전체 위치</a></div>
     <div class="cards">
       <div class="card"><h3><a href="#architecture">구조</a></h3><p>공유 소스 → 설치 → OMP → 작업·문서</p></div>
@@ -146,7 +146,7 @@
       <tr><td>스킬 설치·복구</td><td><code>scripts/deploy-skills.ts</code></td><td><a href="#skills">Skills</a></td></tr>
       <tr><td>사용자 명령</td><td><code>commands/</code></td><td><a href="#commands">Commands</a></td></tr>
     </tbody></table></div>
-    <footer>공개 지식 변경 10개를 검토·정정하고 로컬 OKF 배포를 대조했습니다. 검토 대상 밖의 기존 미대조 입력 2개는 <a href="sources.json">manifest</a>에 남깁니다. 설정과 관계도 구조·게시 파일은 유지합니다.</footer>
+    <footer>원격 공개 지식과 이 PC의 모델 프로필·지침 변경을 병합하고 Windows에 적용했습니다. 검토 대상 밖의 기존 미대조 입력 2개는 <a href="sources.json">manifest</a>에 남깁니다. 관계도 구조·게시 파일은 유지합니다.</footer>
   </article>
 
   <article class="doc-page" id="requirements" data-page data-title="Requirements" data-group="Planning" data-terms="요구사항 수락 기준 완료 검증" hidden>
@@ -183,7 +183,7 @@
     <dl class="meta"><div><dt>Status</dt><dd>확정 / 제안</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
     <div class="table-scroll"><table><thead><tr><th>할 일</th><th>상태</th><th>위치·선행 조건</th><th>완료 기준</th></tr></thead><tbody>
       <tr id="plan-navigation" data-target="overview:project-docs overview:navigation"><td>프로젝트 목차·상태·계획<br><small>NAV-01 · 확정</small></td><td id="plan-navigation-state"><span class="badge">완료</span></td><td><a href="#commands">Commands</a> · 문서 UI</td><td>관계도 갱신, 메뉴·검색, 배포·발견, 독립 검토</td></tr>
-      <tr id="plan-models" data-target="overview:source-bundle overview:bootstrap"><td>GPT-6.1 Sol 프로필 적용<br><small>MODEL-01 · 확정</small></td><td><span class="badge">완료</span></td><td><a href="#installation">Installation</a><br>사용자 승인 후 Windows setup 실행</td><td>관리 설정 21개·OKF 33개 파일 일치 · 저장된 @smol 실호출 통과</td></tr>
+      <tr id="plan-models" data-target="overview:source-bundle overview:bootstrap"><td>고난도 개발·보조 업무 추론 구분<br><small>MODEL-01 · 확정</small></td><td><span class="badge">완료</span></td><td><a href="#installation">Installation</a><br>일괄 xhigh 폐기 · 역할별 차등 적용</td><td>설정 22개·OKF 42개 파일 일치 · 메인/구현/보안 검토 xhigh · 실제 scout/commit medium · advisor high 확인</td></tr>
       <tr id="plan-windows" data-target="overview:bootstrap overview:skill-deployer"><td>Windows 설치 검증<br><small>VERIFY-WIN-01 · 검증 공백</small></td><td><span class="badge blocked">부분</span></td><td><a href="#installation">Installation</a> · <a href="#skills">Skills</a><br>활성 설치·배포 대조 통과</td><td>남은 검증: 재설치·명령 발견·기존본 복구·junction 거부</td></tr>
       <tr id="plan-adoption"><td>작업 중인 프로젝트에 적용<br><small>ADOPT-01 · 제안</small></td><td><span class="badge proposed">미착수</span></td><td>대상 프로젝트 세션·범위 필요</td><td>그 프로젝트에서 <code>/project-map</code> 요청 후 실제 코드·계획 연결</td></tr>
     </tbody></table></div>
@@ -199,20 +199,22 @@
     <p class="map-context">작업 트리 대조 · 커밋 근거 미검증 · <a href="#release">검증 내역</a></p>
   </article>
 
-  <article class="doc-page" id="installation" data-page data-title="Installation" data-group="Development" data-terms="설치 배포 setup.sh setup.ps1 apply_settings_file Set-OmpSettings config modelRoles profiles GPT-6.1 Sol smol commit advisor" data-nodes="overview:bootstrap overview:source-bundle" hidden>
+  <article class="doc-page" id="installation" data-page data-title="Installation" data-group="Development" data-terms="설치 배포 setup.sh setup.ps1 apply_settings_file Set-OmpSettings config modelRoles Opus Astra Sol Luna Haiku Sonnet Fable role-sensitive xhigh high medium low 고난도 보조 커밋 탐색 판단 폴백 fallback 1% usageReservePct title.generator" data-nodes="overview:bootstrap overview:source-bundle" hidden>
     <p class="breadcrumb">Development / Installation</p><h1>Installation</h1><p class="lead">공유 설정·지침·명령·스킬을 활성 OMP 프로필에 배포합니다.</p>
     <dl class="meta"><div><dt>Status</dt><dd>소스·로컬 배포 일치</dd></div><div><dt>Owner</dt><dd>setup</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
     <div class="inline-links"><a href="#architecture?node=bootstrap">전체 위치</a><a href="#skills">스킬 배포 상세</a><a href="#roadmap">남은 검증</a></div>
     <div class="table-scroll"><table><thead><tr><th>위치</th><th>하는 일</th></tr></thead><tbody>
       <tr><td><a href="../../setup.sh"><code>setup.sh</code></a> · <code>apply_settings_file()</code></td><td>POSIX 설치 · 설정 행을 <code>omp config set</code>으로 적용</td></tr>
       <tr><td><a href="../../setup.ps1"><code>setup.ps1</code></a> · <code>Set-OmpSettings()</code></td><td>PowerShell 설치 · 같은 공통 Bun 도구 사용</td></tr>
-      <tr><td><a href="../../config/settings.conf"><code>config/settings.conf</code></a></td><td>모델·도구 기본값 · pro 오버레이는 두 키만 교체</td></tr>
+      <tr><td><a href="../../config/settings.conf"><code>config/settings.conf</code></a></td><td>고난도 개발·보조 업무 차등 추론 · 모델 분담과 잔여 1% 정책 유지</td></tr>
       <tr><td><a href="../../scripts/validate-okf.ts"><code>validate-okf.ts</code></a></td><td>OKF 형식 검사 후 배포</td></tr>
     </tbody></table></div>
     <h2>모델 프로필 변경</h2>
-    <p><code>smol</code>·<code>commit</code>은 GPT-6.1 Sol medium, advisor의 OpenAI fallback은 GPT-6.1 Sol high로 소스를 갱신했습니다. 기본·Opus 전용 프로필과 허용 목록을 함께 맞췄습니다.</p>
-    <p>Astra·Luna·Opus 5.5·Fable 5.1, 추론 강도, quota·승인·advisor 정책은 유지합니다. <a href="../../okf/agents/guide.md#2026-10-05-모델-선정-근거">공식·사용자 평가와 전체 역할표</a></p>
-    <p class="note"><strong>macOS 활성 기본 프로필에 적용했습니다.</strong> <code>sh setup.sh</code> 실행 후 관리 설정 21개와 로컬 OKF 37개 파일의 일치를 확인했습니다. 기존 미커밋 지침은 로컬 배포에 포함하지만 영상 학습 커밋에서는 제외합니다. 모델 실호출과 Windows 실행은 이번 검증에 포함하지 않습니다.</p>
+    <p><strong>추론 강도:</strong> 메인·계획·구현·정밀 검토는 <code>xhigh</code>, 디자인·화면 분석·advisor는 <code>high</code>, 탐색·커밋은 <code>medium</code>, 제목·메모리는 <code>low</code>입니다. 고난도 개발 전제를 단순 보조 업무까지 확대했던 일괄 xhigh 설정은 폐기했습니다.</p>
+    <p><strong>모델·fallback:</strong> Opus 메인·계획·디자인 / Sol 구현·보조 / Astra 전문 검토를 유지합니다. 판단 Opus↔Astra, 실행 Sol→Sonnet, 경량 Luna→Haiku의 대상은 그대로 두고 각 역할의 추론 강도를 명시합니다. 일반 대화에서 커밋을 언급했다고 메인 모델이 자동으로 <code>commit</code> 역할로 바뀌지는 않습니다.</p>
+    <p><strong>Fable 5.1:</strong> 고난도 명시 선택은 <code>/model anthropic/claude-fable-5-1:xhigh</code>를 사용합니다. 기본 역할·자동 fallback 대상에는 넣지 않으며 선택한 세션도 오류·quota 복구 정책을 적용받습니다. <a href="../../okf/agents/guide.md#현재-역할과-운영-경계">전체 역할표</a> · <a href="../../okf/agents/guide.md#구독과-인증의-경계">구독·API 경계</a></p>
+    <p class="note"><strong>Windows 로컬 적용·실호출 확인.</strong> setup 종료 코드 0, 설정 22개·OKF 42개 파일 일치를 확인했습니다. Opus xhigh 메인이 Sol xhigh 작업자·Astra xhigh 보안 검토자·Sol medium scout를 실행했습니다. <code>@commit</code>은 Sol medium, <code>@advisor</code>는 Sol high, Sonnet 후보·Fable 명시 선택은 xhigh로 실행 기록을 확인했습니다. <a href="../../.omp-artifacts/model-role-swap-20261008-a83f2c/hard-workload-xhigh/role-sensitive/deployment-verification.json">배포 근거</a> · <a href="../../.omp-artifacts/model-role-swap-20261008-a83f2c/hard-workload-xhigh/role-sensitive/session-model-evidence.json">실행 모델·강도</a></p>
+    <p>잔여 1% 정책·advisor 활성·모델 ID·7개 선택 목록·인증 방식은 유지했습니다. 역할별 기본값이며 자동 난도 판정을 구현한 것은 아닙니다. 1% 전환은 신뢰 가능한 coding-plan 사용량·적격 후보가 있을 때 적용합니다. API 크레딧 잔액·월 지출 상한·구독 권한·품질 향상은 보장하지 않습니다.</p>
     <p><strong>순서:</strong> 사전 검사 → 설정 → 규칙 → OKF → 확장 → agents → commands → skills</p>
     <p class="map-context">설치는 Archify 실행이 아닙니다. 전체 setup은 트랜잭션이 아닙니다. <a href="#release">실행 근거</a></p>
   </article>
@@ -254,25 +256,27 @@
       <tr><td><code>findDangerousToolCall()</code></td><td>위험 후보 탐지</td></tr>
       <tr><td><code>confirmDangerousCall()</code></td><td>후보 승인 요청 · UI/승인 없으면 차단</td></tr>
     </tbody></table></div>
-    <p class="map-context">이번 작업의 런타임 회귀는 미실행입니다. 보호 hook은 OS 샌드박스가 아닙니다. custom agent override는 없습니다.</p>
+    <p class="map-context">모델 라우팅은 실제 CLI·자식 session에서 확인했습니다. 위험 보호 hook의 회귀는 이번에 실행하지 않았고 OS 샌드박스가 아닙니다. custom agent 파일은 없으며 security-reviewer 모델만 설정 override로 배정합니다.</p>
   </article>
 
   <article class="doc-page" id="release" data-page data-title="Release" data-group="Project records" data-terms="검증 배포 릴리스 브라우저 fingerprint source hash manifest native provenance" data-nodes="overview:publication" hidden>
     <p class="breadcrumb">Project records / Release</p><h1>Release</h1><p class="lead">무엇을 실행해서 확인했는지 구분합니다.</p>
-    <dl class="meta"><div><dt>Status</dt><dd id="release-status">지식 검토·정정 · Windows OKF 배포 대조 통과</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
+    <dl class="meta"><div><dt>Status</dt><dd id="release-status">원격 지식·로컬 모델 프로필 병합 · Windows 전체 적용 대조 통과</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
     <div class="inline-links"><a href="#architecture?node=publication">전체 위치</a></div>
     <div class="table-scroll"><table><thead><tr><th>대상</th><th>검증 상태</th></tr></thead><tbody>
-      <tr><td>공개 지식 변경</td><td>독립 검토 3개 영역 · 지적 정정 · 인덱스 사본의 공개 22개 concept·내부 링크 268개 검사 통과</td></tr>
-      <tr><td>Windows OKF 배포</td><td>로컬 25개 concept 검사 · 배포 파일 33개 소스 일치</td></tr>
-      <tr><td>기존 설정 보존</td><td id="state-install">setup.ps1의 OKF 단계만 실행 · 관리 설정 21개 유지 · 전체 설치 미실행</td></tr>
-      <tr><td>전체·스킬 배포 관계도</td><td id="state-map">게시 JSON/HTML 4개 hash 일치 · 구조 변경·재렌더링 없음 · 기존 gate 기록 유지</td></tr>
-      <tr><td>좌측 메뉴·검색·본문</td><td id="state-ui">기존 동작 유지 · 이번 변경은 지식 링크·검증 상태 문구 · <a href="../../.omp-artifacts/knowledge-publish-20261008-a91c/browser.json">브라우저 관찰 기록</a></td></tr>
-      <tr><td>검증 범위 밖</td><td>게임·모바일 실기기·MCP runtime 교체·모델 실호출 미실행 · <a href="#roadmap">기존 설치 검증 공백</a></td></tr>
+      <tr><td>원격 반영·병합</td><td>46bf5de fast-forward · 겹친 추적 파일 5개만 분리 후 재적용 · 충돌을 양쪽 내용으로 병합 · 하위 목차 요약 정합화 · 독립 검토 지적 없음</td></tr>
+      <tr><td>Windows 설정·OKF</td><td id="state-install">전체 setup.ps1 종료 코드 0 · 관리 설정 22개 저장값·유효값 일치 · OKF 42개 파일 소스 일치 · 미관리 설정·MCP·스킬 보존</td></tr>
+      <tr><td>원격 공개 지식</td><td>게시 PC 기록: 독립 검토 3개 영역·지적 정정 · 공개 22개 concept·내부 링크 268개 검사 · 증거는 이 clone에 없음</td></tr>
+      <tr><td>로컬 모델 프로필</td><td>이전 기록 유지: 역할별 추론 차등 · 메인/작업자/보안 검토 xhigh · scout·commit medium · advisor high 실호출 · <a href="#installation">Installation</a></td></tr>
+      <tr><td>전체·스킬 배포 관계도</td><td id="state-map">게시 JSON/HTML 4개 raw hash 일치 · 구조 변경·재렌더링 없음 · 커밋 근거 미검증</td></tr>
+      <tr><td>좌측 메뉴·검색·본문</td><td id="state-ui">병합 문구 갱신 · 브라우저 확인 결과는 manifest에 기록</td></tr>
+      <tr><td>검증 범위 밖</td><td>이번 동기화의 모델 실호출·강제 fallback·게임/모바일 실기기·MCP runtime 교체 미실행 · <a href="#roadmap">기존 설치 검증 공백</a></td></tr>
     </tbody></table></div>
     <p><a href="sources.json">근거 manifest</a> · 소스 수동 대조 · 신선도 fingerprint · 게시 raw hash</p>
-    <p class="map-context">이번 적용 근거: <a href="../../.omp-artifacts/knowledge-publish-20261008-a91c/verification.json">공개 번들·링크 검사</a> · <a href="../../.omp-artifacts/knowledge-publish-20261008-a91c/deployment.json">Windows OKF 배포·설정 보존</a> · <a href="../../.omp-artifacts/knowledge-publish-20261008-a91c/camera-counterexample.json">카메라 제약 수치 반례</a>. 공식 문서·소스 대조와 지식 배포 검증이며 게임 동작이나 다른 PC의 검증을 대신하지 않습니다. 개별 과거 실행 기록은 manifest의 해당 항목에 보존합니다.</p>
-    <p class="map-context">커밋 근거는 미검증입니다. 정본은 통과한 staging 결과의 복사본이며 영수증은 원래 경로에 보존합니다. 다른 PC의 실행 성공을 보장하지 않습니다.</p>
-    <p class="map-context">신선도는 부분 대조입니다. 이번 공개 지식 변경 10개는 hash를 갱신했으며 기존 <code>coding-style · language-style</code>의 미대조 fingerprint 2개는 이번 내용 검토 대상 밖이라 유지합니다. 현재 파일의 내용 검토 없이 hash만 맞추지 않았습니다. 관계도 구조는 바뀌지 않았습니다.</p>
+    <p class="map-context">이번 근거: <a href="../../.omp-artifacts/sync-20261008-eac098f8/verification.json">배포·설정 대조</a> · <a href="../../.omp-artifacts/sync-20261008-eac098f8/backups/manifest.json">동기화 전 백업 SHA-256</a>. 원격 지식 게시의 검증 자료는 게시한 PC에 있으며 다른 PC의 실행 성공을 보장하지 않습니다.</p>
+    <p class="map-context">동기화 전 백업은 <code>.omp-artifacts/sync-20261008-eac098f8/backups/</code>, 모델 프로필 검증 자료는 <code>.omp-artifacts/model-role-swap-20261008-a83f2c/</code>에 보존합니다. 삭제하면 해당 재확인·복구 자료가 사라집니다.</p>
+    <p class="map-context">커밋 근거는 미검증입니다. 정본은 통과한 staging 결과의 복사본이며 영수증은 원래 경로에 보존합니다.</p>
+    <p class="map-context">신선도는 부분 대조입니다. 병합하며 읽은 입력 10개는 hash를 다시 계산했고, 이번 검토 밖인 <code>coding-style · language-style</code>의 기존 미대조 fingerprint 2개는 유지합니다. 관계도 구조는 바뀌지 않았습니다.</p>
     <p class="map-context"><a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/layout-verification.json">화면 경계 검사</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/discovery-active.json">명령·선언 발견</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/overview/v3/evidence/map.finalize-summary.json">전체 지도 검증</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/skill-deployment/v2/evidence/map.finalize-summary.json">상세 지도 검증</a></p>
   </article>
 
@@ -285,7 +289,7 @@
       <tr><td>Archify는 본문 속 관계도</td><td>같은 파일·함수를 시각화 · 상태/계획 중복 없음</td></tr>
       <tr><td>작업 트리 / 커밋 근거 분리</td><td>개발 중 내용 표시 · 자동 커밋 안 함</td></tr>
       <tr><td>검증 후 게시</td><td>실패 후보로 정본을 교체하지 않음</td></tr>
-      <tr><td>구 Sol 역할만 6.1로 갱신</td><td>공식 후속·독립 코딩 개선 근거 · 난제·시각 역할의 일괄 교체 근거는 부족</td></tr>
+      <tr><td>고난도 개발과 단순 보조 구분</td><td>품질 우선이 일괄 최대 추론을 뜻하지 않음 · 역할별 기본값 사용 · 난도별 자동 전환과 구분</td></tr>
       <tr><td>영상의 원칙만 기존 지침에 통합</td><td>간결성·최소 구현·증거 우선은 유지 · 의미·타입 계약과 검사 경계 보강 · 외부 규칙집 설치·언어 교체 없음</td></tr>
     </tbody></table></div>
     <p class="map-context"><a href="../../okf/log.md">공통 지침 변경 이력</a></p>

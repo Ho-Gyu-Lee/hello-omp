@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 게임 클라이언트 기능/성능 체크리스트
-description: 메모리·프레임·렌더링·에셋·수명·네트워크 상태·반응성·플랫폼과 Unity Android 의존성 배포·EDM4U 실경로 검증 체크리스트.
+description: 메모리·프레임·렌더링·에셋·수명·네트워크 상태·끊김 처리 순서·수신 큐 상한·반응성·플랫폼과 Unity Android 의존성 배포·EDM4U 실경로 검증 체크리스트.
 tags: [game, client, performance, networking, checklist, unity, android, aar, edm4u]
-timestamp: 2026-09-28T00:00:00Z
+timestamp: 2026-10-06T00:00:00Z
 ---
 
 # 게임 클라이언트 기능/성능 체크리스트
@@ -22,6 +22,8 @@ timestamp: 2026-09-28T00:00:00Z
 - [ ] 보정: 현재 표시 상태에서 자연스럽게 시작하며 오래된 목표로 점프한 뒤 다시 이동하는 이중 보정 없음
 - [ ] 불연속 전환: teleport·respawn·scene transfer·authority change 때 속도·버퍼·timestamp의 preserve/reset/recompute 정책 명시
 - [ ] 재접속: session/entity generation을 갱신하고 이전 generation의 패킷·대기 명령에 재검증·폐기 정책을 적용한 뒤 권위 상태로 재수렴
+- [ ] 끊김 처리 순서: 네트워크 스레드가 끊김을 감지해도 게임 스레드가 아직 처리하지 않은 수신 메시지가 남아 있을 수 있음. 세션 상태 초기화(채널 이탈 통지·초기화 플래그 해제)는 같은 수신 큐에 종료 표시로 넣어 게임 스레드가 순서대로 처리하게 함. 다음 접속에서야 올라가는 generation은 재접속 대기 중 처리되는 이전 연결 메시지를 막지 못함
+- [ ] 수신 큐 상한: 게임 루프가 멈춘 동안(일시정지·로딩) 네트워크 스레드가 받은 메시지를 무한히 쌓거나 고정 크기 풀이 고갈돼 크래시하지 않음. 개수·바이트 상한을 넘으면 연결을 끊고 권위 상태로 재동기화하며, 밀린 큐는 프레임당 처리량을 늘려 따라잡음
 - [ ] 플랫폼: 모바일 발열·배터리, 해상도·주사율 차이 대응
 - [ ] Android 플러그인: 로컬 AAR의 외부 라이브러리 의존성을 Gradle/의존성 resolver에 명시하고, C# 컴파일과 별개로 최종 APK의 모든 DEX에 필요한 클래스 정의가 포함되는지 확인. Maven 배포는 의존성 메타데이터를 제공하지만 로컬 AAR 파일만 복사하는 경로에서는 이를 대신한다고 가정하지 않음([Android 라이브러리 문서](https://developer.android.com/studio/projects/android-library#AddDependency)).
 - [ ] Android 클래스 누락: `NoClassDefFoundError`의 정확한 클래스와 호출 위치를 기기 로그→플러그인 바이트코드→최종 APK 정의로 대조. 클래스 참조 문자열만으로 포함을 판정하지 않고 알려진 포함 클래스로 검사기의 양성 대조를 수행. `androidx.core`와 `androidx.webkit`은 별도 artifact이며, [`WebViewAssetLoader`](https://developer.android.com/reference/androidx/webkit/WebViewAssetLoader)는 `androidx.webkit:webkit`에 속함. 이전 export나 에디터 실행을 현재 APK의 기기 실행 검증으로 대체하지 않음.

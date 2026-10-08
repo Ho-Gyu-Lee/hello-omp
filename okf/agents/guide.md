@@ -3,15 +3,15 @@ type: Reference
 title: 에이전트 가이드
 description: 빌트인 에이전트와 모델 역할 전체 목록, 미배정 해석, 실사용 평가와 역할 배정·실행의 구분, 커스텀 에이전트 작성 기준.
 tags: [agents, subagents, routing, builtin]
-timestamp: 2026-10-05T00:00:00Z
+timestamp: 2026-10-08T00:00:00Z
 ---
 
 # 에이전트 가이드
 
-OMP 18.3.2의 `omp agents unpack --dir <격리 경로> --json` 출력에서 빌트인 에이전트 `scout`·`reviewer`·`security-reviewer`·`task`·`sonic` 5종과 아래 model alias를 확인했다(확인: 2026-09-26). 기본 원칙은 제공되는 빌트인을 그대로 사용하는 것이다 — 동명 복제·오버라이드는 번들 프롬프트와 기본값의 갱신을 놓칠 수 있으므로 피한다.
+OMP 18.8.3의 `omp agents unpack --dir <격리 경로> --json` 출력에서 빌트인 에이전트 `scout`·`reviewer`·`security-reviewer`·`task`·`sonic` 5종과 아래 model alias를 확인했다(확인: 2026-10-08). 기본 원칙은 번들 정의를 그대로 사용하는 것이다. 동명 프롬프트 복제 대신 역할·설정 키로 라우팅한다.
 
 - 번들 model alias는 `scout`·`sonic` → `@smol`, `task` → `@task`, `reviewer` → `@slow`이다.
-- `security-reviewer`는 번들 model 지정이 없어 부모 세션의 모델 선택을 따른다. 별도 라우팅이 필요할 때만 `task.agentModelOverrides`를 사용한다.
+- `security-reviewer`는 번들 model 지정이 없다. 공유 설정은 `task.agentModelOverrides={"security-reviewer":"@slow"}`로 메인 상속 대신 검토 역할을 명시한다.
 - role alias는 `modelRoles`의 모델로 해석되고, 값에 명시한 `:level` suffix가 번들 기본 추론 강도보다 우선한다. 현재 설정은 모든 역할에 suffix를 지정하므로 아래 표의 모델·강도가 함께 적용된다. suffix가 없으면 `scout`·`sonic`은 medium이라는 번들 기본값을 따른다.
 - OKF 확인·도구 정책은 빌트인이 기본 상속하는 글로벌 `AGENTS.md`로 적용된다.
 - 특정 에이전트만 모델을 바꾸려면 파일 복사 대신 `task.agentModelOverrides`(에이전트→모델 문자열)를 쓴다. thinking level 조정은 우선 `modelRoles` suffix로 처리하고, 불가능할 때만 소스 override를 검토한다.
@@ -19,10 +19,10 @@ OMP 18.3.2의 `omp agents unpack --dir <격리 경로> --json` 출력에서 빌�
 | 빌트인 에이전트 | 역할 | 사용 시점 | 관리 소스 모델 라우팅 |
 |------|------|-----------|------|
 | `scout` | 읽기 전용 코드베이스 스카우트 | 넓은 탐색, 메인 컨텍스트 보호 | `smol` = gpt-6.1-sol:medium |
-| `reviewer` | 코드 품질·보안 리뷰 | 변경 완료·PR 독립 검토 | `slow` = claude-opus-5-5:xhigh |
-| `security-reviewer` | 읽기 전용 취약점 분석 | 근거 기반 저장소 보안 감사 | 부모 세션 모델(필요 시 agent override) |
-| `task` | 범용 다단계 위임 | 일반 서브에이전트 작업 | `task` = gpt-6-astra:xhigh |
-| `sonic` | 저추론 기계적 작업 | 단순·반복 기계 작업 | `smol` = gpt-6.1-sol:medium |
+| `reviewer` | 코드 품질·보안 리뷰 | 변경 완료·PR 독립 검토 | `slow` = gpt-6-astra:xhigh |
+| `security-reviewer` | 읽기 전용 취약점 분석 | 근거 기반 저장소 보안 감사 | 설정 override `@slow` = gpt-6-astra:xhigh |
+| `task` | 범용 다단계 위임 | 일반 서브에이전트 작업 | `task` = gpt-6.1-sol:xhigh |
+| `sonic` | 기계적 작업 | 단순·반복 기계 작업 | `smol` = gpt-6.1-sol:medium |
 
 ## 가용 에이전트와 모델 역할의 구분
 - 위임에는 현재 세션에 제공된 에이전트 이름만 사용한다. 커스텀 정의·확장·비활성화 설정에 따라 가용 목록은 달라질 수 있으며, 목록에 없는 이름은 실행 전 검사에서 `Unknown agent`로 거부된다.
@@ -35,7 +35,7 @@ OMP 18.3.2의 `omp agents unpack --dir <격리 경로> --json` 출력에서 빌�
 
 ## 모델 역할 전체 목록과 미배정 해석
 
-OMP 18.3.2의 [모델 문서](omp://models.md)·[설정 문서](omp://settings.md)와 유효 설정을 대조했다(확인: 2026-09-26). 설정 파일에 값이 있는 역할만 나열하면 미배정 기본 역할이 빠지므로 지원 목록과 명시 배정을 구분한다.
+OMP 18.8.3의 [모델 문서](omp://models.md)·[설정 문서](omp://settings.md)와 유효 설정을 대조했다(확인: 2026-10-08). 지원 역할과 명시 배정을 구분한다.
 
 | 구분 | 기본 역할 | 의미 |
 |------|-----------|------|
@@ -54,34 +54,91 @@ OMP 18.3.2의 [모델 문서](omp://models.md)·[설정 문서](omp://settings.m
 - 구현 성공을 이미지 독해·위험 감시·판정 정확도의 증거로 확대하지 않는다. 해당 역할의 직접 근거가 없으면 조건부 후보 또는 현행 유지로 표시한다. 작성자와 검토자는 실제 실행 모델을 기준으로 분리하며 역할명이나 fallback 설정만으로 독립성을 보장하지 않는다.
 - API 토큰 단가, 성공 작업당 총사용량, 구독 quota를 구분한다. 카탈로그 등재·허용 목록·계정 접근 권한·실제 도구 왕복 성공은 서로 다른 확인 단계다. 외부 리뷰에 근거한 추천을 로컬 비교검증 결과나 사용자가 채택한 영속 정책으로 기록하지 않는다.
 
-## 2026-10-05 모델 선정 근거
+## 2026-10-08 모델 선정 근거
 
-- 이 문서의 배정표는 **관리 소스 프로필**을 설명한다. 소스 변경·전역 적용·실제 호출을 구분하며 적용 상태는 프로젝트 지도에서 확인한다. 이번 검토는 OMP 18.6.1의 갱신된 카탈로그와 공식 API 문서를 대조했다.
-- [OpenAI 공식 가이드](https://openai.com/index/practical-guide-building-gpt-6/)(10월 2일)는 Astra를 최고 난도 추론, [GPT-6.1 Sol](https://openai.com/index/introducing-gpt-6-1-sol/)(9월 29일)을 복잡한 코딩·조사, Luna를 반복 분류·추출·구조화 요약에 배치한다. `smol`·`commit`과 advisor의 OpenAI fallback만 구 Sol에서 6.1로 갱신하고 Astra·Luna는 유지한다. [Sol API](https://developers.openai.com/api/docs/models/gpt-6.1-sol)는 low·medium·high·xhigh·max를 지원하며 기본값은 medium이다. 이 프로필은 medium/high를 선택하고 도구 호출에는 Responses 경로를 사용한다.
-- [Artificial Analysis 자체 평가](https://artificialanalysis.ai/articles/gpt-6-1-sol-replaces-gpt-6-sol-after-just-7-days-with-near-astra-intelligence)(9월 29일)의 Astra 근접 코딩 결과는 max/xhigh 기준이다. [Paweł Huryn의 실제 코드 수정 실험](https://github.com/phuryn/bug-hunt-bench/blob/main/results/run-notes.md)(10월 1일 갱신본)은 두 코드베이스의 105개 결함에서 구 Sol→6.1 Sol의 medium 결과를 14→29, high를 20→36.5로 보고했다. 구 Sol은 각 1회, 새 Sol은 각 2회 평균이며 Codex CLI도 0.155.1→0.159.0으로 달라 순수 모델 효과를 분리하지 못한다. 이 근거로 같은 경량 역할의 후속 모델을 선택하되 medium을 Astra와 동급으로 주장하거나 OMP 로컬 비교 결과로 확대하지 않는다.
-- [Codex 사용자 신고 #50121](https://github.com/openai/codex/issues/50121)(10월 1일)은 Sol 6.1 xhigh와 GPT-5.6의 경험 비교이며 통제 재현이 아니다. [#49828](https://github.com/openai/codex/issues/49828)은 Sol 6.1 high/Fast의 지시 이행·자기검증 실패도 보고한다. 실패 신고로 보편적 실패율이나 사용자 합의를 판정하지 않는다. Astra 유지는 공식 난도별 배치와 기존 상급 우선 정책에 따른다. advisor fallback 갱신은 기존 Sol high 경로의 후속 교체이지 위험 감시 정확도 향상의 증거가 아니며, 주 advisor(Opus)와 완료 전 독립 검토를 유지한다.
-- [Anthropic 현행 모델](https://platform.claude.com/docs/en/models/overview)은 Opus 5.5·Fable 5.1·Sonnet 5.5·Haiku 4.5다. Opus는 개방적인 다단계 코딩·지식 작업, Fable은 Opus 상위 effort로 부족한 추론, [Sonnet](https://www.anthropic.com/claude-sonnet-5-5)은 범위가 명확한 작업, Haiku는 경량 응답이 공식 용도다. [Wmedia의 실사용 비교](https://wmedia.es/en/tips/claude-code-sonnet-5-5-vs-opus-5-5-benchmark)(9월 29일)는 작은 PHP 저장소의 네 과제에서 Sonnet과 Opus가 모두 통과하고 Sonnet의 비용·응답 효율이 좋았다고 보고한다. 위 Bug Hunt에서는 xhigh의 두 모델 평균이 같고 medium은 Opus, high/max는 Sonnet이 높았지만 Sonnet max의 비용 부담도 컸다. high의 Sonnet 실행별 편차는 모델 간 평균 차이보다 컸으며, 이 결과는 작은 표본의 코드 수정이지 계획·검토 전체의 우열이 아니다. 이 혼합된 과제별 결과와 기존 상급 우선 정책에 따라 Opus를 유지하고, 범위가 명확하고 비용 민감한 작업에는 Sonnet을 대안으로 둔다.
-- Fable의 이미지 입력 지원과 이미지 **이해 정확도 우위**는 다르다. [공식 선택 가이드](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model)는 Opus의 vision-heavy workflows와 Sonnet의 visual understanding도 권장한다. Fable은 공식 비교표에서 응답 지연·API 단가 부담이 더 크며, Max·premium 좌석에서는 주간 한도를 더 빨리 소모하고 Pro/standard 좌석에서는 별도 과금된다. 독립 이미지 비교가 부족하므로 `vision` 유지가 최적·최저비용이라는 뜻은 아니다. 기존 상급 프로필은 유지하되 Fable 별도 과금을 원하지 않는 Pro/standard 계정에는 Opus 전용 프로필을 제공한다. [Mythos 5.1](https://platform.claude.com/docs/en/models/mythos-5-1/overview)은 초대 전용이므로 카탈로그에 있다는 이유로 배정하지 않는다. `image`·`web`·`speech`·`dictation`·`judge` 같은 별도 model-kind 역할도 일반 chat 모델로 채우지 않는다.
+이 문서는 **관리 소스의 선택**을 설명한다. 공식 원문·사용자 리뷰 조회 기준은 2026-10-08이며, 출시일과 조회일은 다르다. 소스·로컬 적용·실호출 상태는 프로젝트 지도에서 구분한다. 외부 결과를 OMP 로컬 품질 비교로 해석하지 않는다.
+
+- **OpenAI:** [공식 목록](https://developers.openai.com/api/docs/models/)의 권장군은 GPT-6 Astra·GPT-6.1 Sol·GPT-6 Luna다. [6.1 Sol 발표](https://openai.com/index/introducing-gpt-6-1-sol/)는 9월 29일이며, [10월 7일 Chat 발표](https://openai.com/index/gpt-6-for-everyone/)는 Work·Codex 모델이 바뀌지 않는다고 명시한다. [공식 용도 가이드](https://openai.com/index/practical-guide-building-gpt-6/)에 따라 일반 구현·조사에는 Sol, 정밀 검토·시각 분석에는 Astra, 분류·요약에는 Luna를 배치한다. Sol 6.1의 도구 호출은 Responses 경로를 사용하며 `none`·`minimal`을 지정하지 않는다.
+- **Anthropic:** [현행 목록](https://platform.claude.com/docs/en/models/overview)은 Opus 5.5·Fable 5.1·Sonnet 5.5·Haiku 5.5다. 가장 최근 발표인 [Haiku 5.5](https://www.anthropic.com/claude-haiku-5-5)(10월 7일)는 대량 경량 작업용이지 상급 메인 대체가 아니다. Opus는 개방적인 agentic coding·지식 작업의 시작점이며, [선택 가이드](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model)는 Opus 상위 effort로 부족할 때 Fable을 권한다. [Mythos 5.1](https://platform.claude.com/docs/en/models/mythos-5-1/overview)은 승인 조직용이므로 배정하지 않는다.
+- **고난도 개발·역할별 차등 정책:** 주력 개발은 어렵다고 전제하되 보조 업무까지 같은 난도로 취급하지 않는다. 메인·계획·구현·정밀 검토는 xhigh, 디자인·화면 분석·advisor는 high, 탐색·커밋은 medium, 제목·메모리는 low로 구분하며 fallback에도 같은 역할 수준을 명시한다. [Claude effort 문서](https://platform.claude.com/docs/en/build-with-claude/effort)와 [Amp의 high 운용](https://ampcode.com/news/opus-5.5)처럼 높은 effort가 항상 우수한 것은 아니다. 이 배정은 역할별 운영 판단이지 품질·비용 A/B 결과가 아니며, 자동 난도 판정·일괄 xhigh·max 강제는 도입하지 않는다.
+- **버그 수정 실험:** [Paweł Huryn Bug Hunt](https://github.com/phuryn/bug-hunt-bench/blob/main/results/run-notes.md)(10월 7일 갱신본)는 두 저장소 105개 결함에서 Astra max 3회 평균 45, Sol 6.1 max 3회 평균 44.3, Sol high 2회 평균 36.5를 보고했다. 실행별 편차·CLI·평가기·effort가 달라 확정 순위가 아니며, Sonnet 5.5 max도 더 높은 평균과 큰 편차를 보여 회사 전체 우열을 확정할 수 없다. Sol의 일반 구현 배정은 공식 용도와 이 혼합된 실사용 근거를 고려한 운영 선택이지 대규모 게임 서버·디자인의 A/B 우위를 검증한 결과가 아니다.
+- **실사용 채택과 반대 사례:** [openclaw autoreview #299](https://github.com/openclaw/agent-skills/issues/299)(9월 29일 게시, 10월 1일 갱신)는 Sol 6.1 high 리뷰 채택과 served-model 확인을 보고한다. 반면 [Codex #50121](https://github.com/openai/codex/issues/50121)(10월 1일)은 xhigh의 지시 이행·완수 퇴행을, [#43163](https://github.com/openai/codex/issues/43163)은 Astra의 무해한 입력 차단을 보고한다. 채택 사례와 개별 실패 신고 모두 보편적 성공률·사용자 합의는 아니다.
+- **Claude의 작은 과제 비교:** [Wmedia Sonnet/Opus](https://wmedia.es/en/tips/claude-code-sonnet-5-5-vs-opus-5-5-benchmark)(9월 29일)는 11파일 PHP 저장소에서 네 과제·네 설정·세 반복을 비교했다. Sonnet medium과 Opus medium 모두 12/12 통과했고 Sonnet의 비용·응답 효율이 좋았다. [같은 저자의 Opus/Fable 비교](https://wmedia.es/en/tips/claude-code-opus-5-5-vs-fable-5-1-vs-opus-5-benchmark)도 작은 과제에서 Fable의 필요성을 입증하지 못했다. 같은 저자를 독립 표본으로 중복 집계하지 않으며 이 결과는 개방형 계획의 우열이 아니다.
+- **리뷰 전문 업체의 혼합 결과:** [CodeRabbit Opus 5.5 평가](https://www.coderabbit.ai/blog/opus-5-5-model-review)(9월 22일)는 OSS 80개 패턴에서 Standard/Max가 일부 새 결함을 찾는 대신 기존에 찾던 결함도 놓쳤고, Max의 precision이 더 낮았다고 보고했다. 출시 파트너·상용 pipeline 자체 평가이며 Standard/Max는 API effort 이름이 아니다. 높은 effort나 회사 분리만으로 검토 정확도가 보장되지 않는다.
+- **전문 검토와 보조 판단:** Astra는 정밀 검토 `slow`에 xhigh, 화면 분석 `vision`에 high를 사용하며 Sol `advisor`는 high다. Sol 탐색·커밋은 medium을 사용한다. `commit`은 OMP 커밋 생성 기능의 역할이며 일반 대화의 커밋 요청을 자동으로 분류하는 설정이 아니다. 제목·메모리는 Luna low와 [Haiku 5.5](https://www.anthropic.com/claude-haiku-5-5) low fallback을 유지한다. 높은 effort나 [이미지 입력 지원](https://developers.openai.com/api/docs/models/gpt-6-astra)만으로 미적 판단·위험 감시 정확도 우위를 주장하지 않는다.
+- **fallback의 목적 분리:** 판단 역할의 Opus fallback은 Astra, Sol 실행·탐색·커밋·advisor의 fallback은 [Sonnet 5.5](https://platform.claude.com/docs/en/models/sonnet-5-5/overview)다. 추론 강도는 주 역할의 xhigh/high/medium 구분을 따른다. Sol과 Sonnet의 기본 API 입력·출력 단가가 같은 구간이어도 성능·완료 비용·구독 소모를 동등하게 보지 않는다. fallback은 provider 장애·quota 대응 경로이지 답의 품질에 따른 자동 상향 기능이 아니다.
+- **Fable 명시 선택:** [공식 선택 가이드](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model)의 고난도 추론 후보로 Fable 5.1을 선택 목록에 유지한다. 어떤 기본 역할·fallback 대상에도 넣지 않고 `/model anthropic/claude-fable-5-1:xhigh`로 선택한다. [Max 플랜의 Fable 한도](https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan)는 기존 주간 한도 안의 최대 50%이며 별도 추가 사용량이 아니다. 이는 Claude 공식 제품의 구독 조건이고 OMP 인증·API 과금 경로의 보장은 아니다.
+
+## OMP 설정 사례의 적용 판단
+
+- [공식 v18.8.3](https://github.com/can1357/oh-my-pi/releases/tag/v18.8.3)(10월 7일)과 설치본이 일치한다. [공식 변경 내역](https://github.com/can1357/oh-my-pi/blob/v18.8.3/packages/coding-agent/CHANGELOG.md)에 따라 18.8.2부터 `task`·eval `agent()`·`workpool()`의 호출별 `model` 인자가 없다. `modelRoles`에 실제 selector를 두고 `task.agentModelOverrides`에는 `@slow` 같은 역할 별칭을 써 중복 모델 고정을 피한다.
+- 같은 변경 내역의 18.8.0은 제목 생성 기본값을 메인 모델 fork로 바꿨다. `title.generator=tiny`를 명시해 제목이 경량 OpenAI 역할을 사용하게 한다. 이 값은 `tiny` 역할 배정만으로 자동 설정되지 않는다.
+- [공식 설정 문서](https://github.com/can1357/oh-my-pi/blob/v18.8.3/docs/settings.md)의 저장 위치는 활성 agent dir의 `config.yml`이다. CLI의 `omp config set task.agentModelOverrides ...`는 dotted setting path를 받지만 YAML을 직접 쓸 때는 `task: { agentModelOverrides: ... }`처럼 중첩해야 한다. 설정·카탈로그·인증·실제 도구 왕복을 각각 확인한다.
+- 라우팅 변경은 다음 서브 실행·fallback에 재로딩되지만 정상 실행 중 메인·이미 시작한 서브의 모델을 바꾸지 않는다. 명시 CLI/env/overlay와 resume 모델은 별도 우선순위다. 이 프로필의 배포가 현재 대화를 자동 전환했다는 뜻은 아니다.
+- [공유 Prime-U 설정](https://gist.github.com/PolyphonyRequiem/dd036d7fa5a708c3488cefaf07eaf966)(9월 19일)은 역할 분리와 per-agent 설정 사례로 참고했다. Copilot 과금·구형 ID·`prewalk` 자동 경량화·advisor 끄기·음성/메모리 변경은 이 환경의 증거나 요청이 아니므로 복사하지 않는다. 자동 경량화는 메인 Anthropic 유지·상급 구현 정책과 충돌한다.
+- `modelPresets`는 역할·기본 effort 전환용이며 fallback·허용 목록까지 같은 묶음으로 전환하는 배포 프로필이 아니다. 이번에는 단일 소스만 유지한다. 여러 advisor, account pool, 외부 plugin·MCP도 필요 근거 없이 추가하지 않는다. [override 신고 #12862](https://github.com/can1357/oh-my-pi/issues/12862)는 종료된 환경별 사례이며 일반 결함으로 단정하지 않고 실제 자식 실행 모델로 확인한다.
+
+## 게임·서버·디자인 사용 경로
+
+| 작업 | 책임 배분 | 수락에 필요한 근거 |
+|---|---|---|
+| 복잡한 클라이언트·서버 구조 | Opus 메인이 요구·불변조건·경계를 정리하고 Sol `task`가 명확한 구현을 수행. Opus 작성 설계는 Astra reviewer, OpenAI 작성 코드는 아래 일회성 Anthropic reviewer로 교차 검토 | 소유권·서버 권위·동시성·내구성·복구와 부하/메모리/프레임 관측. [서버](/game/server-checklist.md)·[클라이언트](/game/client-checklist.md)·[보안](/security/game.md) 기준 |
+| 게임 아트 방향·UI/환경 | Opus 메인·`designer`가 방향·대안·추천안을 정하고 Sol `task`가 구현. Astra `vision`은 실제 화면 교차 분석 | 참조 이미지와 스타일 제약, 실루엣·명도·색·스케일·시선 유도, 실제 카메라/HUD에서의 판독성. 대안 비교·선택 이유·트레이드오프 |
+| 레벨·전투 공간 | Opus가 플레이 목표·진행 구조를 정하고 Sol 작업자가 공간·기믹을 구현. Opus 작성 설계는 Astra가 검토하고 OpenAI 작성 구현은 아래 Anthropic 독립 검토로 확인 | 이동 동선·시야·랜드마크·엄폐·적/보상 배치·실패/복구 경로를 greybox와 플레이로 검증. 탑뷰만 보고 실제 카메라의 가림·거리·길찾기를 통과로 보지 않음 |
+
+- 디자인 요청은 사용자가 모든 세부를 정해 줄 때까지 기다리지 않는다. 기존 요구와 레퍼런스로 대안을 비교하고 추천안 하나와 이유를 제시하며, 표현 취향과 관측 가능한 가독성/조작 결함을 구분한다. 실제 시각 자료가 없으면 관찰한 것처럼 평가하지 않는다.
+- `@designer`는 Opus high의 선택 가능한 모델 별칭이지 빌트인 에이전트가 아니다. 디자인 핵심 판단은 메인에서 수행하고 일반 `task`에는 구현 목표·제약·검증 기준을 전달한다. `plan` 배정이나 `todo` 호출이 계획 모드를 자동 실행하지 않으며, 일반 대화는 선택된 메인 모델을 계속 사용한다. 역할 선택과 난도별 자동 승격을 혼동하지 않는다.
+- `vision`은 이미지 **분석**이고 `image`는 생성 runner다. 컨셉아트·텍스처·3D 에셋 생성 도구나 외부 MCP를 이 설정 변경으로 설치·활성화하지 않는다. 생성이 필요한 실제 작업에서 사용 가능한 도구·권리·출력 형식을 별도로 확인한다.
+- [CodeRabbit의 GTA풍 제작 사례](https://www.coderabbit.ai/blog/opus-5-5-model-review)는 Opus·Astra·Fable의 선택된 플레이 시연이며 미술·레벨 디자인의 통제 비교가 아니다. 코드 벤치마크나 데모만으로 “최고의 디자이너”라고 단정하지 않는다. xhigh도 디자인 정확도·재미의 보장이 아니므로 실제 화면/플레이 검증과 메인의 교차 판단을 유지한다.
+
+### 교차 모델 독립 검토
+
+**독립 검토가 필요한 산출물의 실제 작성 모델이 OpenAI인 경우**(서브·메인 fallback 포함), 작업 산출물 디렉터리에 아래 일회성 YAML을 두고 별도 fresh session의 `reviewer` 또는 `security-reviewer`를 실행한다. `--config`는 그 프로세스에만 적용되며 기존 전역 설정·다른 세션을 바꾸지 않는다. 검토 범위·수락 기준·실제 변경 파일·실행 근거를 프롬프트로 전달하고, 구현자의 자기평가를 결론으로 주입하지 않는다.
+
+```yaml
+# <작업 디렉터리>/anthropic-review.yml
+task:
+  agentModelOverrides:
+    reviewer: "@plan"
+    security-reviewer: "@plan"
+```
+
+```sh
+omp --config <작업디렉터리>/anthropic-review.yml --model @plan -p "<대상과 근거를 지정하고 reviewer 독립 검토를 요청>"
+```
+
+- `@plan`은 이 프로필에서 Opus xhigh다. 모델 이름의 자기보고 대신 자식 session의 provider/model 기록을 확인한다. 교차-provider fallback으로 다시 OpenAI가 실행되면 교차 모델 검토가 아니며 Anthropic 검토가 가능한 상태에서 다시 수행한다.
+- `/agents`나 `omp config set task.agentModelOverrides`는 전역 영속 변경이므로 일회성 검토에 사용하지 않는다. record 전체 교체로 기존 security reviewer 배정을 잃을 수 있다. 사용자 모델 태그(`^` 선택)는 사용자가 해당 모델의 위임을 명시한 경우에만 사용한다.
 
 ## 커스텀 에이전트 작성 시
 - 진짜 새 에이전트(새 이름·다른 페르소나)만 `agents/`에 둔다. 단, bundled frontmatter가 품질 요구와 충돌하고 설정 키로 덮을 수 없는 경우에는 원본 OMP 버전과 변경 범위를 주석으로 남긴 동명 override를 허용한다.
-- `model`을 반드시 명시한다 — 미설정 시 역할이 아니라 부모 세션 모델을 상속한다.
+- `model` 또는 per-agent 설정을 명시한다. 미지정 시 설치본의 task/session 상속 경로를 확인하며 부모와 다른 회사일 것으로 가정하지 않는다.
 - 위임받은 에이전트도 작업 전 [OKF](/index.md)의 관련 개념을 확인하고 omp 기본 도구·스킬을 우선한다.
 
-## 참고
-- 기본 공유 프로필은 OpenAI Codex와 Anthropic 모델을 함께 사용한다. `enabledModels`는 GPT-6 Astra·GPT-6.1 Sol·GPT-6 Luna·Claude Opus 5.5·Claude Fable 5.1의 전체 목록이며 모든 주 모델과 fallback 후보가 포함되어야 한다. 선택된 역할·교차-provider fallback을 사용하려면 해당 provider의 유효 인증이 필요하며, 프로필 전체를 의도대로 사용하려면 두 provider를 모두 인증한다.
-- `default`·`task`는 gpt-6-astra:xhigh, `designer`·`slow`·`plan`은 claude-opus-5-5:xhigh, `smol`·`commit`은 gpt-6.1-sol:medium, `tiny`·`memory`는 gpt-6-luna:low, `vision`은 claude-fable-5-1:high, `advisor`는 claude-opus-5-5:high다.
-- 상급 모델 우선 정책에 따라 `default`·`task`에도 Astra를 사용하고 `extendedContext=true`를 유지한다. 모델 선택에 폐기된 컨텍스트 제한을 적용하지 않으며, 실제 컨텍스트는 provider·모델 카탈로그·유효 설정으로 확인한다. UI/UX 구현은 별도 에이전트 등록 없이 범용 `task`에 위임할 수 있다.
-- `extendedContext=true`는 OMP 카탈로그가 지원하는 확장 컨텍스트를 허용하는 로컬 정책이며, API 장문 가격 구간을 넘을 수 있다. 특정 구독의 입력 한도나 quota를 보장하지 않는다. Astra에도 장문 가격 구간이 있으며, API 가격과 구독 quota 소모율은 구분한다. 고정 단가를 운영 규칙으로 복제하지 않고 [OpenAI 모델 문서](https://developers.openai.com/api/docs/models/gpt-6-astra)·[가격표](https://developers.openai.com/api/docs/pricing)와 실제 provider usage report를 확인한다(공식 문서·OMP 18.2.5 `src/config/model-registry.ts` 확인: 2026-09-18).
-- 비동기 `advisor`는 작업 중 위험 감시를 위해 기본 활성(`advisor.enabled=true`)이다. `modelRoles.advisor=anthropic/claude-opus-5-5:high`와 `syncBacklog=1`을 유지한다. 실제 실행 모델은 fallback으로 달라질 수 있으므로 역할 배정만으로 검토 독립성이나 quota 분리를 보장하지 않는다. 출력 정리만을 위해 감시를 임의로 끄지 않는다.
-- 위험 변경은 구현 전 설계 검토를 수행하고, 완료 전에는 fresh context `reviewer`·`security-reviewer`의 결과를 직접 수신해 지적을 판단·반영·재검증한 뒤 통합 최종본을 전달한다. advisor 카드 표시와 `syncBacklog=1`은 검토 반영이나 최종 답변 승인을 보장하지 않는다. 이미 수신한 advisor 지적과 공개 답변을 바꾸는 추가 의견은 [워크플로](/workflow.md)와 [응답 원칙](/response-principles.md)에 따라 처리한다.
-- Astra가 작성하는 기본 경로는 `reviewer`의 `@slow`(Opus 5.5)와 계열이 다르다. `designer`·`plan` 또는 fallback으로 Anthropic이 작성한 산출물은 Astra 등 반대 계열 검토를 명시적으로 선택한다. 정적 역할표는 이 조건을 자동 분기하지 않으며 검토가 작성 계열로 fallback되면 교차 모델 독립 검토를 충족한 것으로 세지 않는다. `security-reviewer`의 부모 모델 상속도 별도로 확인한다.
-- 기본 프로필의 `vision`은 claude-fable-5-1:high, 교차-provider fallback 후보는 gpt-6-astra:high다. 두 모델의 이미지 입력 능력과 해당 계정·연동 경로의 실제 사용 가능 여부를 구분한다. 일반 서브에이전트 표에는 없지만 `modelRoles.vision`으로 설정된다.
-- `plan`은 plan mode용 모델 역할이며 claude-opus-5-5:xhigh를 사용한다. 빌트인 task agent 이름이 아니며, 테스트 작성은 작업 성격에 맞는 `task` 또는 현재 제공 specialist에 위임한다.
-- [Anthropic 플랜 안내](https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan)에 따르면 Fable 5.1은 유료 플랜에서 제공되지만 Pro·Team standard는 첫 사용부터 별도 usage credits가 필요하다. Max·premium 좌석도 기존 주간 한도의 일부를 쓰므로 추가 quota가 아니다(확인: 2026-10-05). `HELLO_OMP_ANTHROPIC_PLAN=pro`는 이 저장소의 선택형 Opus 전용 프로필이며 구독 권한 제한을 뜻하지 않는다. Fable 별도 과금을 원하지 않으면 이 옵션을 선택한다. 오버레이는 `modelRoles`·`enabledModels` 두 키만 재정의해 `vision`도 Opus 5.5로 배정하고 Fable을 허용 목록에서 제외한다. `retry.fallbackChains`는 기본 프로필에서 상속하므로 OpenAI로의 전환은 유지된다. 배열은 전체 교체되므로 상속된 fallback 후보도 선택형 프로필의 허용 목록에 포함해야 한다.
-- `tiny`는 제목·auto-thinking 분류 등 경량 백그라운드 작업에 gpt-6-luna:low를 사용한다. `memory`도 같은 모델과 Opus 5.5 low fallback을 명시해 `default` 체인 변경의 영향을 분리한다. `commit`은 분석·map/reduce·changelog·commit 제안 전체 agentic pipeline이라 gpt-6.1-sol:medium을 사용한다. Spark는 이 프로필의 역할·`enabledModels`에 포함하지 않으며, 이 선택이나 특정 카탈로그의 부재를 서비스 전체의 지원 종료로 해석하지 않는다. 실제 가용성은 계정·클라이언트·provider 카탈로그로 확인한다.
-- OMP는 원격 모델 카탈로그와 로컬 캐시를 사용한다. portable 설정은 실제 모델을 `provider/model-id`로 고정하되, ID를 설정했다는 사실만으로 가용성·계정 권한·호출 성공을 보장하지 않는다.
-- Opus가 필요한 명시적 역할·fallback에는 `anthropic/claude-opus-5-5`를 지정한다. `providers.anthropic.serverSideFallback=false`는 OMP의 Anthropic API server-side refusal fallback을 사용하지 않도록 유지한다. 이는 OMP의 오류/429 fallback과 다른 경로이며 서비스 전체의 fallback을 제어하는 설정으로 해석하지 않는다. 이 비활성 정책의 기존 근거는 [Anthropic refusal/fallback 문서](https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback)와 OMP 18.2.5 `src/session/settings-stream-fn.ts` 확인(2026-09-18)이며, 이번 전환은 서버 측 fallback을 활성화하지 않는다.
-- 명시한 11개 역할마다 다른 provider의 fallback 후보 1개를 설정한다(Codex 역할 → Claude Opus 5.5, `designer`·`slow`·`plan` → GPT-6 Astra xhigh, `vision` → GPT-6 Astra high, `advisor` → GPT-6.1 Sol high). `tiny`·`memory`는 Opus 5.5 low를 사용한다. 실제 전환은 모델·자격증명 가용성과 런타임의 실패·사용량 판정에 좌우된다. 동일 provider 후보를 연쇄 배치하지 않으며, 복구는 `retry.fallbackRevertPolicy=cooldown-expiry` 정책을 따른다.
-- `retry.modelFallback=true`, `retry.usageAwareFallback=true`, `retry.usageReservePolicy=auto`, `retry.usageReservePct=1`로 신뢰 가능한 coding-plan usage report에 매핑된 quota가 잔여 1% 이하일 때 적격 fallback 후보로 확인 프롬프트 없이 전환하도록 설정했다. 일반 configured API key와 unknown/unmapped usage는 선제 quota 전환 대상이 아니며, 사용할 수 있는 fallback이 없으면 전환을 보장하지 않는다.
-- 위임 기준은 [서브에이전트](/tools/subagents.md), 도구 우선순위는 [omp 기본 도구](/tools/builtin.md).
+## 현재 역할과 운영 경계
+
+| 역할 | 주 모델·추론 강도 | 다른 provider fallback |
+|---|---|---|
+| `default`, `plan` | anthropic/claude-opus-5-5:xhigh | openai-codex/gpt-6-astra:xhigh |
+| `task` | openai-codex/gpt-6.1-sol:xhigh | anthropic/claude-sonnet-5-5:xhigh |
+| `slow` | openai-codex/gpt-6-astra:xhigh | anthropic/claude-opus-5-5:xhigh |
+| `designer` | anthropic/claude-opus-5-5:high | openai-codex/gpt-6-astra:high |
+| `vision` | openai-codex/gpt-6-astra:high | anthropic/claude-opus-5-5:high |
+| `advisor` | openai-codex/gpt-6.1-sol:high | anthropic/claude-sonnet-5-5:high |
+| `smol`, `commit` | openai-codex/gpt-6.1-sol:medium | anthropic/claude-sonnet-5-5:medium |
+| `tiny`, `memory` | openai-codex/gpt-6-luna:low | anthropic/claude-haiku-5-5:low |
+
+- 단일 공유 프로필의 선택 목록은 역할표의 6개 모델과 명시 선택용 Fable 5.1을 합친 7개다. Fable은 `/model anthropic/claude-fable-5-1:xhigh`로 실행한다. 현재 대화의 명시적 모델 선택과 저장된 역할 변경은 별개이며, Fable 자체를 선택한 세션도 일반 런타임 오류·fallback 정책에서는 제외되지 않는다. 역할·fallback을 모두 사용하려면 두 provider의 유효 인증이 필요하다. `image`·`web`·`speech`·`dictation`·`judge`는 임의 배정하지 않으며 역할 배분은 사용량 50:50이나 월 지출 상한을 강제하지 않는다.
+- `extendedContext=true`는 카탈로그가 허용하는 확장 컨텍스트 선택이며 서버 상한·구독 quota 보장이 아니다. API 장문 가격 구간은 [OpenAI 가격표](https://developers.openai.com/api/docs/pricing)·[Anthropic 가격표](https://platform.claude.com/docs/en/about-claude/pricing)와 실제 usage report로 확인한다.
+- `advisor.enabled=true`, `advisor.syncBacklog=1`을 유지한다. 위험 변경의 구현 전 검토와 완료 전 fresh-context 검토는 별도다. advisor 카드·대기 설정이 의견 반영을 증명하지 않는다.
+- 메인 Opus와 OpenAI reviewer의 계열은 다르지만 **독립 검토가 필요한 산출물의 실제 작성 모델이 OpenAI인 경우**(서브·메인 fallback 포함), 같은 OpenAI reviewer만으로 교차 모델 검토를 충족하지 않는다. 위 일회성 검토 overlay로 Anthropic reviewer를 실행한다. 역할표는 이를 자동 분기하지 않으며 검토가 작성 계열로 fallback된 경우에도 교차 모델 검토로 세지 않는다.
+- `retry.modelFallback=true`, `retry.usageAwareFallback=true`, `retry.usageReservePolicy=auto`, `retry.usageReservePct=1`, `retry.fallbackRevertPolicy=cooldown-expiry`를 유지한다. 신뢰 가능한 coding-plan report의 잔여 1% 이하에서 적격 후보로 자동 전환하지만 일반 API key·unknown usage·후보 불가에서는 보장하지 않는다. 회사별 역할 분리는 주 경로 정책이지 fallback까지의 강제 고정이 아니다.
+- `providers.anthropic.serverSideFallback=false`를 유지한다. 이는 Anthropic API refusal fallback에 대한 OMP 설정이며 오류·429·quota에 따른 OMP fallback과 다르다. 서버 전체의 fallback을 제어한다고 해석하지 않는다.
+- 위임 기준은 [서브에이전트](/tools/subagents.md), 검토·실행 증거는 [워크플로](/workflow.md), 도구 선택은 [omp 기본 도구](/tools/builtin.md)를 따른다.
+
+## 구독과 인증의 경계
+
+- 구독 선택과 모델 라우팅은 별개다. 설정 파일을 적용해도 구독 결제·플랜 확인·API 크레딧 수령·인증 전환은 수행되지 않는다. 일반 API key의 크레딧 잔액은 `retry.usageReservePct=1`의 신뢰 가능한 coding-plan quota와 같은 값이 아니다.
+- [Anthropic 공식 지침](https://code.claude.com/docs/en/legal-and-compliance)은 구독 OAuth의 자사 앱 사용 범위와 제3자 로그인·자격증명 중개 제한을 설명한다. OMP에서 응답이 왔다는 사실만으로 Max 구독 OAuth 사용권을 보장하지 않는다. API 키 경로와 [Max의 조건부 월 API 크레딧](https://support.claude.com/en/articles/17154008-monthly-api-credits-for-max-and-team-plans)은 구독 기본 한도와 별개다.
+- [OpenAI 공식 오픈소스 구독 연동](https://developers.openai.com/siwc/token-sharing-open-source/sign-in)은 별도 등록·권한 계약이다. 설치본 OMP 18.8.3의 기존 Codex 인증 경로가 그 계약을 충족하거나 별도 승인을 받았는지는 확인하지 않았다. 성공한 실호출을 공식 승인이나 다른 플랜의 가용성 증거로 확대하지 않는다.
+- ChatGPT의 이미지 생성 기능이 `vision` 설정만으로 OMP에 추가되지는 않는다. [공식 오픈소스 연동 제한](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)도 이미지 입력과 이미지 생성 도구를 구분한다. 생성 도구·인증·과금 변경은 해당 작업에서 별도로 확인한다.

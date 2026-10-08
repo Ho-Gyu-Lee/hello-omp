@@ -35,6 +35,12 @@ if ! command -v bun >/dev/null 2>&1; then
   exit 1
 fi
 
+# Check the newest required setting before any managed setting is changed.
+if ! omp config get title.generator >/dev/null; then
+  echo "ERROR: omp 18.8.0 or newer is required (title.generator setting missing)" >&2
+  exit 1
+fi
+
 CONFIG_DIR="$(omp config path)"
 if [ -z "${CONFIG_DIR}" ]; then
   echo "ERROR: could not resolve omp config dir (omp config path returned empty)" >&2
@@ -67,26 +73,8 @@ apply_settings_file() {
   done < "${settings_file}"
 }
 
-ANTHROPIC_PLAN=${HELLO_OMP_ANTHROPIC_PLAN:-default}
-case "${ANTHROPIC_PLAN}" in
-  *[![:space:]]*) ;;
-  *) ANTHROPIC_PLAN=default ;;
-esac
-ANTHROPIC_PLAN=$(printf '%s' "${ANTHROPIC_PLAN}" | tr '[:upper:]' '[:lower:]')
-case "${ANTHROPIC_PLAN}" in
-  default|max|pro) ;;
-  *)
-    echo "ERROR: HELLO_OMP_ANTHROPIC_PLAN must be default, max, or pro" >&2
-    exit 1
-    ;;
-esac
-
-echo "[1/7] applying model settings (${ANTHROPIC_PLAN})..."
+echo "[1/7] applying model settings..."
 apply_settings_file "${SCRIPT_DIR}/config/settings.conf"
-if [ "${ANTHROPIC_PLAN}" = "pro" ]; then
-  echo "  applying Opus-only profile overrides..."
-  apply_settings_file "${SCRIPT_DIR}/config/settings.anthropic-pro.conf"
-fi
 
 # --- 2) global/advisor rules ---
 echo "[2/7] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."

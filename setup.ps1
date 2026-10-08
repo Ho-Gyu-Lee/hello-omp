@@ -24,6 +24,14 @@ if (-not (Get-Command bun -ErrorAction SilentlyContinue)) {
   Write-Error "bun not found on PATH; Bun is required for OKF validation"
   exit 1
 }
+
+# Check the newest required setting before any managed setting is changed.
+& omp config get title.generator | Out-Null
+if ($LASTEXITCODE -ne 0) {
+  Write-Error "omp 18.8.0 or newer is required (title.generator setting missing)"
+  exit 1
+}
+
 $ConfigDir = (omp config path).Trim()
 if ([string]::IsNullOrWhiteSpace($ConfigDir)) { Write-Error "could not resolve omp config dir"; exit 1 }
 $configFull = [System.IO.Path]::GetFullPath($ConfigDir).TrimEnd($trimChars)
@@ -55,24 +63,13 @@ function Set-OmpSettings([string]$Path) {
     # PowerShell 5.1 strips inner double-quotes when passing to a native exe; escape them as \"
     $value = $parts[1] -replace '"', '\"'
     & omp config set $key $value | Out-Null
+    if ($LASTEXITCODE -ne 0) { Write-Error "failed to set $key"; exit $LASTEXITCODE }
     Write-Host "  set $key"
   }
 }
 
-$anthropicPlan = [Environment]::GetEnvironmentVariable('HELLO_OMP_ANTHROPIC_PLAN')
-if ([string]::IsNullOrWhiteSpace($anthropicPlan)) { $anthropicPlan = 'default' }
-$anthropicPlan = $anthropicPlan.ToLowerInvariant()
-if ($anthropicPlan -notin @('default', 'max', 'pro')) {
-  Write-Error "HELLO_OMP_ANTHROPIC_PLAN must be default, max, or pro"
-  exit 1
-}
-
-Write-Host "[1/7] applying model settings ($anthropicPlan)..."
+Write-Host "[1/7] applying model settings..."
 Set-OmpSettings (Join-Path $ScriptDir 'config\settings.conf')
-if ($anthropicPlan -eq 'pro') {
-  Write-Host "  applying Opus-only profile overrides..."
-  Set-OmpSettings (Join-Path $ScriptDir 'config\settings.anthropic-pro.conf')
-}
 
 # --- 2) global/advisor rules ---
 Write-Host "[2/7] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
