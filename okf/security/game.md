@@ -3,7 +3,7 @@ type: Rule
 title: 게임 클라/서버 보안
 description: 서버 권위·예측/보정·커맨드·경제·정보 가시성·세션/통신·클라이언트 보안.
 tags: [security, game, server-authority, client, server, networking]
-timestamp: 2026-10-07T00:00:00Z
+timestamp: 2026-10-11T00:00:00Z
 ---
 
 # 게임 클라/서버 보안
@@ -45,6 +45,7 @@ timestamp: 2026-10-07T00:00:00Z
 - 패킷 위변조 탐지와 전송 기밀성은 검증된 프로토콜을 사용한다. 비정상 연결·resume·resync 요청은 rate limit하고 자원 상한을 둔다.
 - 공개망에서 bearer 재개 토큰은 서버 identity가 검증된 암호화 채널로만 전달합니다. TCP에는 TLS를 사용하고, 신뢰 인증서 경로와 사전에 정한 서비스 이름을 [RFC 9525](https://www.rfc-editor.org/info/rfc9525/)에 따라 검증합니다. 접속 IP나 서버가 제시한 이름을 기대 identity로 바꾸지 않으며 실패 시 평문·검증 해제 fallback을 금지합니다. token 회전은 분실된 재개 응답·중복 요청과 소비자의 수락 계약까지 함께 다룹니다.
 - TLS session resumption·QUIC migration은 게임 명령의 중복 실행을 막지 않습니다. [TLS 1.3 RFC 9846 §8](https://www.rfc-editor.org/rfc/rfc9846.html#section-8)은 0-RTT와 애플리케이션 재시도를 별개의 replay 원인으로 다룹니다. early data는 기본 비활성으로 두며 별도 안전성 계약 없이 구매·전투·소유권을 바꾸는 세션 resume 같은 상태 변경 메시지를 보내지 않습니다. 0-RTT를 끄더라도 일반 재시도의 멱등성·미확정 결과 처리는 유지합니다.
+- 기기 설치 단위 게스트 계정의 식별값은 bearer 비밀이다. 클라이언트가 CSPRNG로 충분한 길이의 값을 만들고 **첫 요청 전에 로컬에 영속**해야 응답이 유실돼도 같은 값으로 재시도해 같은 계정을 받는다. 서버는 도메인 분리한 digest만 저장하고 원문을 로그·DB에 남기지 않으며, 조회·생성(계정·캐릭터·식별 행)을 한 트랜잭션의 create-or-get으로 처리한다. 같은 요청 상관(correlation)의 충돌 검사는 생성·예산 소비보다 먼저 한다. 전역 생성/인증 예산만 두면 한 식별값이 연결을 반복해 예산을 비울 수 있으므로 식별값당 미사용 인증 grant를 하나로 제한하고, 운영 계정용 여유를 예약하고, 거절을 식별자 없이 집계해 관측한다. 원격 주소별 제한은 실제 클라이언트 주소가 애플리케이션까지 보존될 때만 적용할 수 있다. 타사 로그인은 매번 바뀌는 토큰 값이 아니라 검증한 공급자 namespace와 그 안에서 안정적인 사용자 식별자의 쌍을 키로 쓴다. OIDC는 `sub`가 발급자 안에서만 고유하므로 `(iss, sub)` 쌍을 사용한다([OIDC Core §5.7](https://openid.net/specs/openid-connect-core-1_0.html#ClaimStability)).
 
 ## 정보 가시성·관전자
 - interest management는 성능 최적화이고 fog of war·비공개 상태는 인가 경계다. 플레이어가 알 권한이 있는 정보만 서버에서 선별해 전송한다.

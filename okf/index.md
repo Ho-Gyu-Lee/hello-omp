@@ -17,18 +17,18 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 
 ## 보안
 * [보안 개요](/security/overview.md) - 즉시 경고·취약점 설명·외부 자료의 신뢰 경계·요청 범위에 따른 외부 코드 실행
-* [게임 보안](/security/game.md) - 서버 권위·예측/보정·커맨드·경제·정보 가시성·세션/통신
+* [게임 보안](/security/game.md) - 서버 권위·예측/보정·커맨드·경제·정보 가시성·세션/통신·설치 단위 게스트 식별 비밀
 * [코드 리뷰 보안 체크리스트](/security/review-checklist.md) - 공통 서버·애플리케이션·게임 클라·게임 서버
 * [요청 서명 정규화 계약](/security/signing-canonicalization.md) - 크로스 런타임 서명 베이스 불일치: 키 정렬·값 문자열화·기대 키 집합
 
 ## 게임 클라이언트/서버
-* [네트워크 동기화](/game/network-sync.md) - 권위 상태·입력 처리 ACK·예측/재실행·접촉 트리거 전환 요청·원격 보간·애니메이션 시간축·판정 보상·복구·모바일 경로 전환·전달 의미론
-* [클라이언트 체크리스트](/game/client-checklist.md) - 메모리·프레임·렌더링·수명·네트워크 상태·끊김 처리 순서·수신 큐 상한·반응성·플랫폼·Unity Android 의존성 배포와 EDM4U 검증
-* [서버 체크리스트](/game/server-checklist.md) - Gateway·단일 로직 소유자·콘텐츠 공개 경계·메모리/할당 계측·큐·팬아웃·틱 예산·영속화·장애 복구
-* [Godot + C++ 개발](/game/godot-cpp.md) - 공식 릴리스·API 타깃·GDExtension/모듈·물리/전투/네트워크·로컬 인게임/서버 이관·4X/MMORPG 성능·2D 시야/이동감·아이소메트릭 맵 가장자리 카메라·화면 안 사거리/자동 사냥 대상·에셋 팩 검수·생성 건물 디자인 다양성·에디터 복제/소유권/부분 생성·렌더 정밀도·addon 설정 경계·재사용 UI·수명·실행 검증
+* [네트워크 동기화](/game/network-sync.md) - 권위 상태·입력 처리 ACK·취소 fence와 terminal prefix·예측/재실행·접촉 트리거 전환 요청과 확정 직전 재검증 거절·원격 보간·애니메이션 시간축·판정 보상·복구·모바일 경로 전환·전달 의미론
+* [클라이언트 체크리스트](/game/client-checklist.md) - 메모리·프레임·렌더링·수명·네트워크 상태·끊김 처리 순서·정상 종료의 명시 로그아웃·수신 큐 상한·메인 스레드 수신 처리율·RTT 계측과 캡처 정지·반응성·플랫폼·Unity Android 의존성 배포와 EDM4U 검증
+* [서버 체크리스트](/game/server-checklist.md) - Gateway·단일 로직 소유자·콘텐츠 공개 경계·메모리/할당 계측·큐·팬아웃·틱 예산·서비스 loop 대기와 입력 ack 기반 용량 검증·tick 밖 로직 스레드 포화·반복마다 도는 공개 확인의 제곱 비용·외부 연결 상한·영속화(SQLite statement/WAL·위치 저장 시점)·콘텐츠 서버 링크 상실의 지역 격리·장애 복구·실제 맵 통합 probe 전제
+* [Godot + C++ 개발](/game/godot-cpp.md) - 공식 릴리스·API 타깃·GDExtension/모듈·물리/전투/네트워크·로컬 인게임/서버 이관·4X/MMORPG 성능·2D 시야/이동감·아이소메트릭 맵 가장자리 카메라·화면 안 사거리/자동 사냥 대상·에셋 팩 검수·생성 건물 디자인 다양성·에디터 복제/소유권/부분 생성·렌더 정밀도·addon 설정 경계·자주 여는 UI 리소스/아틀라스/threaded-load 회수·재사용 UI·수명·실행 검증
 
 ## 도구
-* [omp 기본 도구](/tools/builtin.md) - 세션별 가용성·lsp·AST·browser facade·백그라운드 작업·IDE/원격 빌드 환경·UTF-8이 아닌 파일 편집·TypeScript+Bun
+* [omp 기본 도구](/tools/builtin.md) - 세션별 가용성·lsp·AST·browser facade·백그라운드 작업·IDE/원격 빌드 환경·UTF-8이 아닌 파일 편집·생성 이미지 국소 합성·TypeScript+Bun
 * [MCP 정책](/tools/mcp.md) - 기본 도구 우선·외부 연동·스킬과 접근 계약 구분·공급망·인증·경로별 backend 버전 고정과 runtime 교체
 * [스킬](/tools/skills.md) - 가용 스킬·점진적 로딩·OMP 배포/발견/검증·유지 지도 요청 범위·host 호환성·외부 실행 검토
 * [서브에이전트](/tools/subagents.md) - 위임 기준·병렬 계약·파일 소유권·task 격리·반환 결과 검증

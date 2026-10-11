@@ -26,19 +26,19 @@ omp/
 
 전제: 대상 PC에 **OMP 18.8.0 이상**과 Bun이 설치되어 있고 PATH에 있어야 한다. setup은 새 설정 키 지원을 쓰기 전에 검사하고 자동 업그레이드하지 않는다. 선택된 역할과 교차-provider fallback을 사용하려면 해당 provider의 유효 인증이 필요하다. 역할 설정은 구독 구매·인증 방식·월 지출 한도를 바꾸지 않는다. 지원되는 인증·과금 경로는 [에이전트 가이드](okf/agents/guide.md#구독과-인증의-경계)를 확인한다.
 
-관리 소스는 **고난도 개발과 보조 업무를 구분한 역할별 추론 구성**이다. 메인·계획·구현·정밀 검토(`default`·`plan`·`task`·`slow`)는 `xhigh`, 디자인·화면 분석·advisor는 `high`, 탐색·커밋(`smol`·`commit`)은 `medium`, 제목·메모리는 `low`다. 모델 분담은 Opus 판단·디자인 / Sol 구현·보조 / Astra 전문 검토이며, 판단 Opus↔Astra·실행 Sol→Sonnet·경량 Luna→Haiku의 fallback 대상과 7개 선택 목록은 유지한다. 각 fallback의 추론 강도도 해당 역할에 맞춘다. [전체 역할표](okf/agents/guide.md#현재-역할과-운영-경계)를 따른다.
+관리 소스는 **고난도 개발과 보조 업무를 구분한 역할별 추론 구성**이다. 메인·계획·구현·정밀 검토(`default`·`plan`·`task`·`slow`)는 `xhigh`, 디자인·화면 분석·advisor는 `high`, 탐색·커밋(`smol`·`commit`)은 `medium`, 제목·메모리는 `low`다. 모델 분담은 Opus 판단·디자인 / Sonnet 구현 / Sol 보조 / Astra 전문 검토이며, fallback 대상은 판단 Opus↔Astra·구현 Sonnet→Sol·보조 Sol→Sonnet·경량 Luna→Haiku이고 7개 선택 목록은 유지한다. 각 fallback의 추론 강도도 해당 역할에 맞춘다. [전체 역할표](okf/agents/guide.md#현재-역할과-운영-경계)를 따른다.
 
 `extendedContext=true`와 잔여 1% 자동 fallback 정책은 유지한다. 신뢰 가능한 coding-plan 사용량이 잔여 1% 이하일 때 적격 후보로 전환하며, 일반 API key·API 크레딧 잔액·사용량 미확인·후보 불가에서는 보장하지 않는다. 회사별 역할 배분은 주 경로 정책이지 사용량 50:50 또는 월 지출 상한을 강제하는 장치가 아니다.
 
 공식 모델 목록·독립 실사용·실패 신고와 OMP 설정 사례의 채택 판단은 [에이전트 가이드](okf/agents/guide.md#2026-10-08-모델-선정-근거)에 있다. 소스·저장 설정·실제 실행 모델을 구분하며, 설치·적용 상태와 검증 한계는 [프로젝트 지도](docs/project-map/index.html#installation)에서 확인한다.
 
-`modelRoles`는 에이전트 등록이나 자동 실행 설정이 아니다. `designer`는 Opus high의 사용자 정의 별칭이며 같은 이름의 빌트인 에이전트는 없다. 메인 Opus가 디자인 방향·대안·수락 기준을 결정하고 구현을 Sol `task`에 위임한다. `commit`은 OMP 커밋 생성 기능의 역할이며, 일반 대화에서 커밋을 언급했다고 메인 모델이 자동으로 `commit` 역할로 바뀌지는 않는다.
+`modelRoles`는 에이전트 등록이나 자동 실행 설정이 아니다. `designer`는 Opus high의 사용자 정의 별칭이며 같은 이름의 빌트인 에이전트는 없다. 메인 Opus가 디자인 방향·대안·수락 기준을 결정하고 구현을 Sonnet `task`에 위임한다. `commit`은 OMP 커밋 생성 기능의 역할이며, 일반 대화에서 커밋을 언급했다고 메인 모델이 자동으로 `commit` 역할로 바뀌지는 않는다.
 
 주력 게임 클라이언트·서버 개발은 어렵다고 전제하지만 탐색·커밋·제목 같은 보조 업무까지 동일한 난도로 취급하지 않는다. 자동 난도 승격을 새로 구현하거나 모든 역할을 xhigh로 강제하지 않고, 모델·역할별 기본값으로 품질과 불필요한 추론을 구분한다. 높은 effort가 항상 정확하거나 미적 품질·재미를 보장하는 것은 아니므로 실제 화면·플레이·실행 근거로 확인한다. [게임·서버·디자인 사용 경로](okf/agents/guide.md#게임서버디자인-사용-경로)를 따른다.
 
 비동기 advisor는 작업 중 위험 감시를 위해 기본 활성(`advisor.enabled=true`)이다. 보안·영속 데이터·서버 권위·동시성 정합성에 영향을 주는 위험 변경은 구현 전에 설계·불변조건·영향 범위·복구 가능성을 독립 검토한다. 완료 전 독립 검토도 별도로 유지하며 `reviewer`·`security-reviewer`의 결과와 이미 수신한 advisor 지적을 판단·반영·재검증하고 통합 최종본을 전달한다. advisor가 켜져 있다는 사실이나 `syncBacklog`를 최종 검토 완료의 증거로 삼지 않으며, 출력 정리만을 위해 감시를 끄지 않는다.
 
-기본 메인(Opus)과 `reviewer`·`security-reviewer`(Astra)는 다른 계열이다. **독립 검토가 필요한 산출물의 실제 작성 모델이 OpenAI인 경우**(서브·메인 fallback 포함), 같은 OpenAI 검토만으로 교차 모델 검토를 충족하지 않는다. 해당 검토는 [일회성 CLI overlay](okf/agents/guide.md#교차-모델-독립-검토)를 사용해 fresh-context Anthropic reviewer로 실행한다. 전역 `/agents`·`omp config set`을 작업 중 임의 변경하지 않는다. OMP 18.8.2부터 `task`·eval 위임의 호출별 `model` 인자는 없으며, 역할표가 작성 모델에 맞춰 검토자를 자동 교체하지 않는다. fallback도 실제 실행 모델로 확인한다.
+기본 메인(Opus)·구현 `task`(Sonnet)와 `reviewer`·`security-reviewer`(Astra)는 다른 계열이다. **독립 검토가 필요한 산출물의 실제 작성 모델이 OpenAI인 경우**(서브·메인 fallback 포함), 같은 OpenAI 검토만으로 교차 모델 검토를 충족하지 않는다. 해당 검토는 [일회성 CLI overlay](okf/agents/guide.md#교차-모델-독립-검토)를 사용해 fresh-context Anthropic reviewer로 실행한다. 전역 `/agents`·`omp config set`을 작업 중 임의 변경하지 않는다. OMP 18.8.2부터 `task`·eval 위임의 호출별 `model` 인자는 없으며, 역할표가 작성 모델에 맞춰 검토자를 자동 교체하지 않는다. fallback도 실제 실행 모델로 확인한다.
 
 Fable 5.1은 고난도 작업의 **명시 선택 후보**다. `/model anthropic/claude-fable-5-1:xhigh`로 선택하며, 기본 역할이나 자동 fallback의 대상으로 배정하지 않는다. 명시 선택한 Fable 세션도 오류·quota 상황에서는 런타임 fallback으로 다른 모델에 전환될 수 있다. 품질 상향을 위한 선택과 오류·quota에 따른 복구를 구분하고 모델 간 성능·토큰 단가·구독 소모가 같다고 가정하지 않는다. 단일 프로필을 유지하며 실제 계정의 접근 권한·한도·과금은 별도로 확인한다.
 

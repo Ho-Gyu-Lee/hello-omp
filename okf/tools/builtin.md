@@ -1,9 +1,9 @@
 ---
 type: Reference
 title: omp 기본 도구
-description: 세션별 도구 가용성, OMP 내장 도구·browser facade·백그라운드 작업, IDE·원격 빌드 환경 경계, UTF-8이 아닌 파일 편집, TypeScript+Bun 실행과 MCP 대체 매핑.
+description: 세션별 도구 가용성, OMP 내장 도구·browser facade·백그라운드 작업, IDE·원격 빌드 환경 경계, UTF-8이 아닌 파일 편집, 생성 이미지의 결정적 국소 합성, TypeScript+Bun 실행과 MCP 대체 매핑.
 tags: [tools, builtin, lsp, ast, browser, background, typescript, bun]
-timestamp: 2026-10-08T00:00:00Z
+timestamp: 2026-10-10T00:00:00Z
 ---
 
 # omp 기본 도구
@@ -31,6 +31,7 @@ omp는 배터리 포함 — 코딩 워크플로 대부분이 내장 도구로 �
 - `eval`의 `browser` facade — 활성화된 경우 `browser.open`으로 탭을 열고 관찰·상호작용·시각 확인 후 닫는다. 정적 URL은 `read`가 우선이다. 독립 Puppeteer 도구로 가정하지 않으며 실제 API는 `xd://eval/browser`를 읽는다. relay/CDP는 사용자의 실제 로그인 세션일 수 있으므로 대상 탭·행동 권한을 구분한다.
   - 로컬 `file://` 문서는 파일 간 접근 허용 플래그 없이 확인한다. 문서 스크립트가 다른 로컬 파일을 읽어야 할 때만 `allow_file_access`를 쓰며, 이 launch flag는 이미 실행 중인 공유 브라우저에 적용할 수 없으므로 설치된 Chrome 등을 `app.path`로 지정한 전용 브라우저에서 열고 확인 후 `close`한다(OMP 18.6.1 계약 확인). 플래그를 켠 결과를 기본 브라우저 조건의 동작 증거로 쓰지 않는다. 교차 origin인 `file://` iframe 내부 측정은 `tab.frame(<iframe 선택자>)`의 `evaluate` 등을 우선 사용한다.
 - `read` — 이미지 파일 디코딩·분석.
+- 이미지 생성 편집으로 **정밀한 위치·간격 이동이나 특정 표식만 지우는 국소 수정**을 반복 요청하지 않는다. 생성 모델은 요청하지 않은 영역까지 다시 해석해 이미 고친 결함을 되살릴 수 있다. 유지할 기준 이미지가 있으면 생성 결과에서 바꾼 영역만 잘라 기준 위에 합성한다. 이동은 픽셀 측정값으로 결정적으로 적용하고, 기준·영역·이동량·출력 hash를 계보로 남긴 뒤 확대 crop과 독립 검토로 이음매·회귀를 확인한다. 기준 이미지를 재사용했다는 사실을 그 이미지의 사용자 수락으로 기록하지 않는다. 생성 결과를 다음 편집 입력으로 연쇄해 오류를 누적하지 않는다.
 
 ## 백그라운드 작업
 - [OMP 18.3.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.3.0)의 `wait`·`proc://`·`agent://` 경로를 사용한다. 이전 `hub` 호출을 복제하지 않으며 정확한 인자는 현재 세션 문서가 정본이다.
