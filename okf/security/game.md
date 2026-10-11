@@ -1,7 +1,7 @@
 ---
 type: Rule
 title: 게임 클라/서버 보안
-description: 서버 권위·예측/보정·커맨드·경제·정보 가시성·세션/통신·클라이언트 보안.
+description: 서버 권위·예측/보정·커맨드(타 플레이어 대상 요청 포함)·경제·정보 가시성·세션/통신(UDP 연결 식별·주소 검증, 제어 채널 분리 포함)·클라이언트 보안.
 tags: [security, game, server-authority, client, server, networking]
 timestamp: 2026-10-11T00:00:00Z
 ---
@@ -34,6 +34,7 @@ timestamp: 2026-10-11T00:00:00Z
 - 상태 전이 합법성: 현재 상태에서 해당 액션 가능 여부.
 - 타이밍: 액션 rate limiting, 비정상 속도 탐지.
 - 커맨드 중복/재전송: 구매·거래·보상·건설 등 비가역 명령은 command/transaction ID와 deduplication window로 멱등성을 보장한다.
+- 다른 플레이어에게 영향을 주는 요청(파티 초대·소환·인스턴스 동반 입장)의 대상 목록은 서버의 그룹·관계 상태에서 도출한다. 클라이언트가 지명한 ID 목록으로 다른 플레이어를 이동·참가시키지 않는다. 개체를 지정하는 명령은 소유권뿐 아니라 그 대상이 요청자의 관찰 범위·사거리 안인지 확인한다.
 
 ## 경제 익스플로잇 방지
 - 자원 생성/소비는 반드시 서버 트랜잭션으로. 레이스 컨디션 자원 복제 방지(동시 요청 직렬화). 정수 오버/언더플로우 검증.
@@ -45,6 +46,8 @@ timestamp: 2026-10-11T00:00:00Z
 - 패킷 위변조 탐지와 전송 기밀성은 검증된 프로토콜을 사용한다. 비정상 연결·resume·resync 요청은 rate limit하고 자원 상한을 둔다.
 - 공개망에서 bearer 재개 토큰은 서버 identity가 검증된 암호화 채널로만 전달합니다. TCP에는 TLS를 사용하고, 신뢰 인증서 경로와 사전에 정한 서비스 이름을 [RFC 9525](https://www.rfc-editor.org/info/rfc9525/)에 따라 검증합니다. 접속 IP나 서버가 제시한 이름을 기대 identity로 바꾸지 않으며 실패 시 평문·검증 해제 fallback을 금지합니다. token 회전은 분실된 재개 응답·중복 요청과 소비자의 수락 계약까지 함께 다룹니다.
 - TLS session resumption·QUIC migration은 게임 명령의 중복 실행을 막지 않습니다. [TLS 1.3 RFC 9846 §8](https://www.rfc-editor.org/rfc/rfc9846.html#section-8)은 0-RTT와 애플리케이션 재시도를 별개의 replay 원인으로 다룹니다. early data는 기본 비활성으로 두며 별도 안전성 계약 없이 구매·전투·소유권을 바꾸는 세션 resume 같은 상태 변경 메시지를 보내지 않습니다. 0-RTT를 끄더라도 일반 재시도의 멱등성·미확정 결과 처리는 유지합니다.
+- UDP 위의 자체·reliable 전송(KCP·ENet 등)은 연결 식별을 클라이언트가 고른 ID나 모든 클라이언트가 공유하는 상수(빌드에 포함된 공통 키 등)로 하지 않는다. 서버가 발급한 추측 불가능한 토큰(cookie)과 수신 endpoint를 함께 확인하고, 주소 변경은 인증된 패킷으로 경로를 검증한 뒤에만 반영한다. 첫 패킷의 크기·magic·토큰을 원시 버퍼에서 검사하기 전에는 연결별 상태·버퍼를 할당하지 않으며, 주소 검증 전 응답량을 수신량의 일정 배수 이하로 제한한다([RFC 9000 §8](https://www.rfc-editor.org/rfc/rfc9000.html#section-8)의 QUIC은 3배). upstream kcp2k는 endpoint hash로 연결을 구분하고 연결별 무작위 cookie로 위조 패킷을 거부하지만, 새 endpoint마다 handshake 전에 연결 객체와 최대 메시지 크기의 버퍼를 만든다([Mirror 고정 소스의 `KcpServer`](https://github.com/MirrorNetworking/Mirror/blob/c4f3739966e151f405be1762d33502794fd034ff/Assets/Mirror/Transports/KCP/kcp2k/highlevel/KcpServer.cs)·[`KcpPeer`](https://github.com/MirrorNetworking/Mirror/blob/c4f3739966e151f405be1762d33502794fd034ff/Assets/Mirror/Transports/KCP/kcp2k/highlevel/KcpPeer.cs), 조회 2026-10-11). 이식할 때 이 할당 순서는 따르지 않는다. 수신 loop에는 tick당 datagram 처리 예산을 둔다.
+- 운영·관리용 제어 채널은 게임 포트와 분리하고 상호 인증·허용 출처·idle timeout을 둔다. 요청-응답 상관 ID는 요청을 보낸 연결에 묶어 다른 연결의 응답으로 완료되지 않게 한다.
 - 기기 설치 단위 게스트 계정의 식별값은 bearer 비밀이다. 클라이언트가 CSPRNG로 충분한 길이의 값을 만들고 **첫 요청 전에 로컬에 영속**해야 응답이 유실돼도 같은 값으로 재시도해 같은 계정을 받는다. 서버는 도메인 분리한 digest만 저장하고 원문을 로그·DB에 남기지 않으며, 조회·생성(계정·캐릭터·식별 행)을 한 트랜잭션의 create-or-get으로 처리한다. 같은 요청 상관(correlation)의 충돌 검사는 생성·예산 소비보다 먼저 한다. 전역 생성/인증 예산만 두면 한 식별값이 연결을 반복해 예산을 비울 수 있으므로 식별값당 미사용 인증 grant를 하나로 제한하고, 운영 계정용 여유를 예약하고, 거절을 식별자 없이 집계해 관측한다. 원격 주소별 제한은 실제 클라이언트 주소가 애플리케이션까지 보존될 때만 적용할 수 있다. 타사 로그인은 매번 바뀌는 토큰 값이 아니라 검증한 공급자 namespace와 그 안에서 안정적인 사용자 식별자의 쌍을 키로 쓴다. OIDC는 `sub`가 발급자 안에서만 고유하므로 `(iss, sub)` 쌍을 사용한다([OIDC Core §5.7](https://openid.net/specs/openid-connect-core-1_0.html#ClaimStability)).
 
 ## 정보 가시성·관전자

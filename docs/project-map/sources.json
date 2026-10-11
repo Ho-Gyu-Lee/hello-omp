@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": "hello-omp",
   "basis": "working-tree-manual-reconciliation",
-  "snapshotId": "commit-push-20261011-5b3e",
+  "snapshotId": "netcode-knowledge-20261011",
   "scope": {
     "include": [
       "AGENTS.md",
@@ -158,7 +158,7 @@
     {
       "path": "okf/game/godot-cpp.md",
       "mode": "sha256-text-lf",
-      "sha256": "bdca281c4bebc57a1e751ecf57aad4ce77710b25644b698c1597ba9fe176261a",
+      "sha256": "abd9ebaa2811ed03c27c5847086583d97c58f51d94d6ed125a281a6d0b69bc60",
       "views": [
         "overview"
       ]
@@ -166,7 +166,7 @@
     {
       "path": "okf/game/index.md",
       "mode": "sha256-text-lf",
-      "sha256": "2d399bbd92a2f77a8578aecc8cf3cd78257f0d316dd681ca29326289c1dc8336",
+      "sha256": "23e84c2d6be4b39c3338eca301b66a7c2c063c2167452d0bc1c98537f679a0de",
       "views": [
         "overview"
       ]
@@ -174,7 +174,7 @@
     {
       "path": "okf/game/network-sync.md",
       "mode": "sha256-text-lf",
-      "sha256": "334747f88d221bf811f94c532eb63b8f9524f5368d45c7763781168e1642c5a5",
+      "sha256": "35b05f5b1995842f06f81c625c6a59e1b885d505bc3c7f5f0d87d32a8de3db30",
       "views": [
         "overview"
       ]
@@ -182,7 +182,7 @@
     {
       "path": "okf/game/server-checklist.md",
       "mode": "sha256-text-lf",
-      "sha256": "6a7a2ff47e5f627729c0ac162cf29613863f7c35b6ba8aa7fbc7ecd8c12a8d50",
+      "sha256": "a9c2230b8ea20b6a814cb21d4c46b41a9508bbc6bef73964a4802d4b8e5e395e",
       "views": [
         "overview"
       ]
@@ -190,7 +190,7 @@
     {
       "path": "okf/index.md",
       "mode": "sha256-text-lf",
-      "sha256": "db1aa050f9ca78ae946fd9ee4c2243ede45f77722b244d60dce9064e35b563d0",
+      "sha256": "c6ecc3abde17617bb466cc83712def32a67e2686903a09d2f0562ffe19d6c3ff",
       "views": [
         "overview"
       ]
@@ -222,7 +222,7 @@
     {
       "path": "okf/log.md",
       "mode": "sha256-text-lf",
-      "sha256": "c5d03413ec5d22ea808bafc703f713cd5b6e89ad6f4cd09b5fc84f49b88dced7",
+      "sha256": "7c9635f8e79c262f833b562b1d0615aa79f14ab3887ea54b80f8652062c0f715",
       "views": [
         "overview"
       ]
@@ -246,7 +246,7 @@
     {
       "path": "okf/security/game.md",
       "mode": "sha256-text-lf",
-      "sha256": "35f4e66824745fc473709314d55db4a53694fdcc68e347d1a5374f750f486377",
+      "sha256": "715aed8c389ad289fbc01718260c89f635cf3af571c676a8a036f3d9a3c6cc57",
       "views": [
         "overview"
       ]
@@ -254,7 +254,7 @@
     {
       "path": "okf/security/index.md",
       "mode": "sha256-text-lf",
-      "sha256": "c5392ca778baba0a7c0554910133133067d06b6b9fae25b4b70a880b84a2b184",
+      "sha256": "11bb52b5e6d9d8e1679a5cd8983bec7dd5b3d1aa17a75648242cddcfa95ccccd",
       "views": [
         "overview"
       ]
@@ -475,11 +475,11 @@
     }
   },
   "verification": {
-    "semantic": "commit and push of all changes accumulated after b906264 (task role, subscription auth, game/tool/coding knowledge, 10-08 sync map labels); every working-tree diff read; inherited coding-style/language-style drift read from 0170c2c; topology unchanged",
+    "semantic": "this PC: netcode/synchronization public guidance published to 8 OKF inputs (game network-sync, server-checklist, godot-cpp, game index, security game/index, root index, log); every changed line authored and read; two review batches each passed two fresh-context reviewers plus re-checks, and one advisor finding (buffer reference point) was corrected; topology unchanged",
     "nativeCommitEvidence": false,
-    "normalizedInputFreshness": "full: all 47 scoped paths match inventory and recorded fingerprints; 13 inputs rehashed after reading their changes, including the previously retained coding-style/language-style drift",
-    "runtimeLimit": "no setup run on 2026-10-11; 22 effective managed settings, substituted AGENTS, WATCHDOG, one extension, two commands and 107 Archify files matched source; three review-corrected OKF files copied, then all 33 OKF files match; subagent role calls, forced fallback and game/mobile runtime not exercised",
-    "browserSurface": "see commitPublish.browserSurface; diagram renderer and native commit evidence not rerun"
+    "normalizedInputFreshness": "full: all 47 scoped paths match inventory; the 8 changed OKF inputs were read and rehashed, the other 39 match their recorded fingerprints",
+    "runtimeLimit": "setup.ps1 exit 0 after publication; 44 deployed OKF files match source; AGENTS/WATCHDOG, config.yml, settings.json, extension and commands unchanged; guidance claims rest on static code/document analysis without game server or client execution",
+    "browserSurface": "see netcodeKnowledgePublish.browserSurface; diagram renderer and native commit evidence not rerun"
   },
   "knowledgePublication": {
     "observedAt": "2026-10-08",
@@ -508,7 +508,7 @@
     "verificationLimits": "reasoning/routing smoke, not proof that more effort improves quality or saves quota; commit selector tested without creating a Git commit; candidate calls are not forced fallback; existing unityMCP warning unchanged",
     "browserSurface": "Chrome Installation/Release text and role-sensitive navigation checked; one selected article and no horizontal overflow; screenshot and browser-verification.json in evidenceRoot",
     "evidenceRoot": ".omp-artifacts/model-role-swap-20261008-a83f2c/hard-workload-xhigh/role-sensitive",
-    "evidenceLocation": "historical b906264 authoring environment; its 42-file bundle and role-call results are not this synchronization run; local-only evidenceRoot is not present in the current verification environment",
+    "evidenceLocation": "b906264 authoring PC (also the PC of upstreamWindowsApply and the 2026-10-11 windowsLocalApply); evidenceRoot exists only on that PC; its 42-file bundle and role-call results are not a later synchronization run",
     "diagramStatus": "topology unchanged; all existing JSON/HTML raw hashes match; no new render or native commit verification"
   },
   "videoGuidanceUpdate": {
@@ -544,8 +544,9 @@
     "backupPath": ".omp-artifacts/sync-20261008-eac098f8/backups",
     "diagramStatus": "topology unchanged; four published JSON/HTML raw hashes match; no rendering or native commit verification"
   },
-  "windowsLocalApply": {
+  "peerWindowsApply": {
     "observedAt": "2026-10-08",
+    "evidenceLocation": "f80f66e authoring PC; moved from its windowsLocalApply record by this PC's 2026-10-11 sync; evidenceRoot is not present in this clone and was not rerun",
     "revision": "b906264",
     "previousRevision": "46bf5de",
     "profile": "single config/settings.conf",
@@ -557,6 +558,29 @@
     "inheritedMapDrift": ["okf/coding-style.md", "okf/language-style.md"],
     "evidenceRoot": ".omp-artifacts/pull-apply-20261008-6fd8",
     "diagramStatus": "topology unchanged; four published JSON/HTML raw hashes match; no rendering or native commit verification"
+  },
+  "windowsLocalApply": {
+    "observedAt": "2026-10-11",
+    "revision": "f80f66e",
+    "previousRevision": "b906264",
+    "profile": "single config/settings.conf",
+    "ompVersion": "18.8.9",
+    "setup": "powershell.exe -NoProfile -File ./setup.ps1; CurrentUser RemoteSigned already in effect; exit 0",
+    "merge": "clean fast-forward to the reviewed SHA; no stash or conflicts; existing stash entries retained",
+    "localKnowledge": "13 learned files (12 concepts and the index) present in source and deployment; 10 byte-identical; 3 concepts re-evaluated against the remote change with only replaced lines removed",
+    "verification": "22 managed settings match saved/effective values; 34 concepts pass conformance; 42 deployed OKF files match source and differ from the pre-sync deployment only in 13 remote OKF files and 3 merged learned files; config.yml changed only modelRoles.task and retry.fallbackChains.task; settings.json, mcp.json, AGENTS/WATCHDOG .bak and the unmanaged skill unchanged; substituted AGENTS, WATCHDOG, one extension, two commands and 107 Archify files match; 47 scoped inputs and four published JSON/HTML raw hashes match",
+    "environment": "b906264 authoring PC; upstreamWindowsApply and modelProfileUpdate evidence roots are present in this clone",
+    "runtimeSmoke": "default task subagent from the running Opus session recorded anthropic/claude-sonnet-5-5, thinking xhigh, resolvedModelIsFallback=false, credential provider anthropic",
+    "browserSurface": "managed headless Chromium via file://: initial Overview, left-menu Release and Installation each show one article, reload keeps #installation, search for peerWindowsApply lists Installation and Release and selecting Release opens it, no horizontal overflow or page errors; browser.json and project-map-release.webp in evidenceRoot",
+    "verificationLimits": "forced Sol fallback, quota impact, title generation, other role calls, recovery and junction rejection not exercised; no authentication operations; peer and upstream records keep their own environments",
+    "evidenceRoot": ".omp-artifacts/sync-20261011-f80f66e",
+    "backupPath": ".omp-artifacts/sync-20261011-f80f66e/backups",
+    "diagramStatus": "topology unchanged; four published JSON/HTML raw hashes match; no rendering or native commit verification",
+    "snapshotVerification": {
+      "semantic": "this PC: fast-forward b906264 -> f80f66e after SHA-256 backup; remote config/README/OKF changes read; local learned knowledge re-evaluated against them; manifest and entry-point records separated by source PC; topology unchanged",
+      "normalizedInputFreshness": "full: all 47 scoped paths match inventory and recorded fingerprints after the fast-forward; this sync changed no scoped input",
+      "runtimeLimit": "full Windows setup.ps1 on f80f66e exit 0; settings, OKF, rules, extension, commands and Archify match source; one default task subagent call checked; forced fallback, other role calls and game/mobile runtime not exercised"
+    }
   },
   "subscriptionAuthUpdate": {
     "observedAt": "2026-10-10",
@@ -582,6 +606,7 @@
     "verificationLimits": "routing smoke only; forced Sol fallback, Anthropic quota impact and implementation quality not exercised; Vals cost/test is API-priced and not an OMP subscription quota measurement",
     "independentReview": "fresh-context OpenAI reviewer confirmed settings/source match, role-table consistency and benchmark/auth claims; its two findings (stale current-tense Sol implementation sentence, cost-to-quota causality) were corrected in guide, log and index",
     "evidenceRoot": ".omp-artifacts/task-role-sonnet-20261010-7c1e",
+    "evidenceLocation": "f80f66e authoring PC; not present in this clone",
     "backupPath": ".omp-artifacts/task-role-sonnet-20261010-7c1e/before/settings.json",
     "diagramStatus": "topology unchanged; index.html Installation text updated; published JSON/HTML untouched; no rendering or native commit verification"
   },
@@ -596,8 +621,29 @@
     "independentReview": "fresh-context reviewer (no blockers, no re-identifiable private data; settings/README/guide/map role statements consistent) found two should-fix guidance defects: OIDC account key must be (iss, sub) not sub alone, and client-checklist pre-authentication grace contradicted network-sync; both corrected and logged",
     "browserSurface": "Chrome file://: initial Overview, left-menu Release and Installation each show one article, reload keeps #installation, specific body search finds Release, no horizontal overflow or page errors; browser.json and project-map-release.png in evidenceRoot",
     "evidenceRoot": ".omp-artifacts/commit-push-20261011-5b3e",
+    "evidenceLocation": "f80f66e authoring PC; not present in this clone",
+    "snapshotVerification": {
+      "semantic": "commit and push of all changes accumulated after b906264 (task role, subscription auth, game/tool/coding knowledge, 10-08 sync map labels); every working-tree diff read; inherited coding-style/language-style drift read from 0170c2c; topology unchanged",
+      "normalizedInputFreshness": "full: all 47 scoped paths match inventory and recorded fingerprints; 13 inputs rehashed after reading their changes, including the previously retained coding-style/language-style drift",
+      "runtimeLimit": "no setup run on 2026-10-11; 22 effective managed settings, substituted AGENTS, WATCHDOG, one extension, two commands and 107 Archify files matched source; three review-corrected OKF files copied, then all 33 OKF files match; subagent role calls, forced fallback and game/mobile runtime not exercised"
+    },
     "backupPath": ".omp-artifacts/commit-push-20261011-5b3e/before",
     "diagramStatus": "topology unchanged; four published JSON/HTML raw hashes match; no rendering or native commit verification"
+  },
+  "netcodeKnowledgePublish": {
+    "observedAt": "2026-10-11",
+    "ompVersion": "18.8.9",
+    "basis": "f80f66e plus the reviewed working tree; the resulting commit hash is recorded by Git, not in this file",
+    "reconciledInputs": ["okf/game/godot-cpp.md", "okf/game/index.md", "okf/game/network-sync.md", "okf/game/server-checklist.md", "okf/index.md", "okf/log.md", "okf/security/game.md", "okf/security/index.md"],
+    "sourceStatus": "general netcode guidance from static analysis of internal code and simulator results, cross-checked against pinned Mirror c4f3739, Godot 4.7 docs, RFC 9000 section 8, Linux ip-sysctl and SQLite docs; private project details kept in local learned concepts only",
+    "verification": "validate-okf 36 concepts pass; changed public files' internal links resolve; 47 scoped inputs match inventory",
+    "localApply": "setup.ps1 exit 0 three times, the last after all corrections (setup-final.log); 44 deployed OKF files match source and differ from the pre-publication deployment only in 8 public files and 2 added local concepts; AGENTS/WATCHDOG, config.yml, settings.json, extension and commands byte-identical to the pre-publication backup",
+    "independentReview": "two batches, each reviewed by two fresh-context reviewers (technical accuracy and publication boundary) with re-checks; blocking re-identification wording and should-fix defects (timestamp overgeneralization, AOI scan range, HOL chunking, shared baseline exception, kcp2k allocation order, WebSocket latest-wins scope, internal constants, misattributed simulator ratios, length-boundary rule conflict, UPSERT duplicate handling, relayed sample interval) corrected; advisor finding on fixed-buffer reference point corrected",
+    "browserSurface": "managed headless Chromium via file://: Overview and Release hashes each show one article, reload keeps #release, no horizontal overflow or page errors; browser.json and project-map-release.png in evidenceRoot",
+    "evidenceRoot": ".omp-artifacts/okf-netcode-inherit-20261011",
+    "evidenceLocation": "this PC (the 2026-10-11 windowsLocalApply PC); not present in other clones",
+    "backupPath": ".omp-artifacts/okf-netcode-inherit-20261011/backups",
+    "diagramStatus": "topology unchanged; index.html Release/Overview status text updated; published JSON/HTML untouched; no rendering or native commit verification"
   },
   "planning": {
     "canonical": "docs/project-map/index.html#roadmap",

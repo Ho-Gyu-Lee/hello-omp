@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: Godot와 C++ 게임 개발
-description: 공식 Godot·godot-cpp 버전 근거, 물리·전투·네트워크와 4X/MMORPG 성능 설계, 로컬 인게임/서버 이관 경계, 2D 시야·이동감·아이소메트릭 맵 가장자리 카메라·화면 안 사거리와 자동 사냥 대상 선택, 에셋 팩 검수·생성 건물 디자인 다양성, 에디터 복제·소유권·부분 생성, 렌더 데이터 정밀도와 addon 설정 경계, 자주 여는 UI의 리소스·아틀라스·threaded-load token 회수, 재사용 UI·GDExtension 실행 검증 지침입니다.
+description: 공식 Godot·godot-cpp 버전 근거, 물리·전투·네트워크(Web export 전송 제약 포함)와 4X/MMORPG 성능 설계, 로컬 인게임/서버 이관 경계, 2D 시야·이동감·아이소메트릭 맵 가장자리 카메라·화면 안 사거리와 자동 사냥 대상 선택, 에셋 팩 검수·생성 건물 디자인 다양성, 에디터 복제·소유권·부분 생성, 렌더 데이터 정밀도와 addon 설정 경계, 자주 여는 UI의 리소스·아틀라스·threaded-load token 회수, 재사용 UI·GDExtension 실행 검증 지침입니다.
 tags: [game, godot, cpp, gdextension, physics, combat, networking, simulation, ui, build, ownership, performance, camera, isometric]
-timestamp: 2026-10-08T00:00:00Z
+timestamp: 2026-10-11T00:00:00Z
 ---
 
 # Godot와 C++ 게임 개발
@@ -126,6 +126,7 @@ timestamp: 2026-10-08T00:00:00Z
 - Godot의 `ENetMultiplayerPeer`·고수준 RPC를 먼저 평가할 수 있지만 성능 충분성을 이름만으로 판단하지 않습니다. reliable/unreliable/unreliable_ordered와 channel은 메시지의 손실·순서 계약으로 선택합니다. channel 분리는 순서 의존을 분리할 뿐 공유 대역폭·혼잡을 제거하지 않습니다. `reliable`은 업무 명령의 정확히 한 번 커밋을 보장하지 않습니다. [고수준 multiplayer·channels](https://docs.godotengine.org/en/4.7/tutorials/networking/high_level_multiplayer.html#channels)
 - **독립 C++ 서버 경계:** Godot `SceneMultiplayer`의 고수준 프로토콜은 엔진 구현 세부이며 비-Godot 서버용 안정 프로토콜이 아닙니다. Godot headless 서버에서는 해당 API를 검증해 쓸 수 있지만 독립 C++ 서버에는 명시적인 wire schema와 호환되는 transport를 설계합니다. C++ 서버가 ENet을 사용한다는 사실만으로 Godot RPC와 호환되지 않습니다. [공식 SceneMultiplayer 계약](https://docs.godotengine.org/en/4.7/classes/class_scenemultiplayer.html)
 - **보안 경계:** 신뢰할 수 없는 peer의 객체 역직렬화를 허용하지 않습니다. `SceneMultiplayer.allow_object_decoding`은 실행 코드가 포함된 객체를 복원해 원격 코드 실행 위험을 만들 수 있습니다. 바이트/필드 메시지를 길이·개수·권한·상태와 함께 검증하고, `auth_callback`이 비어 있으면 연결 peer가 자동 수락되는 동작을 계정 인증 완료로 해석하지 않습니다. [객체 디코딩 경고와 인증 callback](https://docs.godotengine.org/en/4.7/classes/class_scenemultiplayer.html#class-scenemultiplayer-property-allow-object-decoding)
+- **Web export 전송 제약:** Godot 4.7 Web export는 저수준 네트워킹을 지원하지 않고 HTTP·WebSocket 클라이언트·WebRTC만 사용할 수 있습니다([Networking](https://docs.godotengine.org/en/4.7/tutorials/export/exporting_for_web.html#networking)). 브라우저 탭이 비활성화되면 `_process`·`_physics_process`가 멈춰 장시간이면 연결이 끊길 수 있습니다([Background processing](https://docs.godotengine.org/en/4.7/tutorials/export/exporting_for_web.html#background-processing)). Web 대상이 있으면 플랫폼별 전송 능력(비신뢰·비순서 채널 유무, 최대 메시지 크기)을 명시해 게임 코드가 UDP를 가정하지 않게 합니다. 비신뢰·비순서 전달이 필요하면 WebRTC data channel을 검토합니다. WebSocket은 모든 메시지가 순서 보장 stream에 실려 HOL 지연을 받으므로, 서버 송신 큐의 미송신 **자기완결 snapshot**만 최신 값으로 대체하고 변경분 delta·생성/제거·불연속 marker는 [서버 체크리스트](/game/server-checklist.md)의 병합 금지와 [네트워크 동기화](/game/network-sync.md)의 marker 승계 기준대로 병합·승계합니다. 수신한 묶음은 버리지 않고 보간 버퍼에 넣습니다. [`WebSocketPeer.connect_to_url`](https://docs.godotengine.org/en/4.7/classes/class_websocketpeer.html#class-websocketpeer-method-connect-to-url)은 Web에서 mixed content를 피하려면 `wss://`와 서버 TLS 인증서에 맞는 FQDN을 쓰고 IP로 직접 접속하지 말라고 안내하며, `handshake_headers`는 Web export에서 지원되지 않습니다(조회 2026-10-11). 네이티브 클라이언트용 사설 CA와 별도로 브라우저가 신뢰하는 인증서를 Web 수신 경로에 두고, 인증 값은 사용자 지정 handshake header가 아닌 경로로 전달합니다. 탭 복귀는 재개·full-state 경로로 복구합니다.
 - MMO는 한 프로세스의 CCU 숫자만으로 검증하지 않습니다. 이동·전투·존 밀집·AOI 규모·접속/저장 부하를 명시하고 샤딩/존 분리는 필요한 규모와 권위 이전 계약이 확인될 때 결정합니다. Godot headless가 게임 계산 서버인지, 독립 C++ 서버가 필요한지는 엔진 의존성과 실측 비용으로 판단합니다.
 - 공통 프로토콜·서버 권위·복구 기준은 [네트워크 동기화](/game/network-sync.md), [게임 보안](/security/game.md), [서버 체크리스트](/game/server-checklist.md)를 따릅니다.
 
