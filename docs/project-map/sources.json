@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": "hello-omp",
   "basis": "working-tree-manual-reconciliation",
-  "snapshotId": "netcode-knowledge-20261011",
+  "snapshotId": "sync-local-20261011-afb5aa57",
   "scope": {
     "include": [
       "AGENTS.md",
@@ -475,11 +475,11 @@
     }
   },
   "verification": {
-    "semantic": "this PC: netcode/synchronization public guidance published to 8 OKF inputs (game network-sync, server-checklist, godot-cpp, game index, security game/index, root index, log); every changed line authored and read; two review batches each passed two fresh-context reviewers plus re-checks, and one advisor finding (buffer reference point) was corrected; topology unchanged",
+    "semantic": "this clone: local synchronization f80f66e to 9ba300b; incoming change set read (8 public OKF inputs and project-map records, no config/setup/extension change); this clone's uncommitted f80f66e sync record stashed, backed up and re-merged under localCloneApply; upstream records kept, PC-relative entry-point text relabelled by authoring PC; topology unchanged",
     "nativeCommitEvidence": false,
-    "normalizedInputFreshness": "full: all 47 scoped paths match inventory; the 8 changed OKF inputs were read and rehashed, the other 39 match their recorded fingerprints",
-    "runtimeLimit": "setup.ps1 exit 0 after publication; 44 deployed OKF files match source; AGENTS/WATCHDOG, config.yml, settings.json, extension and commands unchanged; guidance claims rest on static code/document analysis without game server or client execution",
-    "browserSurface": "see netcodeKnowledgePublish.browserSurface; diagram renderer and native commit evidence not rerun"
+    "normalizedInputFreshness": "full: all 47 scoped paths match inventory and the fingerprints recorded upstream; the 8 changed OKF inputs were read and their recorded hashes recomputed from the working tree; no input hash rewritten by this synchronization",
+    "runtimeLimit": "full Windows setup.ps1 exit 0 under user-approved child-process RemoteSigned; 22 saved/effective managed settings and 31 OKF files match source; deployment delta equals the 8 merged public OKF files; config.yml byte-identical; local learned files byte-preserved; model inference, forced fallback, failure recovery and junction rejection not executed",
+    "browserSurface": "see localCloneApply.syncs[1].browserSurface; diagram renderer and native commit evidence not rerun"
   },
   "knowledgePublication": {
     "observedAt": "2026-10-08",
@@ -642,8 +642,55 @@
     "browserSurface": "managed headless Chromium via file://: Overview and Release hashes each show one article, reload keeps #release, no horizontal overflow or page errors; browser.json and project-map-release.png in evidenceRoot",
     "evidenceRoot": ".omp-artifacts/okf-netcode-inherit-20261011",
     "evidenceLocation": "this PC (the 2026-10-11 windowsLocalApply PC); not present in other clones",
+    "snapshotVerification": {
+      "semantic": "this PC: netcode/synchronization public guidance published to 8 OKF inputs (game network-sync, server-checklist, godot-cpp, game index, security game/index, root index, log); every changed line authored and read; two review batches each passed two fresh-context reviewers plus re-checks, and one advisor finding (buffer reference point) was corrected; topology unchanged",
+      "normalizedInputFreshness": "full: all 47 scoped paths match inventory; the 8 changed OKF inputs were read and rehashed, the other 39 match their recorded fingerprints",
+      "runtimeLimit": "setup.ps1 exit 0 after publication; 44 deployed OKF files match source; AGENTS/WATCHDOG, config.yml, settings.json, extension and commands unchanged; guidance claims rest on static code/document analysis without game server or client execution"
+    },
     "backupPath": ".omp-artifacts/okf-netcode-inherit-20261011/backups",
     "diagramStatus": "topology unchanged; index.html Release/Overview status text updated; published JSON/HTML untouched; no rendering or native commit verification"
+  },
+  "localCloneApply": {
+    "environment": "Windows PC that authored neither f80f66e nor 9ba300b but committed this record; its evidence roots below exist only in its own clone. In that clone, upstream fields saying 'this PC' or 'this clone' (windowsLocalApply, peerWindowsApply, netcodeKnowledgePublish) describe the 9ba300b authoring PC, and no upstream record's evidenceRoot was present",
+    "syncs": [
+      {
+        "observedAt": "2026-10-11",
+        "revision": "f80f66ee9ece13dfb315c59859a65673a48fbbbc",
+        "previousRevision": "b906264f59ea716da8df5203f2c940ddb7fd5990",
+        "ompVersion": "18.8.9",
+        "setup": "powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File ./setup.ps1; user-approved child process only; exit 0; initial execution without the policy argument was blocked before setup started",
+        "merge": "clean fast-forward; no stash, reset, clean, commit or push; one private concept and learned index byte-preserved",
+        "verification": "23 OKF concepts pass conformance; 31 source/deployed OKF files match; 22 saved/effective managed settings match source using CLI-declared types; unmanaged config preserved; substituted AGENTS, WATCHDOG, one extension, two commands and 107 Archify files match; native skill discovery finds Archify",
+        "verificationLimits": "no model-inference, forced-fallback, failure-recovery or junction-rejection test; historical records describe their own environments",
+        "evidenceRoot": ".omp-artifacts/sync-local-20261011-03c4eee5",
+        "backupPath": ".omp-artifacts/sync-local-20261011-03c4eee5/backups",
+        "independentReview": "knowledge preservation review found no issues; deployment-evidence review found two inherited current-PC claims in Overview and Runtime, both corrected and exercised in Chrome; review scope excludes unexecuted model inference and recovery scenarios",
+        "reviewCorrectionEvidence": ".omp-artifacts/sync-local-20261011-03c4eee5/browser-review-corrections.json",
+        "diagramStatus": "47 scoped input paths and fingerprints match; four published JSON/HTML raw hashes match; topology unchanged; no rendering or native commit verification",
+        "snapshotVerification": {
+          "semantic": "local synchronization b906264 to f80f66e; incoming tracked changes read; clean fast-forward with ignored local knowledge retained; installed-only differences matched older committed source; deployment topology unchanged",
+          "normalizedInputFreshness": "all 47 scoped paths and fingerprints match the imported manifest; two pre-fetch fingerprint mismatches were already reconciled upstream; no input hash rewritten by this synchronization",
+          "runtimeLimit": "full Windows setup.ps1 exit 0 under user-approved child-process RemoteSigned; 22 saved/effective managed settings and 31 OKF files match source; one private concept and learned index byte-preserved; unmanaged configuration retained; model inference, forced fallback, failure recovery and junction rejection not executed",
+          "browserSurface": "Chrome file:// opened Overview, navigated Release and Installation, retained #installation after reload, searched updated Release body from another selected article, and showed one article with no horizontal overflow or page errors; browser.json and inspected project-map-release.png in this record's evidenceRoot; diagram renderer and native commit evidence not rerun"
+        },
+        "mapRecordStatus": "was uncommitted as top-level windowsLocalApply (with the 10-08 record renamed upstreamPullApply, which upstream names peerWindowsApply); stashed as 'sync-local-20261011-afb5aa57: this PC f80f66e sync map record' and byte-copied to .omp-artifacts/sync-local-20261011-afb5aa57/backups before the 9ba300b fast-forward; committed together with syncs[1] at the user's request (hash recorded by Git)"
+      },
+      {
+        "observedAt": "2026-10-11",
+        "revision": "9ba300b1f1230707b6f2768adaba0b591e88173b",
+        "previousRevision": "f80f66ee9ece13dfb315c59859a65673a48fbbbc",
+        "ompVersion": "18.8.9",
+        "setup": "powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File ./setup.ps1; every execution-policy scope Undefined; user-approved child process only; exit 0; persistent policy unchanged afterwards",
+        "merge": "this clone's uncommitted map record stashed and byte-copied to backupPath; fast-forward f80f66e -> 9ba300b; map records merged by authoring PC; no reset or clean during the sync; the merged map record was then committed at the user's request (hash recorded by Git)",
+        "verification": "setup OKF conformance 23 concepts; 31 source/deployed OKF files match and the deployment delta is exactly the 8 merged public files; 2 learned files byte-preserved in source and deployment; 22 saved/effective managed settings match source; config.yml byte-identical; substituted AGENTS, WATCHDOG, one extension, two commands and 107 Archify files match and installed commands/extensions/skills unchanged; omp skill list finds archify; 47 scoped inputs and four published JSON/HTML raw hashes match",
+        "verificationLimits": "no model-inference, forced-fallback, failure-recovery or junction-rejection test; new netcode guidance not exercised against a game runtime",
+        "browserSurface": "Chrome file://: Overview shows the 9ba300b sync status, left-menu Release and Installation each show one article, reload keeps #installation, search for localCloneApply lists Installation and Release and selecting Release opens it, Runtime states no model inference on this PC, no horizontal overflow or page errors; the evidence links added for this PC (verification.json, setup.stdout.log) resolve; browser.json and project-map-release.png in evidenceRoot",
+        "independentReview": "fresh-context reviewer confirmed upstream records, the previous uncommitted record, PC attribution, this PC's counts, OKF source/deployment equality (git no-index), 47 fingerprints and four published hashes; its one finding (the 9ba300b authoring PC's recovery paths dropped from the Release evidence paragraph) was corrected, the pre-existing project-navigation-20260930-c84b2a links were labelled as absent from this clone, and a re-check found no remaining defects; correction rendering in browser-review-corrections.json",
+        "evidenceRoot": ".omp-artifacts/sync-local-20261011-afb5aa57",
+        "backupPath": ".omp-artifacts/sync-local-20261011-afb5aa57/backups",
+        "diagramStatus": "topology unchanged; four published JSON/HTML raw hashes match; index.html status text merged by authoring PC; no rendering or native commit verification"
+      }
+    ]
   },
   "planning": {
     "canonical": "docs/project-map/index.html#roadmap",
