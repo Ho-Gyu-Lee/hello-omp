@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": "hello-omp",
   "basis": "working-tree-manual-reconciliation",
-  "snapshotId": "sync-local-20261011-afb5aa57",
+  "snapshotId": "commit-push-20261012-eafd43",
   "scope": {
     "include": [
       "AGENTS.md",
@@ -142,7 +142,7 @@
     {
       "path": "okf/coding-style.md",
       "mode": "sha256-text-lf",
-      "sha256": "1c3d50a864d41d2d256a312bee48c22619db771683c5f54a00430b3d0e2b3266",
+      "sha256": "07366d221133afd53845f893d09723160bddf1b7220bf813dcf15af6e30f71e7",
       "views": [
         "overview"
       ]
@@ -206,7 +206,7 @@
     {
       "path": "okf/learning/accumulation.md",
       "mode": "sha256-text-lf",
-      "sha256": "bc52cd44e726a7f7a8fd5d3072b59518116903d82838e951fd671959af7bc3fb",
+      "sha256": "7b4fbd56d85a467e4a4e5b60ac3046502688a9e1473477ef56a622ffbb242d5c",
       "views": [
         "overview"
       ]
@@ -222,7 +222,7 @@
     {
       "path": "okf/log.md",
       "mode": "sha256-text-lf",
-      "sha256": "7c9635f8e79c262f833b562b1d0615aa79f14ab3887ea54b80f8652062c0f715",
+      "sha256": "f5449f4161f8f9b0970ba8796c77a6945147c22a252f5bf82675dd7c36b3e5a5",
       "views": [
         "overview"
       ]
@@ -270,7 +270,7 @@
     {
       "path": "okf/security/review-checklist.md",
       "mode": "sha256-text-lf",
-      "sha256": "578ba4203c41cfeba99bde8e77eb540031c7984a4ca78482500971b0cf78e385",
+      "sha256": "602d7d9af3aad78bdcadc7217f8e04b41f6c710de2dc17231c094a2320b37269",
       "views": [
         "overview"
       ]
@@ -451,6 +451,7 @@
       "jsonSha256": "92b3f297ff98b35ef049bfd023faecae198d214765845b0cf1c45d0d026f4474",
       "htmlSha256": "70f354328dd4ea5d57e089123bec9b21f6c295f256a6e4c72b4579a1942a3484",
       "stagedReceipt": ".omp-artifacts/project-navigation-20260930-c84b2a/overview/v3/evidence/map.finalize-summary.json",
+      "receiptLocation": "macOS map-authoring PC; receipt directory deleted there on 2026-10-12 at user request and not recorded in any other clone",
       "gates": {
         "validate": "pass",
         "deliver": "pass",
@@ -465,6 +466,7 @@
       "jsonSha256": "a3f2823efa9edd95bf8dc681069e9f925896d08efc16ff3fcb59d21fcc11631b",
       "htmlSha256": "45fec86ca155bf2bb4b8d8c32b975d72b282f98ec01075e756c1a93be1dfbb78",
       "stagedReceipt": ".omp-artifacts/project-navigation-20260930-c84b2a/skill-deployment/v2/evidence/map.finalize-summary.json",
+      "receiptLocation": "macOS map-authoring PC; receipt directory deleted there on 2026-10-12 at user request and not recorded in any other clone",
       "gates": {
         "validate": "pass",
         "deliver": "pass",
@@ -475,11 +477,11 @@
     }
   },
   "verification": {
-    "semantic": "this clone: local synchronization f80f66e to 9ba300b; incoming change set read (8 public OKF inputs and project-map records, no config/setup/extension change); this clone's uncommitted f80f66e sync record stashed, backed up and re-merged under localCloneApply; upstream records kept, PC-relative entry-point text relabelled by authoring PC; topology unchanged",
+    "semantic": "macOS: the 2026-10-11 knowledge restoration (knowledgeRestore) committed on f80f66e and rebased onto ccb663d; OKF auto-merged, okf/log.md keeping the two upstream 2026-10-11 entries and the restore entries; only the two project-map files conflicted and were resolved from the upstream text with macOS records added and PC-relative wording relabelled by authoring PC; topology unchanged",
     "nativeCommitEvidence": false,
-    "normalizedInputFreshness": "full: all 47 scoped paths match inventory and the fingerprints recorded upstream; the 8 changed OKF inputs were read and their recorded hashes recomputed from the working tree; no input hash rewritten by this synchronization",
-    "runtimeLimit": "full Windows setup.ps1 exit 0 under user-approved child-process RemoteSigned; 22 saved/effective managed settings and 31 OKF files match source; deployment delta equals the 8 merged public OKF files; config.yml byte-identical; local learned files byte-preserved; model inference, forced fallback, failure recovery and junction rejection not executed",
-    "browserSurface": "see localCloneApply.syncs[1].browserSurface; diagram renderer and native commit evidence not rerun"
+    "normalizedInputFreshness": "full: all 47 scoped paths match inventory after the rebase; 4 inputs changed against the upstream manifest (okf/coding-style.md, okf/log.md as merged, okf/security/review-checklist.md, okf/learning/accumulation.md) were read and rehashed from the working tree; the other 43 match the upstream fingerprints",
+    "runtimeLimit": "sh ./setup.sh exit 0 on macOS with OMP 18.10.0; 37 deployed OKF files identical to source and the deployment delta is exactly the 8 public OKF files from 9ba300b; config.yml, AGENTS and WATCHDOG unchanged; model inference, forced fallback, failure recovery and junction rejection not executed",
+    "browserSurface": "see macCommitPublish.browserSurface; diagram renderer and native commit evidence not rerun"
   },
   "knowledgePublication": {
     "observedAt": "2026-10-08",
@@ -526,6 +528,7 @@
     },
     "verification": "22 public and 29 local concepts pass conformance; 150 related internal links resolve; active setup exits 0; 21 settings and 37 local OKF files match",
     "evidenceRoot": ".omp-artifacts/video-learning-20261005-a7d3e9",
+    "evidenceLocation": "macOS; deleted 2026-10-12 at user request",
     "diagramStatus": "no topology change; existing diagram JSON/HTML retained; no render or native commit verification"
   },
   "upstreamWindowsApply": {
@@ -688,9 +691,71 @@
         "independentReview": "fresh-context reviewer confirmed upstream records, the previous uncommitted record, PC attribution, this PC's counts, OKF source/deployment equality (git no-index), 47 fingerprints and four published hashes; its one finding (the 9ba300b authoring PC's recovery paths dropped from the Release evidence paragraph) was corrected, the pre-existing project-navigation-20260930-c84b2a links were labelled as absent from this clone, and a re-check found no remaining defects; correction rendering in browser-review-corrections.json",
         "evidenceRoot": ".omp-artifacts/sync-local-20261011-afb5aa57",
         "backupPath": ".omp-artifacts/sync-local-20261011-afb5aa57/backups",
-        "diagramStatus": "topology unchanged; four published JSON/HTML raw hashes match; index.html status text merged by authoring PC; no rendering or native commit verification"
+        "diagramStatus": "topology unchanged; four published JSON/HTML raw hashes match; index.html status text merged by authoring PC; no rendering or native commit verification",
+        "snapshotVerification": {
+          "semantic": "this clone: local synchronization f80f66e to 9ba300b; incoming change set read (8 public OKF inputs and project-map records, no config/setup/extension change); this clone's uncommitted f80f66e sync record stashed, backed up and re-merged under localCloneApply; upstream records kept, PC-relative entry-point text relabelled by authoring PC; topology unchanged",
+          "nativeCommitEvidence": false,
+          "normalizedInputFreshness": "full: all 47 scoped paths match inventory and the fingerprints recorded upstream; the 8 changed OKF inputs were read and their recorded hashes recomputed from the working tree; no input hash rewritten by this synchronization",
+          "runtimeLimit": "full Windows setup.ps1 exit 0 under user-approved child-process RemoteSigned; 22 saved/effective managed settings and 31 OKF files match source; deployment delta equals the 8 merged public OKF files; config.yml byte-identical; local learned files byte-preserved; model inference, forced fallback, failure recovery and junction rejection not executed",
+          "browserSurface": "see localCloneApply.syncs[1].browserSurface; diagram renderer and native commit evidence not rerun",
+          "relocatedFrom": "top-level verification of ccb663d, moved unchanged by the 2026-10-12 macOS commit"
+        }
       }
     ]
+  },
+  "knowledgeRestore": {
+    "observedAt": "2026-10-11",
+    "ompVersion": "18.8.9",
+    "host": "macOS",
+    "basis": "f80f66e fast-forward plus uncommitted working-tree restoration; stash@{0} kept",
+    "committedIn": "macCommitPublish (2026-10-12)",
+    "reconciledInputs": [
+      "okf/coding-style.md",
+      "okf/log.md",
+      "okf/security/review-checklist.md",
+      "okf/learning/accumulation.md"
+    ],
+    "restoredFrom": {
+      "stash@{0} (video-learning-20261005)": "coding-style GSI upsert, CloudWatch TableName/GSI dimension, SEARCH 2-week limit; review-checklist auth-failure logging",
+      "2026-09-29 session record": "review-checklist gateway header allowlist, fail-open default/DDL authorization, shared parser state race"
+    },
+    "sourceRecheck": "DynamoDB GSI async/eventually consistent reads, metrics-dimensions TableName excludes GSI for consumed capacity and throttle events, CloudWatch SEARCH two-week limit, grpc-gateway DefaultHeaderMatcher Grpc-Metadata- prefix stripping",
+    "verification": "validate-okf 29 concepts pass; 319 bundle-root internal links resolve; no conflict markers; okf/learned 7 concepts plus index.md preserved, 3 concepts received append-only verdict-correction lines",
+    "learningRule": "okf/learning/accumulation.md 기록 위치 7 sub-bullet: restore stashed or unstaged public publications within the same task or downgrade the local verdict to 보류 with the storage location; check leftover stash during remote sync",
+    "independentReview": "fresh-context reviewer: no blockers; merge, restoration text, official sources, fingerprints and published hashes confirmed; findings fixed: Windows-only current-PC claims and missing-evidence links re-scoped in index.html, learned count 7 concepts plus index, link count 319",
+    "localApply": "setup.sh exit 0; deployed OKF identical to source (37 files); 22 managed settings, AGENTS, WATCHDOG, extension, 2 commands and Archify skill match source",
+    "browserSurface": "headless Chromium file://: Overview and Release each show one article, reload keeps #release, Release-only search term returns Overview and Release, no horizontal overflow, no page or console errors; browser.json in evidenceRoot",
+    "evidenceRoot": ".omp-artifacts/repo-sync-20261011-caf1d9",
+    "backupPath": ".omp-artifacts/repo-sync-20261011-caf1d9/backups",
+    "mapBefore": ".omp-artifacts/repo-sync-20261011-caf1d9/before",
+    "evidenceLocation": "macOS; evidenceRoot, backupPath, mapBefore and stash@{0} deleted 2026-10-12 at user request after the stash content was confirmed in the working tree and deployed OKF",
+    "diagramStatus": "topology unchanged; four published JSON/HTML raw hashes match; no rendering or native commit verification",
+    "snapshotVerification": {
+      "semantic": "macOS pull of f80f66e plus restoration of four public guidance items that existed only in stash@{0} and a 2026-09-29 session record (coding-style GSI upsert/metric dimension/SEARCH, review-checklist auth-failure logging and gateway header/fail-open/shared parser state), plus one accumulation rule against leaving public publications in stash or unstaged state; every changed input read; topology unchanged",
+      "normalizedInputFreshness": "full: all 47 scoped paths match inventory and recorded fingerprints; 4 inputs rehashed after reading their changes (okf/coding-style.md, okf/log.md, okf/security/review-checklist.md, okf/learning/accumulation.md)",
+      "runtimeLimit": "setup.sh exit 0 on macOS; 22 managed settings, substituted AGENTS, WATCHDOG, one extension, two commands, Archify skill and 37 OKF files (including local learned) match source; subagent role calls, forced fallback and game/mobile runtime not exercised; restored items were uncommitted at that time"
+    }
+  },
+  "macCommitPublish": {
+    "observedAt": "2026-10-12",
+    "ompVersion": "18.10.0",
+    "host": "macOS",
+    "basis": "knowledgeRestore committed on f80f66e and rebased onto ccb663d (9ba300b + ccb663d); the resulting commit hash and whether it reached the remote are recorded by Git, not in this file",
+    "reconciledInputs": [
+      "okf/coding-style.md",
+      "okf/log.md",
+      "okf/security/review-checklist.md",
+      "okf/learning/accumulation.md"
+    ],
+    "merge": "OKF auto-merged; only docs/project-map/index.html and sources.json conflicted; upstream text and manifest taken as the base, knowledgeRestore and this record added, upstream entry-point wording that meant the ccb663d authoring PC ('이 PC') relabelled, and the upstream top-level verification moved to localCloneApply.syncs[1].snapshotVerification",
+    "localApply": "sh ./setup.sh (README invocation) exit 0; OKF conformance 29 concepts; 37 deployed OKF files identical to source; deployment delta exactly the 8 public OKF files from 9ba300b; config.yml, AGENTS.md and WATCHDOG.md hashes unchanged; one extension and two commands deployed; Archify unchanged; printed modelRoles match source",
+    "localEvidenceCleanup": "at user request before this commit: 15 macOS .omp-artifacts task directories (about 227 MB, including repo-sync-20261011-caf1d9, project-navigation-20260930-c84b2a and video-learning-20261005-a7d3e9 referenced by this manifest) and stash@{0} 9f0f42c deleted; the stash's added lines were first confirmed in the working tree and deployed OKF, and learned files found only in deleted backups differed from current files by later intentional revisions (cpp-c-style was superseded by the public language-style.md)",
+    "browserSurface": "managed headless Chromium via file://: Overview, Release, Installation and Archive each show one article; reload keeps #release; searching '로컬 근거 정리' from Installation lists Overview and Release and selecting Release opens it; no horizontal overflow, page errors or console messages; the only remaining .omp-artifacts link (commit-push-20261012-eafd43/setup.log) resolves",
+    "verification": "committed snapshot exported with git checkout-index to evidenceRoot/staged-tree: validate-okf passes 22 public concepts; 314 internal OKF links resolve without local learned files; 47 inputs and four published raw hashes match; no conflict markers; 27 relative entry-point links resolve and the only .omp-artifacts link exists",
+    "independentReview": "fresh-context reviewer: no blocker; confirmed all upstream manifest keys and values kept, PC attribution, remaining artifact link, 47 fingerprints, published hashes, OKF source/deployment equality, restored guidance and cited sources, and no secrets or PII; two should-fix findings corrected: the upstream top-level verification is now moved verbatim (nativeCommitEvidence and browserSurface restored), and commit-time text no longer states the push as an observed result",
+    "verificationLimits": "model inference, forced fallback, failure recovery and junction rejection not executed; netcode guidance not exercised against a game runtime",
+    "evidenceRoot": ".omp-artifacts/commit-push-20261012-eafd43",
+    "diagramStatus": "topology unchanged; four published JSON/HTML raw hashes match; index.html status text merged; no rendering or native commit verification"
   },
   "planning": {
     "canonical": "docs/project-map/index.html#roadmap",

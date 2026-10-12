@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="project-map-snapshot" content="로컬 적용 sync-local-20261011-afb5aa57 · 9ba300b fast-forward · 입력 47개 fingerprint 일치">
+  <meta name="project-map-snapshot" content="전체 대조 commit-push-20261012-eafd43 · ccb663d 위 누락 학습 복원 커밋(macOS) · 입력 47개 fingerprint 일치">
   <title>Overview · hello-omp</title>
   <style>
     :root { color-scheme: light; --ink: #26364b; --muted: #62738b; --line: #e3e8ef; --accent: #5145cd; --soft: #eeedff; --sidebar: #f8fafc; --nav: clamp(148px, 18vw, 242px); }
@@ -132,7 +132,7 @@
   <article class="doc-page" id="overview" data-page data-title="Overview" data-group="Project" data-terms="전체 요약 상태 프로젝트 목차" data-nodes="overview:project-docs">
     <p class="breadcrumb">hello-omp / Project</p><h1>Overview</h1>
     <p class="lead">OMP 설정과 작업 지침을 여러 PC에 같은 방식으로 배포합니다.</p>
-    <dl class="meta"><div><dt>Status</dt><dd id="publication-state">9ba300b 원격 반영·Windows 배포 통과 · 입력 47개 전체 대조 · 로컬 지식 바이트 보존</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
+    <dl class="meta"><div><dt>Status</dt><dd id="publication-state">macOS 누락 학습 복원 커밋 · 9ba300b까지 macOS 배포 일치 · 입력 47개 전체 대조 · macOS 로컬 근거 정리</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
     <div class="inline-links"><a href="#architecture?node=project-docs">전체 위치</a></div>
     <div class="cards">
       <div class="card"><h3><a href="#architecture">구조</a></h3><p>공유 소스 → 설치 → OMP → 작업·문서</p></div>
@@ -146,7 +146,7 @@
       <tr><td>스킬 설치·복구</td><td><code>scripts/deploy-skills.ts</code></td><td><a href="#skills">Skills</a></td></tr>
       <tr><td>사용자 명령</td><td><code>commands/</code></td><td><a href="#commands">Commands</a></td></tr>
     </tbody></table></div>
-    <footer>원격 9ba300b의 게임 네트워크 동기화·서버·보안·Godot Web 전송 공개 지식 8개 파일을 받아 이 PC에 setup으로 배포했습니다. 지식 작성·독립 검토는 9ba300b 작성 PC의 기록이며, 이 PC의 앞선 f80f66e 동기화 기록과 함께 Release와 manifest에 출처별로 보존합니다. 관계도 구조·게시 파일은 유지했습니다. 동기화 자체는 커밋 없이 수행했고, 이 지도 기록은 이후 사용자 요청으로 커밋했습니다(커밋 hash는 Git 기록 참조).</footer>
+    <footer>macOS에서 10-11에 복원한 누락 공개 학습 4건과 재발 방지 기준을 원격 9ba300b(게임 네트워크 동기화·서버·보안·Godot Web 전송 공개 지식 8개 파일)·ccb663d(지도 기록) 위에 커밋했습니다(커밋 hash와 원격 반영 여부는 Git 기록 참조). macOS 배포본은 setup.sh로 9ba300b까지 반영해 소스와 일치합니다. 각 PC의 기록은 Release와 manifest에 출처별로 보존하며, macOS의 이전 작업 근거는 사용자 요청으로 정리했습니다. 관계도 구조·게시 파일은 유지했습니다.</footer>
   </article>
 
   <article class="doc-page" id="requirements" data-page data-title="Requirements" data-group="Planning" data-terms="요구사항 수락 기준 완료 검증" hidden>
@@ -183,7 +183,7 @@
     <dl class="meta"><div><dt>Status</dt><dd>확정 / 제안</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
     <div class="table-scroll"><table><thead><tr><th>할 일</th><th>상태</th><th>위치·선행 조건</th><th>완료 기준</th></tr></thead><tbody>
       <tr id="plan-navigation" data-target="overview:project-docs overview:navigation"><td>프로젝트 목차·상태·계획<br><small>NAV-01 · 확정</small></td><td id="plan-navigation-state"><span class="badge">완료</span></td><td><a href="#commands">Commands</a> · 문서 UI</td><td>관계도 갱신, 메뉴·검색, 배포·발견, 독립 검토</td></tr>
-      <tr id="plan-models" data-target="overview:source-bundle overview:bootstrap"><td>고난도 개발·보조 업무 추론 구분<br><small>MODEL-01 · 확정</small></td><td><span class="badge">완료</span></td><td><a href="#installation">Installation</a><br>역할별 설정 배포 · 원격 실호출 기록과 구분</td><td>10-11 이 PC: 설정 22개 저장값·유효값·OKF 31개 파일 일치 · 모델 추론 미실행 · 기본 <code>task</code> Sonnet 5.5 xhigh 실호출은 9ba300b 작성 PC 기록 · 다른 PC의 호출 기록은 manifest에 출처별 보존</td></tr>
+      <tr id="plan-models" data-target="overview:source-bundle overview:bootstrap"><td>고난도 개발·보조 업무 추론 구분<br><small>MODEL-01 · 확정</small></td><td><span class="badge">완료</span></td><td><a href="#installation">Installation</a><br>역할별 설정 배포 · 원격 실호출 기록과 구분</td><td>10-11 ccb663d 작성 PC: 설정 22개 저장값·유효값·OKF 31개 파일 일치 · 10-12 macOS: setup.sh 후 <code>config.yml</code> 변화 없음·OKF 37개 파일 일치 · 두 PC 모두 모델 추론 미실행 · 기본 <code>task</code> Sonnet 5.5 xhigh 실호출은 9ba300b 작성 PC 기록 · 다른 PC의 호출 기록은 manifest에 출처별 보존</td></tr>
       <tr id="plan-windows" data-target="overview:bootstrap overview:skill-deployer"><td>Windows 설치 검증<br><small>VERIFY-WIN-01 · 검증 공백</small></td><td><span class="badge blocked">부분</span></td><td><a href="#installation">Installation</a> · <a href="#skills">Skills</a><br>재설치·배포 대조·스킬 발견 통과</td><td>남은 검증: 명령 발견·기존본 복구·junction 거부</td></tr>
       <tr id="plan-adoption"><td>작업 중인 프로젝트에 적용<br><small>ADOPT-01 · 제안</small></td><td><span class="badge proposed">미착수</span></td><td>대상 프로젝트 세션·범위 필요</td><td>그 프로젝트에서 <code>/project-map</code> 요청 후 실제 코드·계획 연결</td></tr>
     </tbody></table></div>
@@ -212,9 +212,9 @@
     <h2>모델 프로필 변경</h2>
     <p><strong>추론 강도:</strong> 메인·계획·구현·정밀 검토는 <code>xhigh</code>, 디자인·화면 분석·advisor는 <code>high</code>, 탐색·커밋은 <code>medium</code>, 제목·메모리는 <code>low</code>입니다. 고난도 개발 전제를 단순 보조 업무까지 확대했던 일괄 xhigh 설정은 폐기했습니다.</p>
     <p><strong>모델·fallback:</strong> Opus 메인·계획·디자인 / Sonnet 구현 / Sol 보조 / Astra 전문 검토입니다. fallback은 판단 Opus↔Astra, 구현 Sonnet→Sol, 보조 Sol→Sonnet, 경량 Luna→Haiku이며 각 역할의 추론 강도를 명시합니다. 일반 대화에서 커밋을 언급했다고 메인 모델이 자동으로 <code>commit</code> 역할로 바뀌지는 않습니다.</p>
-    <p class="note"><strong>구현 역할 변경(2026-10-10).</strong> 품질 우선 결정으로 <code>task</code>를 Sonnet 5.5 xhigh(fallback Sol 6.1 xhigh)로 바꿨습니다. f80f66e 작성 PC는 두 설정 키만 <code>omp config set</code>으로 적용했고, 9ba300b 작성 PC와 이 PC는 전체 setup으로 적용했습니다. 새 <code>task</code> 서브에이전트가 <code>anthropic/claude-sonnet-5-5</code>·xhigh·fallback 아님으로 실행된 기록은 두 작성 PC의 것(<code>sources.json → taskRoleUpdate · windowsLocalApply</code>)이며, 이 PC는 저장값·유효값만 확인했습니다. 메인과 구현이 Anthropic 한도·인증에 함께 의존하며 실제 소모량은 사용량 기록으로 확인합니다. fallback 시 교차 검토 조건은 <a href="../../okf/agents/guide.md#현재-역할과-운영-경계">역할표</a>를 따릅니다. 작성 PC 근거 <code>.omp-artifacts/task-role-sonnet-20261010-7c1e/</code> · <code>.omp-artifacts/sync-20261011-f80f66e/</code>는 각 PC에만 있습니다.</p>
+    <p class="note"><strong>구현 역할 변경(2026-10-10).</strong> 품질 우선 결정으로 <code>task</code>를 Sonnet 5.5 xhigh(fallback Sol 6.1 xhigh)로 바꿨습니다. f80f66e 작성 PC는 두 설정 키만 <code>omp config set</code>으로 적용했고, 9ba300b 작성 PC와 ccb663d 작성 PC는 setup.ps1, macOS는 setup.sh 전체 적용으로 반영했습니다. 새 <code>task</code> 서브에이전트가 <code>anthropic/claude-sonnet-5-5</code>·xhigh·fallback 아님으로 실행된 기록은 두 작성 PC의 것(<code>sources.json → taskRoleUpdate · windowsLocalApply</code>)이며, ccb663d 작성 PC와 macOS는 저장값·유효값만 확인했습니다. 메인과 구현이 Anthropic 한도·인증에 함께 의존하며 실제 소모량은 사용량 기록으로 확인합니다. fallback 시 교차 검토 조건은 <a href="../../okf/agents/guide.md#현재-역할과-운영-경계">역할표</a>를 따릅니다. 작성 PC 근거 <code>.omp-artifacts/task-role-sonnet-20261010-7c1e/</code> · <code>.omp-artifacts/sync-20261011-f80f66e/</code>는 각 PC에만 있습니다.</p>
     <p><strong>Fable 5.1:</strong> 고난도 명시 선택은 <code>/model anthropic/claude-fable-5-1:xhigh</code>를 사용합니다. 기본 역할·자동 fallback 대상에는 넣지 않으며 선택한 세션도 오류·quota 복구 정책을 적용받습니다. <a href="../../okf/agents/guide.md#현재-역할과-운영-경계">전체 역할표</a> · <a href="../../okf/agents/guide.md#구독과-인증의-경계">구독·API 경계</a></p>
-    <p class="note"><strong>10-11 이 PC 전체 적용(9ba300b).</strong> 실행 정책이 모든 범위에서 Undefined라 사용자 승인으로 자식 PowerShell에만 <code>RemoteSigned</code>를 지정해 setup 종료 코드 0을 확인했습니다. 관리 설정 22개 저장값·유효값과 OKF 31개 파일이 소스와 일치하고 <code>config.yml</code>은 바이트 그대로입니다. 배포본 변화는 원격 공개 OKF 8개뿐이며 로컬 전용 지식 2개 파일을 바이트 보존했습니다. 9ba300b 작성 PC의 f80f66e 적용 기록은 <code>sources.json → windowsLocalApply</code>, f80f66e 작성 PC의 10-08 기록은 <code>peerWindowsApply</code>, 이 PC의 기록은 <code>localCloneApply</code>에 보존합니다. <a href="../../.omp-artifacts/sync-local-20261011-afb5aa57/verification.json">배포·설정 근거</a></p>
+    <p class="note"><strong>10-11 ccb663d 작성 PC 전체 적용(9ba300b).</strong> 실행 정책이 모든 범위에서 Undefined라 사용자 승인으로 자식 PowerShell에만 <code>RemoteSigned</code>를 지정해 setup 종료 코드 0을 확인했습니다. 관리 설정 22개 저장값·유효값과 OKF 31개 파일이 소스와 일치하고 <code>config.yml</code>은 바이트 그대로입니다. 배포본 변화는 원격 공개 OKF 8개뿐이며 로컬 전용 지식 2개 파일을 바이트 보존했습니다. 9ba300b 작성 PC의 f80f66e 적용 기록은 <code>sources.json → windowsLocalApply</code>, f80f66e 작성 PC의 10-08 기록은 <code>peerWindowsApply</code>, ccb663d 작성 PC의 기록은 <code>localCloneApply</code>, macOS의 기록은 <code>knowledgeRestore · macCommitPublish</code>에 보존합니다. 배포·설정 근거 <code>.omp-artifacts/sync-local-20261011-afb5aa57/</code>는 ccb663d 작성 PC에만 있습니다.</p>
     <p>잔여 1% 정책·advisor 활성·모델 ID·7개 선택 목록·인증 방식은 유지했습니다. 역할별 기본값이며 자동 난도 판정을 구현한 것은 아닙니다. 1% 전환은 신뢰 가능한 coding-plan 사용량·적격 후보가 있을 때 적용합니다. API 크레딧 잔액·월 지출 상한·구독 권한·품질 향상은 보장하지 않습니다.</p>
     <p class="map-context">10-08 모델 프로필 작성 환경의 역할별 실호출 기록은 <code>sources.json → modelProfileUpdate</code>에 구분해 보존하며 이번 동기화의 실행 결과로 세지 않습니다. 현재 실행 중인 메인 모델은 설정 배포만으로 바뀌지 않습니다.</p>
     <p><strong>순서:</strong> 사전 검사 → 설정 → 규칙 → OKF → 확장 → agents → commands → skills</p>
@@ -258,31 +258,34 @@
       <tr><td><code>findDangerousToolCall()</code></td><td>위험 후보 탐지</td></tr>
       <tr><td><code>confirmDangerousCall()</code></td><td>후보 승인 요청 · UI/승인 없으면 차단</td></tr>
     </tbody></table></div>
-    <p class="map-context">이 PC의 10-11 동기화에서는 설정·배포 파일·스킬 발견만 확인했고 모델 추론은 실행하지 않았습니다. 기본 <code>task</code> 서브에이전트의 Sonnet 5.5 xhigh(fallback 아님) 실행은 9ba300b 작성 PC의 <code>sources.json → windowsLocalApply</code>, 다른 역할별 자식 session 실행은 <code>modelProfileUpdate</code>의 10-08 기록입니다. 위험 보호 hook의 회귀도 미실행이며 OS 샌드박스가 아닙니다. custom agent 파일은 없으며 security-reviewer 모델만 설정 override로 배정합니다.</p>
+    <p class="map-context">ccb663d 작성 PC의 10-11 동기화는 설정·배포 파일·스킬 발견만, macOS의 10-11·10-12 적용은 설정·배포 파일만 확인했으며 모델 추론은 실행하지 않았습니다. 기본 <code>task</code> 서브에이전트의 Sonnet 5.5 xhigh(fallback 아님) 실행은 9ba300b 작성 PC의 <code>sources.json → windowsLocalApply</code>, 다른 역할별 자식 session 실행은 <code>modelProfileUpdate</code>의 10-08 기록입니다. 위험 보호 hook의 회귀도 미실행이며 OS 샌드박스가 아닙니다. custom agent 파일은 없으며 security-reviewer 모델만 설정 override로 배정합니다.</p>
   </article>
 
   <article class="doc-page" id="release" data-page data-title="Release" data-group="Project records" data-terms="검증 배포 릴리스 브라우저 fingerprint source hash manifest native provenance" data-nodes="overview:publication" hidden>
     <p class="breadcrumb">Project records / Release</p><h1>Release</h1><p class="lead">무엇을 실행해서 확인했는지 구분합니다.</p>
-    <dl class="meta"><div><dt>Status</dt><dd id="release-status">9ba300b 원격 반영 · Windows 배포·로컬 지식 보존 통과</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
+    <dl class="meta"><div><dt>Status</dt><dd id="release-status">macOS 누락 학습 복원 커밋 · 9ba300b까지 macOS 배포 대조 통과 · macOS 로컬 근거 정리</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
     <div class="inline-links"><a href="#architecture?node=publication">전체 위치</a></div>
     <div class="table-scroll"><table><thead><tr><th>대상</th><th>검증 상태</th></tr></thead><tbody>
-      <tr><td>원격 반영·지식 보존 (10-11 이 PC)</td><td>f80f66e → 9ba300b fast-forward · 이 PC의 미커밋 지도 기록(앞선 b906264 → f80f66e 동기화)은 stash·백업 후 출처별로 다시 병합 · 로컬 전용 지식 2개 파일 바이트 보존 · 동기화 전 소스·배포본·설정 백업 SHA-256 일치</td></tr>
+      <tr><td>커밋·로컬 근거 정리 (10-12 macOS)</td><td>10-11 복원분을 커밋해 ccb663d 위로 rebase · OKF는 자동 병합(<code>log</code>에 원격 2개 항목과 복원 항목 공존), 충돌은 지도 2개 파일뿐이며 원격 기록을 기준으로 macOS 기록을 더하고 PC 출처를 다시 표기 · 입력 47개 fingerprint 재계산 · 커밋 스냅샷: OKF 22개 공개 concept 형식 검사·내부 링크 314개(개인 concept 없이) 확인 · 사용자 요청으로 macOS의 <code>.omp-artifacts</code> 기존 작업 디렉터리 15개(약 227MB)와 <code>stash@{0}</code> 삭제(삭제 전 stash 내용이 작업 트리·배포본에 있음을 대조) · 독립 검토: 차단 지적 없음, 지적 2건(원격 검증 기록의 원문 이동, push 결과 선기재) 정정 · 커밋 hash와 원격 반영 여부는 Git 기록 참조</td></tr>
+      <tr><td>macOS 설정·OKF (10-12)</td><td id="state-install-mac">setup.sh 종료 코드 0(OMP 18.10.0) · OKF 29개 concept 형식 검사·37개 파일 소스 일치 · 배포본 변화는 9ba300b 공개 OKF 8개뿐 · <code>config.yml</code>·AGENTS/WATCHDOG 변화 없음 · 확장 1개·명령 2개 배포, Archify 변경 없음</td></tr>
+      <tr><td>원격 반영·지식 보존 (10-11 ccb663d 작성 PC)</td><td>f80f66e → 9ba300b fast-forward · 그 PC의 미커밋 지도 기록(앞선 b906264 → f80f66e 동기화)은 stash·백업 후 출처별로 다시 병합 · 로컬 전용 지식 2개 파일 바이트 보존 · 동기화 전 소스·배포본·설정 백업 SHA-256 일치</td></tr>
       <tr><td>netcode 지식 게시 (10-11 9ba300b 작성 PC)</td><td>공개 OKF 8개 파일(네트워크 동기화·서버 체크리스트·게임 보안·Godot + C++·index·log) 갱신 · 36개 concept 검사·내부 링크 확인 · 두 게시 묶음마다 독립 검토 2건과 재확인을 받아 재식별 표현·원인 오귀속·규칙 충돌·멱등화 처리 등을 정정 · 비동기 검토 1건(버퍼 기준 시각) 정정 · 커밋 hash는 Git 기록 참조</td></tr>
+      <tr><td>원격 반영·학습 복원 (10-11 macOS)</td><td>b906264 → f80f66e fast-forward · stash와 09-29 작업 기록에만 남은 공개 문구 4건을 <code>coding-style · security/review-checklist · log</code>에 복원 · 재발 방지 기준 1건을 <code>learning/accumulation</code>에 추가 · 인용 공식 근거 4건 재확인 · 개인 concept 7개·로컬 index 보존(concept 3개는 판정 정정 줄만 추가) · OKF 29개 concept·내부 링크 319개 검사 · setup.sh 종료 코드 0, 관리 설정 22개·OKF 37개 파일 소스 일치 · 독립 검토 차단 지적 없음 · 10-12 커밋</td></tr>
       <tr><td>커밋·푸시 검토 (10-11 f80f66e 작성 PC)</td><td>b906264 이후 변경 전체 확인 · OKF 25개 concept·내부 링크 304개 검사 · 독립 검토: 차단 지적·재식별 정보 없음, 지침 결함 2건(OIDC 키·인증 전 유예) 정정 · 커밋 hash는 Git 기록 참조</td></tr>
       <tr><td>원격 반영·지식 보존 (10-11 9ba300b 작성 PC)</td><td>b906264 → f80f66e fast-forward · 충돌·stash 없음 · 동기화 전 백업 210개 파일 SHA-256 일치 · 로컬 전용 지식 13개 파일 보존(10개 바이트 동일, 3개 원격 변경에 맞춰 갱신) · f80f66e 작성 PC의 10-08 반영 기록은 manifest <code>peerWindowsApply</code></td></tr>
-      <tr><td>Windows 설정·OKF</td><td id="state-install">10-11 이 PC: setup.ps1 종료 코드 0(자식 프로세스 RemoteSigned) · OKF 23개 concept 형식 검사·31개 파일 소스 일치(동기화 전 대비 원격 공개 8개만 변경) · 관리 설정 22개 저장값·유효값 일치 · <code>config.yml</code>·AGENTS/WATCHDOG·확장 1개·명령 2개·Archify 107개 파일 일치 · 9ba300b 작성 PC의 게시 뒤 결과(OKF 44개 파일)는 manifest <code>netcodeKnowledgePublish</code></td></tr>
+      <tr><td>Windows 설정·OKF</td><td id="state-install">10-11 ccb663d 작성 PC: setup.ps1 종료 코드 0(자식 프로세스 RemoteSigned) · OKF 23개 concept 형식 검사·31개 파일 소스 일치(동기화 전 대비 원격 공개 8개만 변경) · 관리 설정 22개 저장값·유효값 일치 · <code>config.yml</code>·AGENTS/WATCHDOG·확장 1개·명령 2개·Archify 107개 파일 일치 · 9ba300b 작성 PC의 게시 뒤 결과(OKF 44개 파일)는 manifest <code>netcodeKnowledgePublish</code></td></tr>
       <tr><td>공개 지식 게시 이력</td><td>46bf5de 게시 PC의 기록: 공개 22개 concept·내부 링크 268개 검사 · 근거 <code>.omp-artifacts/knowledge-publish-20261008-a91c/</code>는 게시 PC에만 있음 · 현재 동기화 검사와 구분</td></tr>
-      <tr><td>모델 프로필</td><td>10-11 이 PC: 기본 Opus·<code>task</code> Sonnet·fallback Sol 저장값·유효값 확인, 모델 추론 미실행 · <code>task</code> Sonnet 5.5 xhigh 실호출은 9ba300b 작성 PC의 windowsLocalApply, 10-08 역할별 호출은 modelProfileUpdate, 구현 역할 전환은 taskRoleUpdate에 별도 보존 · <a href="#installation">Installation</a></td></tr>
+      <tr><td>모델 프로필</td><td>10-11 ccb663d 작성 PC: 기본 Opus·<code>task</code> Sonnet·fallback Sol 저장값·유효값 확인 · 10-12 macOS: setup.sh가 출력한 <code>modelRoles</code>가 소스와 같음 · 두 PC 모두 모델 추론 미실행 · <code>task</code> Sonnet 5.5 xhigh 실호출은 9ba300b 작성 PC의 windowsLocalApply, 10-08 역할별 호출은 modelProfileUpdate, 구현 역할 전환은 taskRoleUpdate에 별도 보존 · <a href="#installation">Installation</a></td></tr>
       <tr><td>전체·스킬 배포 관계도</td><td id="state-map">게시 JSON/HTML 4개 raw hash 일치 · 구조 변경·재렌더링 없음 · 커밋 근거 미검증</td></tr>
-      <tr><td>좌측 메뉴·검색·본문</td><td id="state-ui">이번 로컬 적용 문구의 브라우저 확인 결과는 manifest <code>localCloneApply</code>에 기록합니다.</td></tr>
-      <tr><td>검증 범위 밖</td><td>이번 동기화의 모델 추론·제목 생성·강제 fallback·설치 실패 복구·junction 거부 미실행 · netcode 지침은 9ba300b 작성 PC의 코드·문서 정적 분석과 독립 검토 근거이며 게임 서버·클라이언트 실행 재현 없음 · <a href="#roadmap">기존 설치 검증 공백</a></td></tr>
+      <tr><td>좌측 메뉴·검색·본문</td><td id="state-ui">macOS 10-12 headless Chromium(<code>file://</code>): Overview·Release·Installation·Archive 선택 시 한 문서 표시, 새로고침 뒤 <code>#release</code> 유지, Installation에서 "로컬 근거 정리" 검색 시 Overview·Release 2개 문서를 찾고 Release 선택 시 이동, 가로 넘침·페이지 오류·콘솔 메시지 없음, 남은 <code>.omp-artifacts</code> 링크는 존재하는 <code>setup.log</code> 1개 · ccb663d 작성 PC의 Chrome 확인은 manifest <code>localCloneApply</code></td></tr>
+      <tr><td>검증 범위 밖</td><td>macOS 10-12 커밋과 ccb663d 작성 PC 동기화 모두 모델 추론·제목 생성·강제 fallback·설치 실패 복구·junction 거부 미실행 · netcode 지침은 9ba300b 작성 PC의 코드·문서 정적 분석과 독립 검토 근거이며 게임 서버·클라이언트 실행 재현 없음 · <a href="#roadmap">기존 설치 검증 공백</a></td></tr>
     </tbody></table></div>
     <p><a href="sources.json">근거 manifest</a> · 소스 수동 대조 · 신선도 fingerprint · 게시 raw hash</p>
-    <p class="map-context">이번 근거(이 PC): <a href="../../.omp-artifacts/sync-local-20261011-afb5aa57/verification.json">배포·설정·보존 대조</a> · <a href="../../.omp-artifacts/sync-local-20261011-afb5aa57/setup.stdout.log">실제 설치 출력</a>. 이 PC의 앞선 f80f66e 동기화 근거는 <code>.omp-artifacts/sync-local-20261011-03c4eee5/</code>에 있습니다. 9ba300b 작성 PC의 근거(<code>okf-netcode-inherit-20261011</code>: 최종 setup 로그·화면 확인, 게시 전 소스·배포본 OKF와 설정 사본·SHA-256 목록 <code>backups/</code>, 갱신 전 지도 사본 <code>before/</code> · <code>sync-20261011-f80f66e</code>)와 f80f66e 작성 PC의 근거(<code>commit-push-20261011-5b3e</code> · <code>task-role-sonnet-20261010-7c1e</code> · <code>pull-apply-20261008-6fd8</code>)는 각 PC에만 있습니다. 각 PC의 실행 근거는 독립적이며 다른 PC의 성공을 보장하지 않습니다.</p>
-    <p class="map-context">동기화 전 소스·배포 지식·설정, pull 전 이 PC의 미커밋 지도 사본, 원격 지도 사본은 <code>.omp-artifacts/sync-local-20261011-afb5aa57/backups/</code>에 보존하고, 같은 미커밋 지도 변경은 이 PC의 <code>git stash</code>에도 남겨 두었습니다. 인증 변경과 영구 실행 정책 변경은 수행하지 않았습니다. 보존 자료를 삭제하면 해당 재확인·복구 자료가 사라집니다.</p>
-    <p class="map-context">커밋 근거는 미검증입니다. 정본은 통과한 staging 결과의 복사본이며 영수증은 원래 경로에 보존합니다.</p>
-    <p class="map-context">신선도: 입력 경로 47개 목록·fingerprint가 9ba300b 반영 후 작업 트리와 모두 일치합니다. 바뀐 공개 OKF 8개는 내용을 읽었고 fingerprint는 원격 manifest 값 그대로 현재 파일과 일치합니다. 게시 JSON/HTML 4개 hash가 일치하고 관계도 구조·렌더링은 유지했습니다.</p>
-    <p class="map-context">지도 작성 환경의 근거(이 clone에는 없음): <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/layout-verification.json">화면 경계 검사</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/discovery-active.json">명령·선언 발견</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/overview/v3/evidence/map.finalize-summary.json">전체 지도 검증</a> · <a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/skill-deployment/v2/evidence/map.finalize-summary.json">상세 지도 검증</a></p>
+    <p class="map-context">이번 근거(macOS 10-12): <a href="../../.omp-artifacts/commit-push-20261012-eafd43/setup.log">setup 출력</a> · 커밋 스냅샷 검증본 <code>.omp-artifacts/commit-push-20261012-eafd43/staged-tree/</code>. macOS의 이전 근거(<code>repo-sync-20261011-caf1d9</code> · <code>project-navigation-20260930-c84b2a</code> · <code>video-learning-20261005-a7d3e9</code> 등)는 10-12 사용자 요청으로 삭제해 macOS에서 다시 확인할 수 없습니다. ccb663d 작성 PC의 근거(<code>sync-local-20261011-afb5aa57</code> · <code>sync-local-20261011-03c4eee5</code>), 9ba300b 작성 PC의 근거(<code>okf-netcode-inherit-20261011</code>: 최종 setup 로그·화면 확인, 게시 전 소스·배포본 OKF와 설정 사본·SHA-256 목록 <code>backups/</code>, 갱신 전 지도 사본 <code>before/</code> · <code>sync-20261011-f80f66e</code>)와 f80f66e 작성 PC의 근거(<code>commit-push-20261011-5b3e</code> · <code>task-role-sonnet-20261010-7c1e</code> · <code>pull-apply-20261008-6fd8</code>)는 각 PC에만 있습니다. 각 PC의 실행 근거는 독립적이며 다른 PC의 성공을 보장하지 않습니다.</p>
+    <p class="map-context">ccb663d 작성 PC는 동기화 전 소스·배포 지식·설정과 지도 사본을 그 PC의 <code>.omp-artifacts/sync-local-20261011-afb5aa57/backups/</code>와 <code>git stash</code>에 보존했다고 기록했습니다. macOS는 이번 커밋을 위한 별도 백업을 만들지 않았고 <code>stash@{0}</code>과 이전 백업을 삭제했으므로, 커밋 전 상태의 복구 수단은 Git 기록뿐입니다. 인증 변경과 영구 실행 정책 변경은 수행하지 않았습니다.</p>
+    <p class="map-context">커밋 근거는 미검증입니다. 정본은 통과한 staging 결과의 복사본입니다. 영수증은 원래 경로에 보존했으나 macOS의 것은 10-12 사용자 요청으로 삭제했습니다.</p>
+    <p class="map-context">신선도: rebase 뒤 작업 트리에서 입력 경로 47개 목록·fingerprint를 다시 계산해 모두 일치합니다. 원격 manifest 대비 이번에 바뀐 입력 4개(<code>coding-style · log · security/review-checklist · learning/accumulation</code>)는 내용을 읽고 다시 계산했고, <code>log</code>는 원격 항목과 병합된 결과로 계산했습니다. 게시 JSON/HTML 4개 raw hash가 일치하고 관계도 구조·렌더링은 유지했습니다.</p>
+    <p class="map-context">지도 작성 환경(macOS, 09-30)의 검증 영수증 <code>.omp-artifacts/project-navigation-20260930-c84b2a/</code>(화면 경계 검사·명령·선언 발견·전체/상세 지도 finalize 요약)는 10-12 사용자 요청으로 삭제했습니다. 게시 JSON/HTML이 manifest의 raw hash와 같다는 대조만 남습니다.</p>
   </article>
 
   <article class="doc-page" id="decisions" data-page data-title="Decisions" data-group="Project records" data-terms="결정 이유 선택 기준 tradeoff Archify 통합" hidden>
@@ -302,12 +305,12 @@
 
   <article class="doc-page" id="archive" data-page data-title="Archive" data-group="Project records" data-terms="이전본 보존 아카이브 snapshot 증거 복구" hidden>
     <p class="breadcrumb">Project records / Archive</p><h1>Archive</h1><p class="lead">이전 생성본과 복구 자료입니다. 현재 상태와 구분합니다.</p>
-    <dl class="meta"><div><dt>Status</dt><dd>로컬 보존</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
+    <dl class="meta"><div><dt>Status</dt><dd>macOS 정리됨</dd></div><div><dt>Owner</dt><dd>통합 담당자</dd></div><div><dt>Updated</dt><dd data-snapshot></dd></div></dl>
     <ul class="source-list">
-      <li><a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/overview/v1/map.html">전체 지도 초기 검증본</a></li>
-      <li><a href="../../.omp-artifacts/project-navigation-20260930-c84b2a/skill-deployment/v1/map.html">스킬 배포 상세 검증본</a></li>
+      <li>전체 지도 초기 검증본 <code>.omp-artifacts/project-navigation-20260930-c84b2a/overview/v1/map.html</code></li>
+      <li>스킬 배포 상세 검증본 <code>.omp-artifacts/project-navigation-20260930-c84b2a/skill-deployment/v1/map.html</code></li>
     </ul>
-    <p class="map-context">로컬 검증·복구 자료이며 다른 clone에는 없을 수 있습니다. 사용자 요청 없이 삭제하지 않습니다.</p>
+    <p class="map-context">macOS 로컬 검증·복구 자료였으며 10-12 사용자 요청으로 삭제했습니다. 다른 clone에 있다는 기록은 없습니다.</p>
   </article>
 </main>
 <noscript><p class="note">문서 메뉴·검색에는 JavaScript가 필요합니다. Overview와 각 파일 원본은 직접 읽을 수 있습니다.</p></noscript>

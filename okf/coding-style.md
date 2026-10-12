@@ -3,7 +3,7 @@ type: Rule
 title: 코딩 스타일
 description: 간결성(YAGNI)·검토 비용·결정 사다리와 표준 기능의 의미 계약·언어 공통 스타일 정본·프로젝트 우선순위·언어 의미/포매터 예외·공개 API·아키텍처·서버 상태와 외부 응답 계약.
 tags: [rule, coding-style, cross-language, naming, architecture, api-design, server, response-contract]
-timestamp: 2026-10-10T00:00:00Z
+timestamp: 2026-10-11T00:00:00Z
 ---
 
 # 코딩 스타일
@@ -62,7 +62,10 @@ timestamp: 2026-10-10T00:00:00Z
 - **런타임 간 정수 정밀도:** 64비트 식별자·세대·sequence를 JSON으로 주고받을 때 소비자의 수 표현 범위를 계약에 포함한다. JavaScript `Number`의 안전 정수 상한은 [`Number.MAX_SAFE_INTEGER`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER), 즉 `2^53-1`이다. 그 범위를 넘는 값은 생산자부터 정규화된 10진 문자열 등 손실 없는 형식으로 내보내고 소비자가 문법·범위를 검증한 뒤 필요하면 `BigInt`로 해석한다. `JSON.parse`로 이미 반올림된 숫자를 `String()`·타입 단언으로 감싸도 원래 값은 복구되지 않는다. 복구·소유권 증명·조건부 갱신에는 안전 상한 밖의 서로 다른 값이 경계를 왕복해도 구별되는 회귀를 둔다.
 - 부분 갱신: 존재하는 필드를 각각 검증한 뒤 필드 조합과 기존 상태 간 교차 불변조건을 검증한다. 다른 선택 필드의 부재가 현재 필드의 검증을 우회하게 하지 않는다.
 - 결과 전파: 보정·정규화·재계산된 최종 accepted 값을 저장·캐시·이벤트·응답에 일관되게 사용하고 원본 요청값을 다시 전파하지 않는다.
+- 존재 판정·upsert: 최종 일관성 보조 인덱스의 조회 결과로 행의 존재를 판정해 INSERT·증분하지 않는다. [DynamoDB GSI](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html)는 기본 테이블 쓰기를 비동기로 반영하고 최종 일관성 읽기만 지원한다. 그래서 방금 만든 행을 못 보고 중복 행이나 증분 누락이 생긴다. 존재 판정은 기본키 대상의 조건부 쓰기(존재·부재 조건)로 하고, 중복 키 충돌은 기존 행 갱신 재시도로 처리한다. 데이터를 옮길 때는 쓰기를 먼저 새 저장소로 전환하고, 기존 값은 한 번만 합산하는 순서로 누락·이중 반영을 막는다.
 - 외부 응답 집계: 선택 필드의 부재·null과 실제 0을 구분한다. 계약 근거 없이 누락을 0으로 간주하지 않으며, 계약이 허용하는 대체 필드·우선순위·단위를 확인한 뒤 폴백한다. 집계값과 세부값이 함께 있으면 중복 합산하지 않고 실제 0을 거짓 값으로 취급해 다른 값으로 대체하지 않는다. 필드 부재·0·집계/세부 동시 존재에서 소비자가 관찰하는 집계 결과를 검증한다.
   - 공개 API 예: [DynamoDB ConsumedCapacity](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ConsumedCapacity.html)의 `CapacityUnits`·`ReadCapacityUnits`·`WriteCapacityUnits`는 모두 선택 필드다. 방향별 필드가 실제 0이면 그대로 사용하고, 필드가 없을 때만 작업의 읽기/쓰기 방향이 명확한 경우 총계 `CapacityUnits`를 해당 방향으로 집계한다. 총계도 없으면 측정 불가이며, 전체 값과 테이블·인덱스 세부값을 중복 합산하지 않는다. 용량 반환을 요청했는지도 확인하고 이 용량 단위를 실제 전송 바이트로 해석하지 않는다.
   - 호출 이름만으로 소비 방향을 고정하지 않는다. [DynamoDB TransactWriteItems](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TransactWriteItems.html#DDB-TransactWriteItems-request-ClientRequestToken)는 성공한 요청을 유효한 같은 `ClientRequestToken`으로 재호출하면 쓰기가 아니라 읽기 용량을 반환한다. 총계 폴백의 방향은 해당 호출의 계약으로 확인한다.
   - 실패 경로도 사용량 반환 계약을 확인한다. [DynamoDB 조건부 쓰기](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithItems.html#WorkingWithItems.ConditionalWrites.ReturnConsumedCapacity)는 조건 실패에도 쓰기 용량을 소비하지만 실패 응답에 소비 용량을 반환하지 않는다. 성공 응답에서 관측한 합만으로 실제 전체 사용량을 단정하지 않으며, 관측 불가를 0으로 처리하거나 근거 없는 추정치로 채우지 않는다.
+  - 지표 차원이 전체를 포함하는지도 계약으로 확인한다. [DynamoDB CloudWatch 지표](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/metrics-dimensions.html)에서 `TableName` 차원만 지정한 `ConsumedReadCapacityUnits`·`ConsumedWriteCapacityUnits`·`ReadThrottleEvents`·`WriteThrottleEvents`는 테이블분만 반환하고 GSI분을 포함하지 않는다. 전체 사용량은 `TableName`+`GlobalSecondaryIndexName` 차원의 인덱스별 값을 더해 구하고, 테이블분·GSI분·합계를 구분해 보고한다. 응답 `ConsumedCapacity` 총계와 달리 여기서 주의할 것은 중복 합산이 아니라 누락이다.
+  - 지표 탐색 결과가 없다고 0으로 보지 않는다. [CloudWatch SEARCH 식](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-search-expressions.html)은 최근 2주 안에 데이터를 보고한 지표만 찾는다. 그보다 오래된 구간의 스로틀·오류·인덱스별 값은 차원을 명시한 지표로 조회하고, 탐색 결과가 비어 있으면 측정 불가와 실제 0을 구분한다.
