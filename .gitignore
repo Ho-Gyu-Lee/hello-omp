@@ -12,8 +12,9 @@
 agent.db*
 .DS_Store
 
-# Local-only learned concepts (personal preferences, scoped facts, publication review).
-# Deployed via filesystem copy by setup, but never committed to the public repo.
-# index.md stays tracked as the local-only policy note; concept files are discovered by directory read.
+# Legacy location of local-only learned concepts, kept ignored as a guard against committing them.
+# Local concepts now live in <configdir>/okf/learned/ and never in this clone; setup copies legacy files there once.
+# Ignoring does not protect files: git merge/pull overwrite ignored files by default (--overwrite-ignore).
+# index.md stays tracked as the local-only policy note; setup replaces <configdir>/okf/learned/index.md with it.
 okf/learned/*
 !okf/learned/index.md

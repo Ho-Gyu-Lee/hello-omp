@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # omp portable setup — macOS / Linux
-# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents  6) commands  7) skills
+# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents  6) commands  7) skills  8) removals + settings check
 # Idempotent: safe to re-run. Honors PI_CODING_AGENT_DIR via `omp config path`.
 set -eu
 
@@ -54,6 +54,8 @@ if [ "${CONFIG_DIR_CMP}" = "${SCRIPT_DIR_CMP}" ]; then
 fi
 mkdir -p "${CONFIG_DIR}"
 bun "${SCRIPT_DIR}/scripts/deploy-skills.ts" --check "${CONFIG_DIR}"
+# local knowledge preflight: stops before any change on migration conflicts, invalid local concepts or a detected wipe
+bun "${SCRIPT_DIR}/scripts/deploy-okf.ts" --check "${CONFIG_DIR}"
 echo "omp config dir: ${CONFIG_DIR}"
 # absolute OKF path (slash-normalized) injected into AGENTS.md/agents so agents read it from any cwd
 OKF_ABS=$(printf '%s' "${CONFIG_DIR}/okf" | sed 's|\\|/|g')
@@ -73,11 +75,11 @@ apply_settings_file() {
   done < "${settings_file}"
 }
 
-echo "[1/7] applying model settings..."
+echo "[1/8] applying model settings..."
 apply_settings_file "${SCRIPT_DIR}/config/settings.conf"
 
 # --- 2) global/advisor rules ---
-echo "[2/7] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
+echo "[2/8] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
 if [ -f "${CONFIG_DIR}/AGENTS.md" ] && [ ! -f "${CONFIG_DIR}/AGENTS.md.bak" ]; then
   cp "${CONFIG_DIR}/AGENTS.md" "${CONFIG_DIR}/AGENTS.md.bak"
 fi
@@ -88,18 +90,16 @@ if [ -f "${CONFIG_DIR}/WATCHDOG.md" ] && [ ! -f "${CONFIG_DIR}/WATCHDOG.md.bak" 
 fi
 cp "${SCRIPT_DIR}/rules/WATCHDOG.md" "${CONFIG_DIR}/WATCHDOG.md"
 
-# --- 3) OKF bundle (validate source, then clean redeploy) ---
-echo "[3/7] validating and deploying OKF bundle..."
+# --- 3) OKF bundle (validate source, then redeploy public files; local learned/ is preserved) ---
+echo "[3/8] validating and deploying OKF bundle..."
 if ! bun "${SCRIPT_DIR}/scripts/validate-okf.ts" "${SCRIPT_DIR}/okf"; then
   echo "ERROR: OKF conformance validation failed" >&2
   exit 1
 fi
-rm -rf "${CONFIG_DIR}/okf"
-mkdir -p "${CONFIG_DIR}/okf"
-cp -R "${SCRIPT_DIR}/okf/." "${CONFIG_DIR}/okf/"
+bun "${SCRIPT_DIR}/scripts/deploy-okf.ts" "${CONFIG_DIR}"
 
 # --- 4) extensions (auto-discovered from user agent dir) ---
-echo "[4/7] deploying extensions (if any)..."
+echo "[4/8] deploying extensions (if any)..."
 n=0
 for ext in "${SCRIPT_DIR}/extensions/"*.js "${SCRIPT_DIR}/extensions/"*.ts; do
   [ -f "$ext" ] || continue
@@ -116,7 +116,7 @@ fi
 
 
 # --- 5) agent overrides/custom agents (optional; built-in agents are default) ---
-echo "[5/7] deploying agent overrides/custom agents (if any)..."
+echo "[5/8] deploying agent overrides/custom agents (if any)..."
 for managed in reviewer.md plan.md; do
   managed_role=${managed%.md}
   managed_marker="# source: omp v16.3.8 bundled ${managed_role}; only thinkingLevel changed high -> xhigh."
@@ -140,7 +140,7 @@ else
 fi
 
 # --- 6) file slash commands (preserve unrelated user commands) ---
-echo "[6/7] deploying commands (if any)..."
+echo "[6/8] deploying commands (if any)..."
 n=0
 for cmd in "${SCRIPT_DIR}/commands/"*.md; do
   [ -f "$cmd" ] || continue
@@ -156,8 +156,12 @@ else
 fi
 
 # --- 7) bundled skills (copy only; no upstream code execution) ---
-echo "[7/7] deploying bundled skills..."
+echo "[7/8] deploying bundled skills..."
 bun "${SCRIPT_DIR}/scripts/deploy-skills.ts" "${CONFIG_DIR}"
+
+# --- 8) apply removals from the repository and verify settings (records what setup deployed) ---
+echo "[8/8] retiring removed managed items and verifying settings..."
+bun "${SCRIPT_DIR}/scripts/sync-managed.ts" "${CONFIG_DIR}"
 
 echo ""
 echo "done. verifying modelRoles:"

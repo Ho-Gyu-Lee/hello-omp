@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: 에이전트 생태계 동향과 적용 판단
-description: 2026-08-26~09-26과 2026-09-26~10-12 두 기간의 공식 변경(OMP 릴리스·MCP 사양·에이전트 도구 벤더)과 GitHub 월간 Trending 관측(09-26, 10-12)을 구분하고 OMP 지침의 반영·유지·미채택 근거를 연결한다.
+description: 2026-08-26~09-26과 2026-09-26~10-12 두 기간의 공식 변경(OMP 릴리스·MCP·OKF 사양·에이전트 도구 벤더)과 GitHub 월간 Trending 관측(09-26, 10-12)을 구분하고 OMP 지침의 반영·유지·미채택 근거를 연결한다.
 tags: [tools, research, trends, github, skills, review, memory, sandbox, mcp]
 timestamp: 2026-10-12T00:00:00Z
 ---
@@ -90,11 +90,12 @@ timestamp: 2026-10-12T00:00:00Z
 | 2026-10-11 | [OMP 18.9.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.9.0): `retry.fallbackOn`(`any` 기본·`usage-limit`·`except-usage-limit`), 브라우저 `targets()`와 사용자가 연 페이지 채택 | fallback 설정은 바꾸지 않는다(기본 `any`). 브라우저 권한 구분은 [기본 도구](/tools/builtin.md)에 반영했다. |
 | 2026-10-12 | [OMP 18.10.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.10.0): `omp session pack/unpack`, `omp auth export/import`, 로컬 IPC의 네이티브 전송(Windows에서 이전 버전이 시작한 daemon은 재사용하지 않으므로 업그레이드 뒤 이전 세션을 닫으라는 안내) | 사용하지 않는다. `omp auth export`는 로그인 자격증명을 다른 기기로 옮기므로 사용자 요청·승인 범위에서만 다룬다. |
 
-### 사양 대조: MCP·Agent Skills
+### 사양 대조: MCP·Agent Skills·OKF
 
 - MCP: 현행 revision은 [2026-07-28](https://modelcontextprotocol.io/specification/versioning)이며 이 기간에 새 revision은 없다([릴리스 목록](https://github.com/modelcontextprotocol/modelcontextprotocol/releases) 최신 확인). 07-28 revision은 `initialize` 핸드셰이크를 제거한 stateless 모델이다([변경 내역](https://modelcontextprotocol.io/specification/2026-07-28/changelog)). 기간 안 채택 관측은 [Python SDK v2.3.0](https://github.com/modelcontextprotocol/python-sdk/releases/tag/v2.3.0)(10-02)의 클라이언트 `server/discover` 프로브(`mode="auto"`)와 아래 Claude Code의 기본 협상이다. 반면 OMP 18.10.0은 2025-11-25 `initialize`를 보내므로 [MCP 정책](/tools/mcp.md)에 「사양 revision과 OMP 클라이언트 호환」을 추가했고 서버 전환을 가정하지 않는다.
 - Agent Skills: [사양](https://agentskills.io/specification)의 구성(`name`·`description`·`license`·`compatibility`·`metadata`·실험적 `allowed-tools`)은 [저장소](https://github.com/agentskills/agentskills)의 마지막 커밋이 2026-08-09라 이 기간에 바뀌지 않았다. [스킬 사용](/tools/skills.md)을 유지한다.
 - Docker MCP gateway [v0.44.1](https://github.com/docker/mcp-gateway/releases/tag/v0.44.1)(09-23, 기간 직전)과 [brave-search-mcp-server v2.1.4](https://github.com/brave/brave-search-mcp-server/releases/tag/v2.1.4)(09-17)이 조사일 기준 최신이며 `dynamic-tools`·`--dry-run`·Brave 도구 목록은 [MCP 정책](/tools/mcp.md) 서술과 같다. 기간 밖의 현행 대조이며 신규 발표로 세지 않는다.
+- OKF: 현행은 [v0.2](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md)다. 발표는 [2026-07-25 Google Cloud 블로그](https://cloud.google.com/blog/products/data-analytics/okf-v0-2-adds-trust-signals)였고, 사양 저장소는 2026-08에 `GoogleCloudPlatform/open-knowledge-format`으로 옮겨졌다. 마지막 사양 커밋은 2026-08-21(모든 시각 값에 명시적 UTC 오프셋 요구)이며 v0.3은 제안 단계다([#16](https://github.com/GoogleCloudPlatform/open-knowledge-format/issues/16) 등). v0.2는 `sources`·`generated`·`verified`·`status`·`stale_after`와 `Attested Computation`을 선택 항목으로 더하고, `timestamp`를 `generated.at`으로 대체한다(v0.1 형식으로도 읽힘). 소비 모델은 `index.md`의 한 줄 설명으로 고르고(§8), frontmatter로 관련성·신뢰를 판단한 뒤 고른 개념의 본문만 읽는 방식이다. 발표문은 개념을 간결하게 두라고 권한다. 이 번들은 v0.1 frontmatter를 유지하고, 2026-10-12에 여러 독립 주제를 담은 큰 개념을 주제별 개념으로 나눴다([학습 축적](/learning/accumulation.md) 「기록 위치」 4). [Knowledge Catalog 연동](https://cloud.google.com/blog/products/data-analytics/scale-okf-bundles-across-an-organization-with-knowledge-catalog)(2026-08-27, 이전 조사 기간에서 누락)은 조직 단위 검색·IAM 공유용이라 개인 파일형 번들에는 채택하지 않는다. `okf.md`·`useokf.com` 등은 Google이 아닌 제3자 사이트·도구다.
 
 ### 에이전트 도구 벤더의 공식 변경 — 관련 주제 선별
 

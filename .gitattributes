@@ -4,4 +4,3 @@
 *.md text eol=lf
 *.conf text eol=lf
 skills/archify/** text eol=lf
-docs/project-map/** text eol=lf

@@ -1,6 +1,6 @@
 #requires -version 5
 # omp portable setup - Windows (PowerShell 5.1+)
-# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents  6) commands  7) skills
+# Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents  6) commands  7) skills  8) removals + settings check
 # Idempotent: safe to re-run. Honors PI_CODING_AGENT_DIR via `omp config path`.
 $ErrorActionPreference = 'Stop'
 # PowerShell 7.3+ defaults to Windows/Standard native argument passing, which quotes native .exe arguments itself and would double-escape the manual \" below; keep the 5.1 (Legacy) behavior.
@@ -44,6 +44,9 @@ if ([string]::Equals($scriptFull, $configFull, [System.StringComparison]::Ordina
 New-Item -ItemType Directory -Force $ConfigDir | Out-Null
 & bun (Join-Path $ScriptDir 'scripts\deploy-skills.ts') --check $ConfigDir
 if ($LASTEXITCODE -ne 0) { Write-Error "setup path preflight failed"; exit $LASTEXITCODE }
+# local knowledge preflight: stops before any change on migration conflicts, invalid local concepts or a detected wipe
+& bun (Join-Path $ScriptDir 'scripts\deploy-okf.ts') --check $ConfigDir
+if ($LASTEXITCODE -ne 0) { Write-Error "OKF local knowledge preflight failed"; exit $LASTEXITCODE }
 Write-Host "omp config dir: $ConfigDir"
 # absolute OKF path (slash-normalized) injected into AGENTS.md/agents so agents read it from any cwd
 $okfAbs = (Join-Path $ConfigDir 'okf') -replace '\\', '/'
@@ -70,11 +73,11 @@ function Set-OmpSettings([string]$Path) {
   }
 }
 
-Write-Host "[1/7] applying model settings..."
+Write-Host "[1/8] applying model settings..."
 Set-OmpSettings (Join-Path $ScriptDir 'config\settings.conf')
 
 # --- 2) global/advisor rules ---
-Write-Host "[2/7] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
+Write-Host "[2/8] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
 $agentsMd = Join-Path $ConfigDir 'AGENTS.md'
 if ((Test-Path $agentsMd) -and -not (Test-Path "$agentsMd.bak")) { Copy-Item $agentsMd "$agentsMd.bak" -Force }
 Copy-Item (Join-Path $ScriptDir 'rules\AGENTS.md') $agentsMd -Force
@@ -83,18 +86,17 @@ $watchdogMd = Join-Path $ConfigDir 'WATCHDOG.md'
 if ((Test-Path $watchdogMd) -and -not (Test-Path "$watchdogMd.bak")) { Copy-Item $watchdogMd "$watchdogMd.bak" -Force }
 Copy-Item (Join-Path $ScriptDir 'rules\WATCHDOG.md') $watchdogMd -Force
 
-# --- 3) OKF bundle (validate source, then clean redeploy) ---
-Write-Host "[3/7] validating and deploying OKF bundle..."
+# --- 3) OKF bundle (validate source, then redeploy public files; local learned/ is preserved) ---
+Write-Host "[3/8] validating and deploying OKF bundle..."
 $okfSrc = Join-Path $ScriptDir 'okf'
 $okfValidator = Join-Path $ScriptDir 'scripts\validate-okf.ts'
 & bun $okfValidator $okfSrc
 if ($LASTEXITCODE -ne 0) { Write-Error "OKF conformance validation failed"; exit $LASTEXITCODE }
-$okfDst = Join-Path $ConfigDir 'okf'
-if (Test-Path $okfDst) { Remove-Item $okfDst -Recurse -Force }
-Copy-Item $okfSrc $okfDst -Recurse -Force
+& bun (Join-Path $ScriptDir 'scripts\deploy-okf.ts') $ConfigDir
+if ($LASTEXITCODE -ne 0) { Write-Error "OKF deployment failed"; exit $LASTEXITCODE }
 
 # --- 4) extensions (auto-discovered from user agent dir) ---
-Write-Host "[4/7] deploying extensions (if any)..."
+Write-Host "[4/8] deploying extensions (if any)..."
 $extensionsDir = Join-Path $ScriptDir 'extensions'
 $srcExtensions = @()
 if (Test-Path $extensionsDir) {
@@ -113,7 +115,7 @@ if ($srcExtensions.Count -gt 0) {
 
 
 # --- 5) agent overrides/custom agents (optional; built-in agents are default) ---
-Write-Host "[5/7] deploying agent overrides/custom agents (if any)..."
+Write-Host "[5/8] deploying agent overrides/custom agents (if any)..."
 $agentsDst = Join-Path $ConfigDir 'agents'
 $managedAgents = @('reviewer.md', 'plan.md')
 foreach ($managed in $managedAgents) {
@@ -142,7 +144,7 @@ if ($srcAgents.Count -gt 0) {
 }
 
 # --- 6) file slash commands (preserve unrelated user commands) ---
-Write-Host "[6/7] deploying commands (if any)..."
+Write-Host "[6/8] deploying commands (if any)..."
 $commandsDir = Join-Path $ScriptDir 'commands'
 $srcCommands = @()
 if (Test-Path -LiteralPath $commandsDir) {
@@ -160,9 +162,14 @@ if ($srcCommands.Count -gt 0) {
 }
 
 # --- 7) bundled skills (copy only; no upstream code execution) ---
-Write-Host "[7/7] deploying bundled skills..."
+Write-Host "[7/8] deploying bundled skills..."
 & bun (Join-Path $ScriptDir 'scripts\deploy-skills.ts') $ConfigDir
 if ($LASTEXITCODE -ne 0) { Write-Error "skill deployment failed"; exit $LASTEXITCODE }
+
+# --- 8) apply removals from the repository and verify settings (records what setup deployed) ---
+Write-Host "[8/8] retiring removed managed items and verifying settings..."
+& bun (Join-Path $ScriptDir 'scripts\sync-managed.ts') $ConfigDir
+if ($LASTEXITCODE -ne 0) { Write-Error "managed item sync failed"; exit $LASTEXITCODE }
 
 Write-Host ""
 Write-Host "done. verifying modelRoles:"

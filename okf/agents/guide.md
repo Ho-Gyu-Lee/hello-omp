@@ -56,7 +56,7 @@ OMP 18.10.0의 [모델 문서](omp://models.md)·[설정 문서](omp://settings.
 
 ## 2026-10-08 모델 선정 근거
 
-이 문서는 **관리 소스의 선택**을 설명한다. 공식 원문·사용자 리뷰 조회 기준은 2026-10-08이며(구현 역할 변경 항목은 2026-10-10), 출시일과 조회일은 다르다. 소스·로컬 적용·실호출 상태는 프로젝트 지도에서 구분한다. 외부 결과를 OMP 로컬 품질 비교로 해석하지 않는다.
+이 문서는 **관리 소스의 선택**을 설명한다. 공식 원문·사용자 리뷰 조회 기준은 2026-10-08이며(구현 역할 변경 항목은 2026-10-10), 출시일과 조회일은 다르다. 소스·로컬 적용·실호출 상태는 서로 구분해 확인한다. 외부 결과를 OMP 로컬 품질 비교로 해석하지 않는다.
 
 - **구현 역할 변경(2026-10-10):** 사용자의 품질 우선 결정으로 `task`를 Sonnet 5.5 xhigh로, fallback을 Sol 6.1 xhigh로 바꿨다. 근거는 [Vals Terminal-Bench 4.0](https://www.vals.ai/benchmarks/terminal-bench-4)(10-07, 동일 하네스 avg@3)의 Sonnet 64.14%(제공자 fallback 처리분을 실패로 보면 62.63%) 대 Sol 6.1 55.05%와, 기본 `task` 산출물이 OpenAI `slow` reviewer로 교차 검토되는 구조다. 같은 표의 API 가격 기준 테스트당 비용은 토큰 단가가 같은 두 모델에서 Sonnet $16.51·Sol $1.72로 토큰 사용량 차이를 시사하지만, OMP 구독 quota 차감을 측정한 값은 아니다. 구현을 옮기면 메인과 구현이 같은 Anthropic 구독 한도·인증에 의존해 한도·위험이 집중되며, 실제 소모량은 사용량 기록으로 확인한다. 과제의 약 3/4이 전통적 소프트웨어 밖이므로 게임 개발 품질의 A/B 결과가 아니다. `advisor`는 메인과 다른 계열 감시, `slow`는 교차 검토, `vision`·`smol`·`commit`·`tiny`는 Sonnet 우위 근거 부재로 유지한다.
 - **OpenAI:** [공식 목록](https://developers.openai.com/api/docs/models/)의 권장군은 GPT-6 Astra·GPT-6.1 Sol·GPT-6 Luna다. [6.1 Sol 발표](https://openai.com/index/introducing-gpt-6-1-sol/)는 9월 29일이며, [10월 7일 Chat 발표](https://openai.com/index/gpt-6-for-everyone/)는 Work·Codex 모델이 바뀌지 않는다고 명시한다. [공식 용도 가이드](https://openai.com/index/practical-guide-building-gpt-6/)는 일반 구현·조사에 Sol, 정밀 검토·시각 분석에 Astra, 분류·요약에 Luna를 권한다. 이 프로필은 Astra를 정밀 검토·화면 분석, Luna를 제목·메모리, Sol을 탐색·커밋·advisor와 구현 fallback에 배치한다. 10-08의 Sol 기본 구현 배정은 위 구현 역할 변경으로 대체됐다. Sol 6.1의 도구 호출은 Responses 경로를 사용하며 `none`·`minimal`을 지정하지 않는다.

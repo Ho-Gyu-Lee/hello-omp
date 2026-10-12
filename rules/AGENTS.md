@@ -91,7 +91,7 @@ omp의 기본 기능으로 되는 일은 MCP를 두지 않고 기본 도구를 �
 상세 룰·도메인 지식은 OKF 번들(Open Knowledge Format)에 있다. 배포본 절대경로는 `__OKF_DIR__`, 관리 소스 절대경로는 `__OKF_SOURCE_DIR__` 이다. 작업 전 관련 개념을 참조한다.
 
 1. 진입점은 `__OKF_DIR__/index.md` — `read`로 읽으면 개념 목록과 위치를 준다.
-2. 작업 유형과 concept의 제목·설명·태그를 대조해 가장 가까운 개념을 읽는다. 대표 매핑은 다음과 같으며 완전 목록이 아니다: 모든 언어의 코드 작성·수정·리뷰 → `coding-style.md`·`language-style.md`; 다단계·대규모 작업·작업 파일 배치 → `workflow.md`; 유지 선언이 있는 프로젝트 변경·프로젝트 목차/상태·사용자와 변경 위치 공유 → `project-navigation.md`; 작업용 스크립트·실행 언어 → `tools/builtin.md`; 버그 수정·디버깅 → `bugfix.md`; 서버/API·코드 리뷰 → `coding-style.md`·`security/review-checklist.md`; 게임 → `game/*`·`security/game.md`; Godot + C++ → `game/godot-cpp.md` 및 `learned/`에서 발견한 게임 개발 목적 concept; 도구 선택 → `tools/*`.
+2. 작업 유형과 concept의 제목·설명·태그를 대조해 가장 가까운 개념을 읽는다. 대표 매핑은 다음과 같으며 완전 목록이 아니다: 모든 언어의 코드 작성·수정·리뷰 → `coding-style.md`·`language-style.md`(C/C++는 `language-style-c-cpp.md`도); 다단계·대규모 작업·작업 파일 배치 → `workflow.md`; 유지 선언이 있는 프로젝트 변경·프로젝트 목차/상태·사용자와 변경 위치 공유 → `project-navigation.md`; 작업용 스크립트·실행 언어 → `tools/builtin.md`; 버그 수정·디버깅 → `bugfix.md`; 서버/API·코드 리뷰 → `coding-style.md`·`security/review-checklist.md`; 게임 → `game/*`·`security/game.md`; Godot + C++ → `game/godot-cpp.md`(하위 개념 목록에서 해당 주제) 및 `learned/`에서 발견한 게임 개발 목적 concept; 도구 선택 → `tools/*`.
 3. 번들 내부 링크 `[..](/path.md)`는 번들 루트 기준이므로 `__OKF_DIR__/path.md`로 읽는다. 개념 파일은 YAML 프런트매터(`type` 등) + 본문.
 4. 상대경로로 읽지 말 것 — 에이전트의 cwd는 작업 중인 프로젝트라 번들 위치와 다르다. 항상 `__OKF_DIR__` 절대경로를 쓴다.
 5. OKF 내용과 실제 코드/파일이 다르면 실제를 우선하고 검증한 뒤 진행한다(OKF는 작성 시점 기준).
@@ -99,9 +99,9 @@ omp의 기본 기능으로 되는 일은 MCP를 두지 않고 기본 도구를 �
 ## OKF 학습 축적
 
 - 구현·버그 수정·조사·설정/규칙 변경 작업과 사용자 교정·영속 결정에서는 별도 요청 없이 완료 전에 학습을 판정한다. 관련 로컬 지식을 재사용·정정할 때도 공개 반영 가능성을 재평가한다. 실행 조건·기록·공개 범위의 정본은 `__OKF_DIR__/learning/accumulation.md`, 필수 완료 보고 형식은 `__OKF_DIR__/workflow.md`를 따른다. 새 학습 후보가 없는 단순 질의·사소한 편집에는 형식적으로 적용하지 않는다.
-- 영속 학습의 소스 오브 트루스는 `__OKF_SOURCE_DIR__` 이다. 배포본 `__OKF_DIR__`만 직접 고치면 다음 setup 재배포 때 사라진다.
-- 새 concept은 공개 가능한 지식이면 주제에 맞는 소스 OKF 위치에, 개인 선호·프로젝트 한정 사실·공개 범위 검토 중인 지식이면 `__OKF_SOURCE_DIR__/learned/`에 만든다. 반영 후 setup을 재실행해 배포본으로 동기화한다.
-- 개인 선호·프로젝트 한정 사실과 공개 가능한 지식을 구분하고 기존 concept 갱신을 우선한다. 관리 번들의 변경 이력은 `log.md`에 남기고 새 concept은 해당 디렉터리와 루트 `index.md`에 연결한다. `/learned/` concept은 `.gitignore`로 로컬 전용이며 index에 per-file 목록을 남기지 않는다. 공개 반영은 소스 문서 수정까지이며 Git 스테이징·커밋·푸시의 승인이 아니다.
+- 공개 지식의 소스 오브 트루스는 `__OKF_SOURCE_DIR__` 이다. 공개 지식은 소스에서 고친 뒤 setup을 재실행해 배포하며, 배포본 `__OKF_DIR__`의 공개 파일만 직접 고치면 다음 setup에서 소스 내용으로 되돌아간다.
+- 새 concept은 공개 가능한 지식이면 주제에 맞는 소스 OKF 위치(`__OKF_SOURCE_DIR__`)에 만들고 setup을 재실행해 배포본으로 동기화한다. 개인 선호·프로젝트 한정 사실·공개 범위 검토 중인 지식(로컬 지식)은 `__OKF_DIR__/learned/`에 직접 만들고 고친다. setup은 이 디렉터리를 보존하므로 로컬 concept에는 setup 재실행이 필요 없다. 소스 `__OKF_SOURCE_DIR__/learned/`에는 로컬 concept을 만들지 않는다. `__OKF_DIR__/learned/index.md`는 setup이 레포 파일로 교체하므로 고치지 않는다. 로컬 concept을 만들거나 고치거나 지운 뒤에는 `bun __OKF_SOURCE_DIR__/../scripts/deploy-okf.ts --record __OKF_DIR__/..`로 검증하고 이력에 기록한다. 이전 방식의 setup이 설정 폴더의 OKF를 지워도 `--restore`로 현재 상태를 되살리고, 지운 concept은 되살리지 않게 하기 위해서다.
+- 개인 선호·프로젝트 한정 사실과 공개 가능한 지식을 구분하고 기존 concept 갱신을 우선한다. 관리 번들의 변경 이력은 `log.md`에 남기고 새 concept은 해당 디렉터리와 루트 `index.md`에 연결한다. `/learned/` concept은 설정 폴더에만 두는 로컬 전용이며 레포에 커밋하지 않고 index에 per-file 목록을 남기지 않는다. 공개 반영은 소스 문서 수정까지이며 Git 스테이징·커밋·푸시의 승인이 아니다.
 - API 키·토큰·PII·내부 접속정보, 검증되지 않은 추측, 일회성 진행 상태는 OKF에 기록하지 않는다.
 
 ## 검증·리뷰
