@@ -3,7 +3,7 @@ type: Checklist
 title: 코드 리뷰 보안 체크리스트
 description: 공통 서버·애플리케이션 및 게임 클라이언트·서버 보안 리뷰 항목.
 tags: [security, review, checklist, server, game]
-timestamp: 2026-10-11T00:00:00Z
+timestamp: 2026-10-12T00:00:00Z
 ---
 
 # 코드 리뷰 보안 체크리스트
@@ -15,7 +15,7 @@ timestamp: 2026-10-11T00:00:00Z
 - [ ] CSRF: 쿠키 등 자동 첨부 자격증명과 로그인·세션 설정 경로의 위험을 실제 인증 흐름으로 판정하는가. framework의 검증된 방어를 우선하고 token·Origin·Fetch Metadata의 서버 검증 범위 및 누락·null·미지원 시 대체 방어/거부를 확인하는가. REST/JWT 명칭·CORS·SameSite만으로 제외하지 않으며 same-site와 same-origin·하위 도메인 신뢰 경계를 구분하는가. 상태변경을 GET으로 노출하지 않는가([OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html))
 - [ ] 인증/인가 로직 확인
 - [ ] 객체 수준 인가: 클라이언트가 지정한 리소스 ID(uuid/키/인덱스 등)에 대해 요청 주체가 소유자·권한 보유자인지 서버에서 검증하는가(BOLA/IDOR). 목록·로그에 노출되는 ID는 비밀이 아니다
-- [ ] 게이트웨이·프록시가 HTTP 헤더를 내부 메타데이터로 변환할 때 신원·권한 키를 허용 목록으로만 전달하는가. 정확한 이름 비교의 차단 목록은 라이브러리 기본 매핑의 접두사·대소문자 변환 경로로 우회될 수 있다(예: [grpc-gateway `DefaultHeaderMatcher`](https://pkg.go.dev/github.com/grpc-ecosystem/grpc-gateway/v2/runtime#DefaultHeaderMatcher)는 `Grpc-Metadata-` 접두사를 떼어 gRPC 메타데이터로 전달한다). 권한 수준·신원은 클라이언트가 보낸 값이 아니라 검증된 자격(토큰 검증 결과·수신 리스너·서명)으로 서버가 설정하고, 같은 키의 클라이언트 값은 수신 단계에서 먼저 제거하는가
+- [ ] 게이트웨이·프록시가 HTTP 헤더를 내부 메타데이터로 변환할 때 신원·권한 키를 허용 목록으로만 전달하는가. 정확한 이름 비교의 차단 목록은 라이브러리 기본 매핑의 접두사·대소문자 변환 경로로 우회될 수 있다(예: [grpc-gateway `DefaultHeaderMatcher`](https://pkg.go.dev/github.com/grpc-ecosystem/grpc-gateway/v2/runtime#DefaultHeaderMatcher)는 `Grpc-Metadata-` 접두사를 떼어 gRPC 메타데이터로 전달한다. [v2.31.0](https://github.com/grpc-ecosystem/grpc-gateway/releases/tag/v2.31.0)(2026-09-25)은 예약된 `grpcgateway-` 네임스페이스로 변환되는 `Grpc-Metadata-grpcgateway-*`만 새로 거부하며 그 밖의 `Grpc-Metadata-*`는 여전히 접두사만 제거해 전달한다. 소스 확인 2026-10-12). 권한 수준·신원은 클라이언트가 보낸 값이 아니라 검증된 자격(토큰 검증 결과·수신 리스너·서명)으로 서버가 설정하고, 같은 키의 클라이언트 값은 수신 단계에서 먼저 제거하는가
 - [ ] 신뢰 표식이 없을 때 최고 권한으로 동작하는 fail-open 기본값(예: 게이트웨이 표식이 없는 직접 연결을 관리자로 취급)이 없는가. 스키마·권한 설정을 바꾸는 관리 연산(DDL 등)도 데이터 연산과 같은 인가를 거치는가
 - [ ] 요청별 파싱·인증 결과를 공유 객체의 필드에 저장했다가 다시 읽지 않는가. 동시 요청이 덮어쓰면 한 요청의 명령이 다른 요청의 신원·권한 컨텍스트로 실행된다. 결과는 호출별 반환값으로 전달하고 `-race` 등 동시 실행 검증을 둔다
 - [ ] 민감정보 로깅 여부: 인증 실패·오류 경로의 로그도 확인하는가. 검증 서버의 5xx·타임아웃으로 실패한 요청의 토큰은 유효할 수 있으므로, 원문 대신 해시 앞자리·길이처럼 원문을 복원할 수 없는 값만 남기는가

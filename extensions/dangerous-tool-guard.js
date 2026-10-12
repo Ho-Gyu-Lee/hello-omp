@@ -5,6 +5,7 @@ const SQL_TRUNCATE_RE = /\bTRUNCATE\b/i;
 const SQL_DELETE_RE = /\bDELETE\s+FROM\b/i;
 const SQL_UPDATE_RE = /\bUPDATE\s+[\w."`\[\]-]+\s+SET\b/i;
 const BROWSER_DELETE_RE = /\bmethod\s*:\s*["']DELETE["']/i;
+const BROWSER_PRELUDE_RE = /\b(?:browser|tab|page)\s*\.\s*\w/;
 const SHELL_RUNNER_RE = /(?:subprocess\.|child_process|execFile|spawn\s*\(|exec\s*\(|Bun\.\$|os\.system\s*\()/i;
 const EVAL_DIRECT_REMOVE_RE = /(?:shutil\.rmtree\s*\(|(?:\bfs(?:\.promises)?|fsp)\s*\.\s*rm(?:dir)?(?:Sync)?\s*\(|\bos\.(?:remove|unlink|rmdir)\s*\()/i;
 const EVAL_SHELL_RM_RE = /(?:rm\s+-[\w-]*r|\brm\s+)/i;
@@ -76,9 +77,7 @@ function findDangerousToolCall(event) {
     case "bash":
       return inspectBash(String(input.command ?? ""));
     case "eval":
-      return inspectEvalInput(input);
-    case "browser":
-      return inspectBrowser(String(input.code ?? ""));
+      return inspectEval(String(input.code ?? ""), String(input.language ?? ""));
     case "debug":
       return inspectDebug(input);
     default:
@@ -90,19 +89,6 @@ function findDangerousToolCall(event) {
 function inspectBash(command) {
   if (!command.trim()) return undefined;
   return inspectShellScript(command);
-}
-
-function inspectEvalInput(input) {
-  const cells = Array.isArray(input.cells) ? input.cells : undefined;
-  if (cells) {
-    for (const cell of cells) {
-      const found = inspectEval(String(cell?.code ?? ""), String(cell?.language ?? ""));
-      if (found) return found;
-    }
-    return undefined;
-  }
-
-  return inspectEval(String(input.code ?? ""), String(input.language ?? ""));
 }
 
 function inspectEval(code, language) {
@@ -117,15 +103,10 @@ function inspectEval(code, language) {
     return finding("destructive file removal detected in eval code", code);
   }
 
-  return undefined;
-}
+  if (BROWSER_PRELUDE_RE.test(code) && BROWSER_DELETE_RE.test(code)) {
+    return finding("HTTP DELETE detected in browser automation code", code);
+  }
 
-function inspectBrowser(code) {
-  if (!code.trim()) return undefined;
-
-  const sql = destructiveSqlReason(code);
-  if (sql && DB_CODE_RE.test(code)) return finding(`destructive SQL detected in browser code: ${sql}`, code);
-  if (BROWSER_DELETE_RE.test(code)) return finding("HTTP DELETE detected in browser automation code", code);
   return undefined;
 }
 

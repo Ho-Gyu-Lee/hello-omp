@@ -3,6 +3,8 @@
 # Deploy order: 1) role-based models  2) global/advisor rules  3) OKF bundle  4) extensions  5) agents  6) commands  7) skills
 # Idempotent: safe to re-run. Honors PI_CODING_AGENT_DIR via `omp config path`.
 $ErrorActionPreference = 'Stop'
+# PowerShell 7.3+ defaults to Windows/Standard native argument passing, which quotes native .exe arguments itself and would double-escape the manual \" below; keep the 5.1 (Legacy) behavior.
+$PSNativeCommandArgumentPassing = 'Legacy'
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $trimChars = [char[]]@('\', '/')
 $scriptFull = [System.IO.Path]::GetFullPath($ScriptDir).TrimEnd($trimChars)

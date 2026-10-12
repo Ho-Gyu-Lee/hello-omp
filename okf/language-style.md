@@ -3,33 +3,33 @@ type: Rule
 title: 언어 공통 코딩 스타일
 description: 언어 공통 네이밍·계약 예외와 작성·수정 범위의 가독성 기준. 문장·제어 흐름·역할별 선언·이름/단위·호출 인수·주석을 명확히 하고 평가·초기화·수명·레이아웃 계약을 보존.
 tags: [rule, cross-language, c, cpp, csharp, go, python, javascript, typescript, coding-style, naming, readability, ownership]
-timestamp: 2026-09-29T00:00:00Z
+timestamp: 2026-10-12T00:00:00Z
 ---
 
 # 언어 공통 코딩 스타일
 
 이 문서는 이 저장소가 배포하는 **언어 공통 기본 규칙의 정본**입니다. 전통적인 Microsoft 계열의 표기를 참고하되 특정 Microsoft 규격이나 레거시 관행 전체를 재현하지 않습니다. 네이밍·배치는 **선택**, 언어 제약·수명·ABI 계약은 **사실**로 구분합니다. Hungarian notation, 수동 메모리 관리, 무조건적인 매크로 사용까지 가져오지 않습니다.
 
-이 기본값은 **C/C++에 한정하지 않습니다. C#·Go·Python·JavaScript·TypeScript 등을 포함해 사용자가 작성하는 모든 언어의 코드에 적용**합니다. 언어 목록은 예시이며 그 밖의 언어도 같은 판정 기준을 따릅니다. 타입·함수·메서드는 `PascalCase`, **고정 상수·enum 값은 `UPPER_SNAKE_CASE`**, 캡슐화된 인스턴스 필드는 `mPascalCase`, 지역 변수·인자는 `camelCase`입니다. [공통 코딩 스타일](/coding-style.md)의 적용 우선순위를 따르며 기존 프로젝트 규칙을 자동으로 덮어쓰지는 않습니다. 다음 「프로젝트 적용 규칙」부터 「에이전트 적용 규칙」까지는 프로젝트 지침으로 옮겨 쓸 수 있습니다. Godot 참조는 OKF `game/godot-cpp.md` 또는 프로젝트의 Godot 지침으로 확인합니다.
+이 기본값은 **C/C++에 한정하지 않습니다. C#·Go·Python·JavaScript·TypeScript 등을 포함해 사용자가 작성하는 모든 언어의 코드에 적용**합니다. 언어 목록은 예시이며 그 밖의 언어도 같은 판정 기준을 따릅니다. 타입·함수·메서드는 `PascalCase`, **고정 상수·enum 값은 `UPPER_SNAKE_CASE`**, 캡슐화된 인스턴스 필드는 `mPascalCase`, 지역 변수·인자는 `camelCase`입니다. 아래 「1. 우선순위와 언어 수준」의 적용 우선순위를 따르며 기존 프로젝트 규칙을 자동으로 덮어쓰지는 않습니다. 다음 「프로젝트 적용 규칙」부터 「에이전트 적용 규칙」까지는 프로젝트 지침으로 옮겨 쓸 수 있습니다. Godot 참조는 OKF `game/godot-cpp.md` 또는 프로젝트의 Godot 지침으로 확인합니다.
 
 ## 프로젝트 적용 규칙
 
 ### 1. 우선순위와 언어 수준
 
-1. 컴파일러·플랫폼·ABI·외부 API가 요구하는 계약을 지킵니다. 예약 식별자와 생성 코드도 임의 변경하지 않습니다.
+1. 컴파일러·플랫폼·ABI·엔진 override·표준 라이브러리·OS API·외부 API와 언어의 문법·공개성·자동 탐색 규칙이 요구하는 계약을 지킵니다. 예약 식별자와 생성 코드도 임의 변경하지 않으며, 이름만 맞추려고 공개 범위·직렬화 키·프로토콜 동작을 바꾸지 않습니다.
 2. 현재 작업에 대한 명시적 요구와 프로젝트의 `AGENTS.md`, 스타일 문서, 빌드 설정, 포매터·린터 설정을 따릅니다. 컴파일러·툴체인의 기본 활성 명명 진단도 확인합니다. 실제 활성 진단과 충돌하는 이름은 해당 범위에서 도구가 요구하는 표기를 따르고 예외를 설명하며, 표기를 강제하려고 경고를 억제하지 않습니다. 반대로 새 린터를 도입해 이 규칙을 바꾸지도 않습니다. 명시적 요구가 기존 규칙의 변경을 뜻할 때만 해당 범위를 변경하며, 외부 계약은 스타일 요청으로 무효화되지 않습니다.
 3. 명시적 규칙이 없으면 같은 영역의 기존 코드 3–5개를 살펴 네이밍·중괄호·들여쓰기의 일관된 패턴을 따릅니다. 단 아래 가독성 최소 기준까지 주변의 압축·혼합 관례에 맞춰 생략하지 않습니다.
 4. 명시 규칙과 같은 영역의 일관된 기존 패턴이 모두 없는 새 코드에는 이 언어 공통 스타일 기본값을 적용합니다. Python은 보통 snake_case, JS는 보통 camelCase라는 생태계 관례만으로 이 문서의 함수·메서드 `PascalCase`를 바꾸지 않습니다. 단 이름이 공개 범위·자동 탐색·프로토콜 동작을 바꾸는 경우에는 아래 언어별 예외가 우선입니다.
 
 **가독성 최소 기준의 적용 범위:** 에이전트가 새로 작성하거나 실제로 수정하는 논리 단위(문장·블록·선언 그룹)에는 3장의 문장·단락 구분, 역할별 그룹화, 명확한 제어 흐름 기준을 적용합니다. 주변 코드가 붙어 있거나 역할이 섞여 있다는 이유로 이를 재생산하지 않습니다. 언어 문법·외부 계약·프로젝트의 명시 규칙 및 포매터·린터가 강제하는 제약은 우선하며 충돌은 설명합니다. 기존 파일 전체를 재포맷하거나 공개 API를 바꾸라는 뜻은 아닙니다.
 
-프로젝트가 선언한 언어 버전, 컴파일러·런타임, 포매터, 모듈/패키지 체계를 먼저 확인합니다. 스타일을 적용한다는 이유로 버전·빌드 설정을 바꾸지 않습니다. **C++에서만 새 프로젝트 기본 표준은 C++17**, **C에서만 새 코드 기본 문법은 C99**입니다. 각각 godot-cpp 10.0.0의 요구 및 중첩 네임스페이스·inline 변수·`if constexpr`, `<stdint.h>`·`<stdbool.h>`·`static inline`을 사용할 수 있는 기준입니다. C++ 예제는 C++17 기준이고, 기존 프로젝트가 더 낮은 표준이면 지원되는 표현으로 바꿉니다. C++20 기능은 프로젝트가 해당 표준을 선언한 경우에만 사용합니다. 이 선택으로 C#·Go·Python·JS·TS의 버전을 지정하지 않으며 C++ 소유권·포인터·헤더·RTTI 규칙도 다른 언어에 이식하지 않습니다.
+프로젝트가 선언한 언어 버전, 컴파일러·런타임, 포매터, 모듈/패키지 체계를 먼저 확인합니다. 스타일을 적용한다는 이유로 버전·빌드 설정을 바꾸지 않습니다. **C++에서만 새 프로젝트 기본 표준은 C++17**, **C에서만 새 코드 기본 문법은 C99**입니다. C++17은 godot-cpp 10.0.0 핀이 컴파일러 플래그로 요구하는 표준([근거](/game/godot-cpp.md))이자 중첩 네임스페이스·inline 변수·`if constexpr`를 사용할 수 있는 기준이고, C99는 `<stdint.h>`·`<stdbool.h>`·`static inline`을 사용할 수 있는 기준입니다. C++ 예제는 C++17 기준이고, 기존 프로젝트가 더 낮은 표준이면 지원되는 표현으로 바꿉니다. C++20 기능은 프로젝트가 해당 표준을 선언한 경우에만 사용합니다. 이 선택으로 C#·Go·Python·JS·TS의 버전을 지정하지 않으며 C++ 소유권·포인터·헤더·RTTI 규칙도 다른 언어에 이식하지 않습니다.
 
 ### 2. 네이밍 기본값
 
 일반 함수·런타임 변수에는 소문자 `snake_case`를 새로 도입하지 않습니다. **고정 상수·enum 값·비트 플래그·상수형 비타입 템플릿 매개변수·매크로는 `UPPER_SNAKE_CASE`**를 사용합니다. 타입·함수의 약어는 `HttpClient`, `GetId`, `XmlReader`처럼 단어로 취급하고 상수에서는 `HTTP_TIMEOUT_SECONDS`, `PLAYER_ID_BITS`처럼 대문자로 씁니다. 반복문의 짧은 인덱스 `i`, `j`는 허용하되 `pFoo`, `pszName`, `dwCount`처럼 타입을 이름에 복제하는 접두사는 기본값으로 사용하지 않습니다. `m`, `s`, `g`는 타입이 아니라 저장 위치·공유 상태를 표시하는 제한된 예외입니다.
 
-- **클래스·구조체·열거형·인터페이스·타입 별칭:** `PascalCase`입니다. `PlayerController`, `SpawnPoint`, `ConnectionState`, `PlayerId`, `SessionStore`처럼 역할을 드러냅니다. C#·TS를 포함해 인터페이스에 `I` 접두사를 자동 추가하지 않습니다. 기존 프로젝트의 `ISessionStore` 관례나 외부 계약이 있으면 그것을 보존합니다. Go에서 비공개 타입이 필요하면 공개 범위를 지키는 소문자 시작 예외를 적용합니다.
+- **클래스·구조체·열거형·인터페이스:** `PascalCase`입니다. `PlayerController`, `SpawnPoint`, `ConnectionState`, `PlayerId`, `SessionStore`처럼 역할을 드러냅니다. C#·TS를 포함해 인터페이스에 `I` 접두사를 자동 추가하지 않습니다. 기존 프로젝트의 `ISessionStore` 관례나 외부 계약이 있으면 그것을 보존합니다. Go에서 비공개 타입이 필요하면 공개 범위를 지키는 소문자 시작 예외를 적용합니다. 타입 별칭은 아래 별도 항목을 따릅니다.
 - **함수·메서드:** 공개·내부 구현 모두 원칙은 `PascalCase`입니다. `LoadLevel`, `IsReady`, `HasItems`, `GetPosition`처럼 표현합니다. Python·JS·TS의 소유 함수에도 같은 규칙을 사용합니다. 생성자·연산자·프로토콜 메서드와 Go의 비공개 심볼 등 이름에 의미가 있는 경우만 아래 예외를 적용합니다. 함수로 쓰는 JS/TS의 const 화살표 함수도 `const GetUser = ...`이며, 함수 인자로 받는 콜백 변수는 인자 규칙대로 `onComplete`입니다.
 - **캡슐화된 인스턴스 데이터 필드:** `mPascalCase`입니다. `mPosition`, `mPlayerId`, `mMaxPlayers`처럼 씁니다. 새 클래스는 지원되는 접근 제어로 상태를 기본 비공개로 두며 `member_name_`·`_memberName`을 이 기본값으로 사용하지 않습니다. JS/TS의 런타임 비공개 필드는 `#mPlayerId`이고, Python의 `mPlayerId`는 이름 관례일 뿐 강제 접근 제어가 아닙니다.
 - **데이터 필드와 프로퍼티:** C/C++의 단순 public 데이터 struct, Python dataclass, JS/TS의 plain object·데이터 타입 필드는 `camelCase`입니다. C#의 프로퍼티·record 데이터 멤버와 Go의 exported struct 필드는 `PascalCase`를 사용합니다. C#/Python/JS/TS의 접근자 기반 프로퍼티도 `Value`처럼 `PascalCase`입니다. 저장 필드 `mValue`와 공개 프로퍼티 `Value`를 구분합니다. JSON·DB·네트워크 키는 별도 계약이며 스타일에 맞추려고 바꾸지 않습니다.
@@ -105,6 +105,7 @@ void process_player(int player_id);
 
 - 기존 API·직렬화 키·reflection 기반 이름·등록 문자열·파일 탐색 패턴을 변경해야 하면 네이밍 정리가 아니라 계약 변경으로 검토합니다. React를 사용한다면 `useState`·`useCounter` 같은 hook 계약과 소문자 DOM 태그를 지키며, `PascalCase`를 맞추는 forwarding wrapper를 만들지 않습니다.
 - 프로퍼티·event·메서드에 `m`을 붙이지 않습니다. backing field를 직접 작성할 때만 필드 규칙을 적용합니다. JS/TS의 비공개 메서드는 `#IncrementCore`, 비공개 static 필드는 `#sCache`입니다.
+- C# 14(.NET 10과 함께 2025-11-11 출시) 이상에서는 접근자 로직이 필요한 프로퍼티도 `field` 키워드로 별도 backing field 선언 없이 구현할 수 있습니다([C# 14 `field` 키워드](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-14), [프로퍼티 문서](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties)). 프로젝트 `LangVersion`이 지원하면 불필요한 명시 `mValue`를 새로 만들지 않으며, 기존 명시 필드를 스타일만으로 `field`로 바꾸지 않습니다. 같은 타입에 `field`라는 이름의 기존 멤버가 있으면 `@field`·`this.field`로 구분합니다.
 - Go의 내부 helper를 `IncrementCore`로 만들면 exported가 되므로 `incrementCore`가 맞습니다. 반대로 JSON encode 대상 데이터가 필요하면 `Value`처럼 exported 필드를 두고 `json:"value"` tag로 wire 이름을 분리합니다. `mValue`에 JSON tag만 붙여 외부에 직렬화하려 하지 않습니다.
 - Go package 범위의 `MAX_PLAYERS`는 exported, `_MAX_PLAYERS`는 unexported입니다. 상수 표기를 통일하면서도 공개 범위를 바꾸지 않기 위한 기본값입니다. 함수 지역 상수는 대문자여도 package export 대상이 아닙니다. Python의 비공개 모듈 상수도 공개 범위 계약상 필요하면 `_MAX_PLAYERS`로 쓰되 기존 `__all__`·import 계약은 보존합니다. C/C++에서는 `_` + 대문자 이름이 모든 범위에서 구현 예약이므로 이 `_` 접두사 예외를 적용하지 않습니다.
 - Go는 `gofmt`의 탭·같은 줄 여는 중괄호를 따릅니다. Python은 콜론·4칸 들여쓰기를 사용합니다. C/C++·C#·JS/TS는 명시 포매터가 없을 때 Allman·4칸입니다. JS/TS의 `return`·`throw`와 표현식, `async`와 함수, 화살표 인자와 `=>` 사이에는 의미를 바꾸는 줄바꿈을 넣지 않습니다. `return { value: 1 };`은 객체 표현식이므로 Allman 블록 규칙 대상이 아닙니다.
@@ -229,12 +230,14 @@ Bad: 소유 Python 함수 `get_user`, 소유 JS 함수 `getUser`, 새 C# 필드 
 
 Bad: 고정 상수 `MaxPlayers`, enum 값 `ConnectionState.Connected`, 상수 표기를 맞추려고 runtime 인자 `playerCount`를 `PLAYER_COUNT`로 바꾸는 작업입니다. `Enum.name`, C# enum 문자열화, reflection·직렬화에서 기존 이름이 계약이면 이름 변경과 소비자 이전을 별도 검토합니다.
 
+TS 프로젝트가 `erasableSyntaxOnly`를 켜거나 Node.js의 타입 스트리핑으로 직접 실행하면 `enum` 선언을 사용할 수 없으므로(Node.js는 v24.12·v25.2부터 타입 스트리핑을 stable로 표시하고 v26에서 `--experimental-transform-types`를 제거) 위 JS 행처럼 명명된 `const` 값을 씁니다. 근거: [`erasableSyntaxOnly`](https://www.typescriptlang.org/tsconfig/erasableSyntaxOnly.html), [Node.js TypeScript 문서](https://nodejs.org/api/typescript.html). 기존 프로젝트의 `enum`은 스타일만으로 바꾸지 않습니다.
+
 ### 3. 배치·선언·제어 흐름
 
 **공통 선택:** 기존 프로젝트 포매터가 우선입니다. 명시 포매터가 없으면 C/C++·C#·JS/TS 블록은 Allman·공백 4칸, Go는 gofmt, Python은 콜론·공백 4칸입니다. 위 언어별 문법 예외가 아래보다 우선합니다. 아래 구체적인 `switch`·포인터·네임스페이스·접근 지정자 및 코드 예제는 C/C++ 기준이며, 다른 언어에 없는 구문을 강제하지 않습니다. 폭만을 위한 줄바꿈 금지, 문장·논리 단락·독립 제어문의 구분, 역할별 선언 그룹과 명확한 흐름은 언어 공통이며, 구체적인 표기는 해당 언어의 문법·포매터를 따릅니다.
 
 - 함수·클래스·구조체·열거형·네임스페이스·조건문·반복문의 여는 중괄호를 다음 줄에 둡니다. `else`와 `catch`도 닫는 중괄호 다음 줄에 둡니다. `do`의 종료 조건은 `} while (condition);`처럼 닫는 중괄호와 같은 줄에 둡니다. 초기화 목록의 `{}`는 블록이 아니므로 `Point point{1, 2};`처럼 같은 줄에 둡니다.
-- **강제 줄 길이 상한은 두지 않습니다.** 선언·시그니처·인자 목록·호출·체인·객체 초기화자는 한 줄을 우선합니다. 폭을 맞추기 위한 줄바꿈은 하지 않습니다. 복합 조건·긴 체인의 여러 판단 단계가 읽기 어렵다면 의미 있는 중간 값이나 기존 함수를 사용하되, 단순히 긴 줄을 쪼개기 위한 추상화는 만들지 않습니다. 분리할 때는 단락 평가·조건부 실행, 부수 효과의 순서·횟수, 값 범주·임시 객체 수명, 복사·할당 비용을 보존합니다. 임시 객체 일부의 참조·view만 남겨 수명을 잃거나 조건부 호출을 미리 실행하지 않습니다. 포매터·린터가 줄 길이를 강제할 때는 예외입니다.
+- **강제 줄 길이 상한은 두지 않습니다.** 선언·시그니처·인자 목록·호출·체인·객체 초기화자는 한 줄을 우선합니다. 폭을 맞추기 위한 줄바꿈은 하지 않습니다. 복합 조건·긴 체인의 여러 판단 단계가 읽기 어렵다면 의미 있는 중간 값이나 기존 함수를 사용하되, 단순히 긴 줄을 쪼개기 위한 추상화는 만들지 않습니다. 분리할 때는 단락 평가·조건부 실행, 부수 효과의 순서·횟수, 값 범주·임시 객체 수명, 복사·할당 비용을 보존합니다. 임시 객체 일부의 참조·view만 남겨 수명을 잃거나 조건부 호출을 미리 실행하지 않습니다. 프로젝트 포매터·린터(`.editorconfig`, Prettier, rustfmt 등)가 줄 길이를 강제하면 예외로 그쪽을 따르며 CI·저장 시 자동 포맷과 싸우지 않습니다.
 - **문장은 한 줄에 하나씩 씁니다.** 세미콜론으로 여러 실행 문장을 한 줄에 붙이지 않습니다. `for` 헤더처럼 문법상 한 구성인 초기화·조건·증감은 예외입니다. 짧은 `if`, 반복문, 함수도 정상적인 블록으로 쓰며, 람다 본문이 문장 블록이면 같은 원칙을 적용합니다. 언어가 별도로 지원하는 간단한 단일 식 본문(람다·표현식 본문 멤버)은 유지할 수 있습니다. 한 줄 우선은 문장·블록 압축 지시가 아닙니다.
 - `if (condition)`, `for (...)`, `switch (state)`처럼 제어 키워드 뒤에 공백을 둡니다. 호출은 `LoadLevel(levelId)`처럼 씁니다. 이항 연산자 양옆과 쉼표 뒤에는 공백을 둡니다. 탭·연속 공백으로 열을 정렬하지 않습니다.
 - C와 C++ 모두 `Type* pointer`, `Type& reference`, `const Type* pointer`처럼 `*`·`&`를 타입 쪽에 붙입니다. C에는 참조가 없습니다. **선언당 변수는 하나**로 하여 `int* first, second;`의 오해를 없앱니다. 함수 포인터처럼 문법이 복잡하면 적절한 타입 별칭을 사용합니다.
@@ -249,7 +252,7 @@ Bad: 고정 상수 `MaxPlayers`, enum 값 `ConnectionState.Connected`, 상수 �
 - **주석은 코드에 없는 이유·계약을 적습니다.** 제약·단위·불변조건·외부 우회책의 근거는 남기되 문장을 그대로 읽어 주는 주석, 작업 과정·변경 이력, 주석 처리한 죽은 코드를 제품 코드에 쌓지 않습니다. 바꾼 코드와 인접 주석이 어긋나면 함께 수정합니다. 공개 API 문서·라이선스·도구 지시문과 이 가이드의 Good/Bad 표식은 유지합니다.
 - `switch`의 `case`·`default`는 switch 중괄호와 같은 깊이, 본문은 한 단계 들여씁니다. 여러 문장·블록을 가진 case 경로 사이는 빈 줄 하나로 구분하되, 본문 없는 연속 레이블은 같은 경로로 붙여 둡니다. 각 경로는 명시적으로 `break`·`return` 등으로 끝냅니다. 동작을 실행한 뒤 다음 case로 넘어가는 의도적인 fallthrough만 표기하며 C++17은 `[[fallthrough]];`를 사용합니다. C99는 프로젝트 공통 헤더의 `NS_FALLTHROUGH;` 하나를 사용합니다. 먼저 `#if defined(__has_attribute)`로 감싼 뒤 안쪽의 별도 `#if __has_attribute(fallthrough)`가 참이면 `__attribute__((fallthrough))`, 그 밖에는 빈 문장으로 확장합니다. 정의 존재 검사와 함수형 매크로 검사를 하나의 `&&` 식으로 합치지 않습니다. 기존 프로젝트 표기가 있으면 그것을 따릅니다. case별 지역 변수 수명에는 별도 블록을 둡니다. 닫힌 enum을 모두 다룰 때는 불필요한 `default`로 누락 경고를 숨기지 않습니다. 외부 정수·역직렬화 값처럼 유효하지 않은 값이 들어오는 경계는 따로 검증하거나 오류 경로를 둡니다.
 - **네임스페이스 블록마다 내용에 공백 4칸을 추가합니다.** 이름 있는 네임스페이스와 익명 네임스페이스 모두 같은 규칙이며, 중첩 블록은 깊이마다 4칸씩 누적합니다. 여는·닫는 중괄호는 선언과 같은 깊이에 두고 Allman을 유지합니다. 중첩 네임스페이스는 C++17의 `namespace Northstar::Net` 단일 정의를 기본으로 하며, 이는 하나의 블록이므로 내용은 한 단계만 들여씁니다. 프로젝트 표준이 C++17 미만일 때만 이름 있는 블록을 중첩합니다. C# 블록형 namespace에도 같은 들여쓰기를 적용하지만, 파일 범위 namespace에는 중괄호 블록이 없으므로 추가 들여쓰기를 하지 않습니다. 파일 내부 구현에는 익명 네임스페이스를 사용하고 헤더에는 익명 네임스페이스를 두지 않습니다.
-- 클래스는 `public`, 필요한 경우에만 `protected`, `private` 순서로 씁니다. 접근 지정자는 클래스 중괄호와 같은 깊이, 멤버는 한 단계 들여씁니다. public 타입·상수, 생성/소멸, 사용자가 호출하는 메서드, private 보조 메서드·상태 순으로 정리합니다. 메서드 선언과 데이터 멤버 선언을 뒤섞지 않으며 그 사이에는 빈 줄 하나를 둡니다. `protected` 데이터나 가상의 확장점을 미리 만들지 않습니다.
+- 클래스는 `public`, 필요한 경우에만 `protected`, `private` 순서로 씁니다. 접근 지정자는 클래스 중괄호와 같은 깊이, 멤버는 한 단계 들여씁니다. public 타입·상수, 생성/소멸, 사용자가 호출하는 메서드, private 보조 메서드·상태 순으로 정리합니다. 메서드 선언과 데이터 멤버 선언을 뒤섞지 않으며 그 사이에는 빈 줄 하나를 둡니다. `protected`·확장점의 추가 기준은 6장의 공개와 private API를 따릅니다.
 - **멤버 변수는 타입이나 추가한 순서가 아니라 역할·불변조건으로 묶습니다.** 서로 함께 쓰거나 함께 유효해야 하는 값은 인접하게 두고 그룹 사이에 빈 줄 하나를 둡니다. 같은 그룹 안에서는 한 줄에 변수 하나를 연속 선언합니다. 예를 들어 의존 객체·설정값·이동 상태·전투 상태·캐시는 구분하되, 모든 클래스에 이 그룹을 만들거나 이 순서를 기계적으로 강제하지 않습니다.
 - 같은 접근 섹션의 고정 상수·정적 공유 상태·인스턴스 상태는 서로 구분합니다. 새 멤버는 계약이 허용하는 위치의 관련 그룹에 넣고 무조건 끝에 덧붙이지 않습니다. **모든 언어에서 재배치·중간 삽입 전에** 위치 기반 생성·집계 초기화, 필드 초기화 평가 순서, 직렬화·리플렉션·레이아웃 계약을 확인합니다. 끝에 추가하는 것도 자동으로 안전한 것은 아니며, 소비자·데이터 형식의 변경이 필요하면 단순 스타일 정리로 처리하지 않습니다. 역할이 이름만으로 분명하지 않은 그룹에만 짧은 설명 주석을 붙이며 장식용 구분선·빈 그룹·가독성만을 위한 새 래퍼 타입을 만들지 않습니다.
 - **C++ 선언 순서는 가독성보다 초기화·수명·레이아웃 계약이 우선입니다.** 비정적 필드는 선언 순서로 초기화되고 역순으로 소멸하므로, 의존 대상이 먼저 생성되고 의존하는 멤버보다 나중에 소멸하도록 배치합니다. 생성자 초기화 목록도 선언 순서와 맞춥니다. 기존 멤버의 이동·중간 삽입 전 모든 생성자·기본 멤버 초기화자·소멸 의존성, 위 순서 계약과 근거가 있는 캐시 라인·패딩·hot/cold 배치를 확인합니다. 확인되지 않거나 계약을 바꾸는 재배치는 하지 않고 기존 순서 안에서 빈 줄·필요한 주석으로 구분합니다. 성능 근거 없이 타입 크기·알파벳순 정렬로 관련 멤버를 흩뜨리지 않습니다.
@@ -476,11 +479,11 @@ void DrawPlayer(const PlayerController& player);
 // void DrawPlayer(std::shared_ptr<PlayerController> player);
 ```
 
-**Godot 예외:** Godot 객체에 위 표준 스마트 포인터·`delete` 기본값을 그대로 대입하지 않습니다. `Ref<T>`, `Node`·scene tree의 수명과 해제, 엔진 콜백·바인딩 계약은 OKF의 `game/godot-cpp.md`(Godot와 C++ 게임 개발) 또는 프로젝트의 Godot 지침을 먼저 따릅니다. `_ready`, `_process`, `_bind_methods` 등의 엔진 요구 이름과 이미 연결된 ABI 진입 심볼은 보존합니다. `memnew`는 네임스페이스 멤버 함수가 아니라 매크로이므로 필요한 곳에서 `memnew(MyNode)`처럼 호출하며 **`godot::memnew(MyNode)`로 쓰지 않습니다.** 엔진 객체를 일반 `std::unique_ptr`의 기본 해제자로 감싸거나 임의로 `delete`하지 않습니다.
+**Godot 예외:** Godot 객체에 위 표준 스마트 포인터·`delete` 기본값을 그대로 대입하지 않습니다. `Ref<T>`·`Node`·scene tree의 수명과 해제, `memnew` 매크로 호출 형식, `_ready`·`_process`·`_bind_methods` 등 엔진 요구 이름과 이미 연결된 ABI 진입 심볼, 엔진 콜백·바인딩 계약은 OKF의 [Godot와 C++ 게임 개발](/game/godot-cpp.md) 또는 프로젝트의 Godot 지침을 먼저 따릅니다.
 
 소유한 프로젝트에서 새로 작성하는 일반 C++ 메서드는 이 기본값이 적용되면 `PascalCase`를 유지합니다. godot-cpp 저장소 자체의 `snake_case` 스타일을 확장 프로젝트 전체에 자동 강제하지 않습니다. 반대로 godot-cpp 자체를 수정할 때는 그 저장소의 기존 규칙을 따릅니다. C++ 메서드 식별자와 `ClassDB::bind_method` 등에 전달하는 script-facing 이름은 별개의 선택입니다. 이미 scene·직렬화·스크립트에서 사용하는 바인딩 문자열은 보존하고, 새로운 script-facing 이름은 프로젝트의 Godot API 규칙에 따라 별도로 정할 수 있습니다.
 
-Godot 정수 상수·enum 바인딩에서는 `BIND_CONSTANT`·`BIND_ENUM_CONSTANT`가 매크로 인수의 C++ 식을 문자열화해 script 이름으로 쓰고 정수 값을 요구합니다. C++ 내부 `enum class`와 script 이름을 분리하려면 `ClassDB::bind_integer_constant`에 enum·상수 이름과 명시적 정수 변환 값을 전달합니다. Variant 인자·반환 타입으로 enum 자체를 노출해야 한다면 해당 버전의 binding 요구를 확인합니다. 이미 배포한 script 상수·enum 이름은 보존합니다.
+Godot 정수 상수·enum 바인딩(`BIND_CONSTANT`·`BIND_ENUM_CONSTANT`·`ClassDB::bind_integer_constant`)에서 C++ 내부 이름과 script 이름을 분리하는 규칙은 [Godot와 C++ 게임 개발](/game/godot-cpp.md)을 따릅니다. Variant 인자·반환 타입으로 enum 자체를 노출해야 한다면 해당 버전의 binding 요구를 확인하고, 이미 배포한 script 상수·enum 이름은 보존합니다.
 
 #### 예외·RTTI·템플릿·람다·cast·매크로·STL
 
@@ -573,7 +576,7 @@ include guard·전방 선언·ODR·`.h/.cpp/.c` 배치는 C/C++ 전용입니다.
 - **전방 선언:** 포인터·참조 선언처럼 불완전 타입만으로 충분하고 실제 include 결합을 줄일 때 사용합니다. 값 멤버·상속·inline 본문 등 완전한 타입이 필요한 곳은 include합니다. 표준 라이브러리 타입을 임의로 전방 선언하지 않습니다. PImpl과 불완전 타입의 `std::unique_ptr`는 소멸자 등 완전한 타입이 필요한 연산을 구현 파일에서 정의해야 할 수 있습니다. 단지 헤더 줄 수를 줄이기 위한 PImpl·힙 할당은 도입하지 않습니다.
 - **헤더와 구현:** 헤더에는 소비자가 알아야 할 선언과 필요한 타입·템플릿·inline/constexpr 정의만 둡니다. 일반 비-inline 함수 정의와 내부 helper·알고리즘·가변 저장소는 `.cpp`/`.c`로 옮깁니다. 헤더 전역 변수 정의로 여러 번역 단위에 중복 정의를 만들지 않습니다. 필요한 외부 변수는 `extern` 선언과 한 곳의 정의를 사용하고 더 나은 캡슐화가 없는지 먼저 검토합니다.
 - **이름 공간 오염:** 헤더에 `using namespace`를 쓰지 않습니다. 구현에서도 `std::`를 기본으로 유지하고 긴 타입은 범위가 제한된 `using` 선언·별칭으로 줄입니다. 공개 헤더에서 내부 매크로·플랫폼 타입·불필요한 third-party include를 전파하지 않습니다.
-- **공개와 private API:** 소비자가 선택·조합해야 할 계약만 공개합니다. 구현 보조 함수·튜닝 값·저장 구조·검증 단계를 공개하지 않습니다. private 상태마다 기계적인 getter/setter를 만들거나 확장 요구 없이 `virtual`, `protected`, 상속 훅을 추가하지 않습니다. 공개 API에는 입력 조건, 결과·오류, 소유권·수명, 필요할 때 스레드 제약을 명시합니다.
+- **공개와 private API:** 공개 범위·확장점·설정의 기준은 [코딩 스타일의 공개 API와 확장성](/coding-style.md#공개-api와-확장성)을 따릅니다. C/C++에서는 private 상태마다 기계적인 getter/setter를 만들지 않고, 공개 API에는 입력 조건, 결과·오류, 소유권·수명, 필요할 때 스레드 제약을 명시합니다.
 - **외부 경계:** 공개 심볼·직렬화 키·스크립트 바인딩 이름의 변경은 스타일 정리가 아니라 호환성 변경입니다. 요청된 범위에서만 소비자·바인딩·직렬화·문서까지 함께 이전합니다. ABI가 필요한 경계에서는 예외·RTTI·allocator·STL·구조체 레이아웃의 호환 조건을 별도로 확인합니다.
 
 ```cpp
@@ -620,11 +623,11 @@ size_t NsPacketGetHeaderSize(void);
 ## 근거와 사실·선택의 구분
 
 - **선택:** 타입·함수·인터페이스의 `PascalCase`, 필드 `mPascalCase`, 지역·인자의 `camelCase`, 상태 `s`·`g`, 고정 상수·enum 값·비트 플래그의 `UPPER_SNAKE_CASE`는 이 번들의 언어 공통 선택입니다. Go 비공개 상수의 `_` 접두사, 언어별 데이터 필드·패키지·파일명·포매팅 예외는 본문에서 하나씩 정했습니다. C++ 세부 규칙까지 언어 중립 표준으로 주장하지 않습니다.
-- **사실과 설계 근거:** [C++ Core Guidelines C.2](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-struct)는 불변조건을 가진 class와 독립 데이터의 struct를 구분합니다. [C.20](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-zero)은 기본 연산을 직접 정의하지 않아도 되는 설계, [F.16](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rf-in)은 입력 전달 비용·const 참조, [R.1](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-raii)은 RAII를 다룹니다.
-- **소유권 근거:** [R.3](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-ptr)의 raw pointer 비소유는 설계 규칙이며 C·legacy ABI 예외가 있음을 함께 확인했습니다. [R.20·R.21](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-owner)은 소유 스마트 포인터와 공유 소유가 없을 때 unique ownership 우선을 설명합니다. [ES.11](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Res-auto)은 `auto` 및 복사/참조 차이, [ES.49](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Res-casts-named)는 의도가 드러나는 cast를 다룹니다. 이 문서가 그 출처의 모든 네이밍·표준 선택을 채택한다는 뜻은 아닙니다.
-- **Godot 사실:** 공개 Godot 가이드가 고정한 godot-cpp `10.0.0-stable`의 [`memory.hpp`](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/include/godot_cpp/core/memory.hpp)에서 `#define memnew(...)`를 확인했습니다. 다른 바인딩 버전은 해당 핀의 소스로 다시 확인합니다. 릴리스별 선택·소유권 설명은 공개 Godot 가이드에서 관리합니다.
-- **확인일:** C/C++·Godot 근거는 2026-09-26, 다국어 의미·적용 범위는 2026-09-27에 확인했습니다. Core Guidelines 원문의 문서 날짜는 C++ 표준 릴리스일이 아닙니다. Godot 릴리스·빌드 사실의 정본은 [Godot와 C++ 게임 개발](/game/godot-cpp.md)입니다.
-- **언어별 의미 근거:** [Go exported identifiers](https://go.dev/ref/spec#Exported_identifiers)와 [gofmt·세미콜론 삽입](https://go.dev/doc/effective_go#formatting), [Python 예약 식별자](https://docs.python.org/3/reference/lexical_analysis.html#reserved-classes-of-identifiers), [C# 프로퍼티](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties), [JS private elements](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_elements), [JS 줄바꿈·ASI](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#automatic_semicolon_insertion)를 확인했습니다. 소스의 네이밍 예제는 언어 의미의 근거이며 이 문서의 스타일 규칙 전체를 대체하지 않습니다.
+- **사실과 설계 근거:** [C++ Core Guidelines C.2](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rc-struct)는 불변조건을 가진 class와 독립 데이터의 struct를 구분합니다. [C.20](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rc-zero)은 기본 연산을 직접 정의하지 않아도 되는 설계, [F.16](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rf-in)은 입력 전달 비용·const 참조, [R.1](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-raii)은 RAII를 다룹니다.
+- **소유권 근거:** [R.3](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-ptr)의 raw pointer 비소유는 설계 규칙이며 C·legacy ABI 예외가 있음을 함께 확인했습니다. [R.20](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-owner)·[R.21](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-unique)은 소유 스마트 포인터와 공유 소유가 없을 때 unique ownership 우선을 설명합니다. [ES.11](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#res-auto)은 `auto` 및 복사/참조 차이, [ES.49](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#res-casts-named)는 의도가 드러나는 cast를 다룹니다. 이 문서가 그 출처의 모든 네이밍·표준 선택을 채택한다는 뜻은 아닙니다.
+- **Godot 사실:** godot-cpp 버전·핀·`memnew` 매크로·C++17 요구 같은 바인딩 사실과 근거는 [Godot와 C++ 게임 개발](/game/godot-cpp.md)에서 관리합니다. 다른 바인딩 버전은 해당 핀의 소스로 다시 확인합니다.
+- **확인일:** C/C++·Godot 근거는 2026-09-26, 다국어 의미·적용 범위는 2026-09-27에 확인했습니다. 인용 URL·앵커와 godot-cpp 10.0.0 핀의 C++17 플래그·`#pragma once`·`memnew`·`ClassDB::bind_integer_constant`, C# 14 `field` 키워드, TS·Node.js의 enum 비지원 범위는 2026-10-12에 다시 확인했습니다(Core Guidelines 앵커는 소문자 `rc-struct`형 `<a name>`으로 갱신). Core Guidelines 원문의 문서 날짜는 C++ 표준 릴리스일이 아닙니다. Godot 릴리스·빌드 사실의 정본은 [Godot와 C++ 게임 개발](/game/godot-cpp.md)입니다.
+- **언어별 의미 근거:** [Go exported identifiers](https://go.dev/ref/spec#Exported_identifiers), [gofmt](https://go.dev/doc/effective_go#formatting)·[세미콜론 삽입](https://go.dev/doc/effective_go#semicolons), [Python 예약 식별자](https://docs.python.org/3/reference/lexical_analysis.html#reserved-classes-of-identifiers), [C# 프로퍼티](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties), [JS constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/constructor)·[private elements](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_elements), [JS 줄바꿈·ASI](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#automatic_semicolon_insertion)를 확인했습니다. 소스의 네이밍 예제는 언어 의미의 근거이며 이 문서의 스타일 규칙 전체를 대체하지 않습니다.
 
 ## 관리 범위
 
@@ -696,5 +699,5 @@ size_t NsPacketGetHeaderSize(void);
 | 언어 표준 | C++ 전용 C++17·C 전용 C99 기본, 다른 언어와 기존 프로젝트 버전은 유지 | `-std=c++17` |
 | 공개 API | 필요한 계약만 노출, 구현은 소스에 숨김 | 소유권·오류·수명 명시 |
 | 외부 API·Godot 훅 | 이름·ABI·수명 계약 보존 | `_ready`, `_process`, `_bind_methods` |
-| Godot 할당 매크로 | 네임스페이스 함수로 오해하지 않음 | `memnew(MyNode)`, `godot::memnew` 금지 |
+| Godot 할당·수명 | 엔진 소유 규칙이 표준 스마트 포인터·`delete` 기본값보다 우선 | [Godot와 C++ 게임 개발](/game/godot-cpp.md) |
 | 기존 코드 수정 | 기존 표기 유지, 작성·수정한 논리 단위에 가독성 최소 기준 적용 | 무관한 재포맷·rename 및 외부 계약 변경 금지 |
