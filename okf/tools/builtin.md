@@ -3,7 +3,7 @@ type: Reference
 title: omp 기본 도구
 description: 세션별 도구 가용성, OMP 내장 도구·browser facade·백그라운드 작업, IDE·원격 빌드 환경 경계, UTF-8이 아닌 파일 편집, 생성 이미지의 결정적 국소 합성, TypeScript+Bun 실행과 MCP 경계 참조.
 tags: [tools, builtin, lsp, ast, browser, background, typescript, bun]
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-14T00:00:00Z
 ---
 
 # omp 기본 도구
@@ -26,6 +26,8 @@ omp는 배터리 포함 — 코딩 워크플로 대부분이 내장 도구로 �
 
 ## 실행·디버깅·자동화
 - `bash` — 기존 CLI·프로젝트 명령 실행. `eval` — 파일이 필요 없는 계산·변환·자동화는 `language: "js"`로 Bun에서 실행한다.
+- 상태가 유지되는 `eval`/REPL에서 소스를 갱신한 뒤, 같은 파일 경로의 이전 객체와 새 모듈 함수를 섞지 않는다. 모듈 내부 `WeakMap`에 등록한 lease·capability나 클래스 identity는 해당 모듈 인스턴스의 계약이다([객체 identity와 WeakMap](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap#key_equality)). 생성자·검증자 함수가 같은 인스턴스인지 대조하고, 실제 프로그램 검증은 새 프로세스의 정식 진입점에서 실행한다. 잘못 섞은 객체를 받아주도록 제품 검증을 완화하거나 가짜 lease를 만들지 않는다.
+- `Bun.Subprocess.exitCode === null`만으로 실행 중이라고 판정하지 않는다. 신호 종료에서는 종료를 기다린 뒤에도 `exitCode`가 null이고 `signalCode`가 채워질 수 있다. 소유 프로세스의 `exited`를 기다린 결과와 `signalCode`를 함께 기록하며, 명시적 강제 종료를 정상 exit 0으로 바꾸지 않는다([Bun 종료 처리](https://bun.com/docs/runtime/child-process#exit-handling)). 이는 다른 프로세스나 하위 native 서비스의 종료 증거를 대신하지 않는다.
 - IDE·터미널·WSL/원격 빌드의 환경변수와 경로 해석 주체를 구분한다. 별도 셸의 `export`가 IDE에서 시작한 빌드에도 전달된다고 가정하지 않는다. [Visual Studio의 CMake preset 처리](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs)는 변수 확장 후 CMake를 호출하므로, target 의존성 경로는 target 환경에 명시하거나 `${sourceDir}`의 toolchain 진입 파일 안에서 실제 빌드 호스트 환경으로 결정한다. 미설정 변수를 `/scripts/...` 같은 유효하지 않은 절대 경로로 확장하지 않으며, 잘못 지정된 명시 경로를 다른 설치본으로 조용히 대체하지 않는다.
 - `debug` — DAP 디버거(번들 어댑터 `gdb`·`lldb-dap`·`codelldb`·`debugpy`·`dlv`·`js-debug-adapter` 등, `omp://tools/debug.md`, OMP 18.10.0 확인: 2026-10-12) 스테핑·브레이크포인트.
 - `eval`의 `browser` facade — 활성화된 경우 `browser.open`으로 탭을 열고 관찰·상호작용·시각 확인 후 닫는다. 정적 URL은 `read`가 우선이다. 독립 Puppeteer 도구로 가정하지 않으며 실제 API는 `xd://eval/browser`를 읽는다. relay/CDP는 사용자의 실제 로그인 세션일 수 있으므로 대상 탭·행동 권한을 구분한다. 사용자가 이미 연 페이지를 쓰려면 `browser.targets()`로 목록을 확인해 `app.target`을 지정하고, 요청 없이 보이는 탭을 탐색하지 않는다(OMP 18.9.0 이후 `xd://eval/browser`).

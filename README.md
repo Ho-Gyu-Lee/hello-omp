@@ -31,6 +31,8 @@ omp/
 
 비동기 advisor는 작업 중 위험 감시용으로 기본 활성(`advisor.enabled=true`)이며 완료 전 독립 검토를 대체하지 않는다. 검토 시점·순서는 [워크플로](okf/workflow.md)의 「독립 검토 시점과 최종 응답」을 따르고, 독립 검토가 필요한 산출물의 실제 작성 모델이 OpenAI인 경우의 교차 모델 검토(일회성 CLI overlay)는 [에이전트 가이드](okf/agents/guide.md#교차-모델-독립-검토)를 따른다. Fable 5.1은 기본 역할·자동 fallback이 아닌 **명시 선택 후보**이며 `/switch anthropic/claude-fable-5-1:xhigh`로 현재 세션에서만 선택한다. TUI의 `/model`은 `allowArgs`를 선언하지 않아 인자를 붙이면 내장 명령으로 처리되지 않고 다음 해석 단계로 넘어가므로(`omp://slash-command-internals.md`, OMP 18.10.0 확인 2026-10-12) 모델 지정에는 `/switch`를 쓴다.
 
+지침의 정본은 `rules/AGENTS.md`와 `okf/`로 유지한다. [OMP context files 문서](https://github.com/can1357/oh-my-pi/blob/v18.8.4/docs/context-files.md)와 설치본 18.11.0의 `omp://context-files.md`를 대조했다(2026-10-15). `AGENTS.md`는 자동 로드되는 프로젝트 컨텍스트이고, native `RULES.md`는 발견되면 본문이 매 요청에 포함되는 always-apply 규칙이다. 프로젝트 `RULES.md`는 cwd에서 저장소 루트로 올라가며 만나는 **가장 가까운 비어 있지 않은 `.omp/`**에서만 찾으며, 그곳에 파일이 없다고 상위 `.omp/`로 넘어가지 않는다. 이 레포는 별도 `RULES.md`·cron 재주입을 추가하지 않는다. 자동 주입은 준수나 완료의 보장이 아니므로 [검증 무결성·컨텍스트 복구 규칙](okf/workflow.md)을 함께 적용한다.
+
 ```sh
 # macOS / Linux
 sh setup.sh
