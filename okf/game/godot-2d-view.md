@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: Godot 2D 시야·카메라와 자동 사냥 대상
-description: 2D 시야와 이동감, 아이소메트릭 맵 가장자리 카메라, 화면 안 공격 사거리와 자동 사냥 대상 선택 규칙을 정리합니다.
+description: 2D 시야와 이동감·이동 애니메이션, 저속 자동 이동의 경로 재계획, 아이소메트릭 맵 가장자리 카메라, 화면 안 공격 사거리와 자동 사냥 대상 선택 규칙을 정리합니다.
 tags: [game, godot, camera, isometric, 2d, animation, combat, movement]
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # Godot 2D 시야·카메라와 자동 사냥 대상

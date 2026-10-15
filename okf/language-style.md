@@ -3,7 +3,7 @@ type: Rule
 title: 언어 공통 코딩 스타일
 description: 모든 언어에 적용하는 네이밍 기본값과 언어별 예외, 작성·수정 범위의 문장·제어 흐름·선언 가독성 기준을 정하는 정본이며 C/C++ 전용 규칙은 하위 개념으로 나눕니다.
 tags: [rule, cross-language, c, cpp, csharp, go, python, javascript, typescript, coding-style, naming, readability, ownership]
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # 언어 공통 코딩 스타일
@@ -23,7 +23,7 @@ timestamp: 2026-10-12T00:00:00Z
 1. 컴파일러·플랫폼·ABI·엔진 override·표준 라이브러리·OS API·외부 API와 언어의 문법·공개성·자동 탐색 규칙이 요구하는 계약을 지킵니다. 예약 식별자와 생성 코드도 임의 변경하지 않으며, 이름만 맞추려고 공개 범위·직렬화 키·프로토콜 동작을 바꾸지 않습니다.
 2. 현재 작업에 대한 명시적 요구와 프로젝트의 `AGENTS.md`, 스타일 문서, 빌드 설정, 포매터·린터 설정을 따릅니다. 컴파일러·툴체인의 기본 활성 명명 진단도 확인합니다. 실제 활성 진단과 충돌하는 이름은 해당 범위에서 도구가 요구하는 표기를 따르고 예외를 설명하며, 표기를 강제하려고 경고를 억제하지 않습니다. 반대로 새 린터를 도입해 이 규칙을 바꾸지도 않습니다. 명시적 요구가 기존 규칙의 변경을 뜻할 때만 해당 범위를 변경하며, 외부 계약은 스타일 요청으로 무효화되지 않습니다.
 3. 명시적 규칙이 없으면 같은 영역의 기존 코드 3–5개를 살펴 네이밍·중괄호·들여쓰기의 일관된 패턴을 따릅니다. 단 아래 가독성 최소 기준까지 주변의 압축·혼합 관례에 맞춰 생략하지 않습니다.
-4. 명시 규칙과 같은 영역의 일관된 기존 패턴이 모두 없는 새 코드에는 이 언어 공통 스타일 기본값을 적용합니다. Python은 보통 snake_case, JS는 보통 camelCase라는 생태계 관례만으로 이 문서의 함수·메서드 `PascalCase`를 바꾸지 않습니다. 단 이름이 공개 범위·자동 탐색·프로토콜 동작을 바꾸는 경우에는 아래 언어별 예외가 우선입니다.
+4. 명시 규칙과 같은 영역의 일관된 기존 패턴이 모두 없는 새 코드에서는 사용자가 설정 폴더의 축적 지식(OKF `learned/`)에 해당 언어·프로젝트의 지침을 두었으면 그 범위 안에서 먼저 따르고, 그 지침이 없거나 정하지 않은 부분에는 이 언어 공통 스타일 기본값을 적용합니다. Python은 보통 snake_case, JS는 보통 camelCase라는 생태계 관례만으로 이 문서의 함수·메서드 `PascalCase`를 바꾸지 않습니다. 단 이름이 공개 범위·자동 탐색·프로토콜 동작을 바꾸는 경우에는 아래 언어별 예외가 우선입니다.
 
 **가독성 최소 기준의 적용 범위:** 에이전트가 새로 작성하거나 실제로 수정하는 논리 단위(문장·블록·선언 그룹)에는 3장의 문장·단락 구분, 역할별 그룹화, 명확한 제어 흐름 기준을 적용합니다. 주변 코드가 붙어 있거나 역할이 섞여 있다는 이유로 이를 재생산하지 않습니다. 언어 문법·외부 계약·프로젝트의 명시 규칙 및 포매터·린터가 강제하는 제약은 우선하며 충돌은 설명합니다. 기존 파일 전체를 재포맷하거나 공개 API를 바꾸라는 뜻은 아닙니다.
 
@@ -257,7 +257,7 @@ TS 프로젝트가 `erasableSyntaxOnly`를 켜거나 Node.js의 타입 스트리
 - **멤버 변수는 타입이나 추가한 순서가 아니라 역할·불변조건으로 묶습니다.** 서로 함께 쓰거나 함께 유효해야 하는 값은 인접하게 두고 그룹 사이에 빈 줄 하나를 둡니다. 같은 그룹 안에서는 한 줄에 변수 하나를 연속 선언합니다. 예를 들어 의존 객체·설정값·이동 상태·전투 상태·캐시는 구분하되, 모든 클래스에 이 그룹을 만들거나 이 순서를 기계적으로 강제하지 않습니다.
 - 같은 접근 섹션의 고정 상수·정적 공유 상태·인스턴스 상태는 서로 구분합니다. 새 멤버는 계약이 허용하는 위치의 관련 그룹에 넣고 무조건 끝에 덧붙이지 않습니다. **모든 언어에서 재배치·중간 삽입 전에** 위치 기반 생성·집계 초기화, 필드 초기화 평가 순서, 직렬화·리플렉션·레이아웃 계약을 확인합니다. 끝에 추가하는 것도 자동으로 안전한 것은 아니며, 소비자·데이터 형식의 변경이 필요하면 단순 스타일 정리로 처리하지 않습니다. 역할이 이름만으로 분명하지 않은 그룹에만 짧은 설명 주석을 붙이며 장식용 구분선·빈 그룹·가독성만을 위한 새 래퍼 타입을 만들지 않습니다.
 
-C/C++ 전용 배치 규칙과 예시는 [C/C++ 전용 코딩 규칙](/language-style-c-cpp.md)을 따릅니다.
+C/C++ 전용 배치 규칙과 예시는 [C/C++ 전용 코딩 규칙](/language-style-c-cpp.md)을 따릅니다. 이 문서에서 그 문서로 옮긴 4~6장(C++ 표현·수명·라이브러리, C 전용 규칙, 헤더·소스·공개 경계)도 장 번호를 그대로 유지하므로, 이 문서에 4~6장이 없는 것은 누락이 아닙니다.
 
 ### 7. 에이전트 적용 규칙
 
@@ -276,7 +276,7 @@ C/C++ 전용 배치 규칙과 예시는 [C/C++ 전용 코딩 규칙](/language-s
 - **사실과 설계 근거:** [C++ Core Guidelines C.2](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rc-struct)는 불변조건을 가진 class와 독립 데이터의 struct를 구분합니다. [C.20](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rc-zero)은 기본 연산을 직접 정의하지 않아도 되는 설계, [F.16](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rf-in)은 입력 전달 비용·const 참조, [R.1](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-raii)은 RAII를 다룹니다.
 - **소유권 근거:** [R.3](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-ptr)의 raw pointer 비소유는 설계 규칙이며 C·legacy ABI 예외가 있음을 함께 확인했습니다. [R.20](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-owner)·[R.21](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-unique)은 소유 스마트 포인터와 공유 소유가 없을 때 unique ownership 우선을 설명합니다. [ES.11](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#res-auto)은 `auto` 및 복사/참조 차이, [ES.49](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#res-casts-named)는 의도가 드러나는 cast를 다룹니다. 이 문서가 그 출처의 모든 네이밍·표준 선택을 채택한다는 뜻은 아닙니다.
 - **Godot 사실:** godot-cpp 버전·핀·`memnew` 매크로·C++17 요구 같은 바인딩 사실과 근거는 [Godot와 C++ 게임 개발](/game/godot-cpp.md)(버전 핀)과 [godot-cpp 빌드·실행 검증](/game/godot-build.md)(C++17 플래그)·[Godot Scene·Resource 수명](/game/godot-runtime.md)(`memnew`)에서 관리합니다. 다른 바인딩 버전은 해당 핀의 소스로 다시 확인합니다.
-- **확인일:** C/C++·Godot 근거는 2026-09-26, 다국어 의미·적용 범위는 2026-09-27에 확인했습니다. 인용 URL·앵커와 godot-cpp 10.0.0 핀의 C++17 플래그·`#pragma once`·`memnew`·`ClassDB::bind_integer_constant`, C# 14 `field` 키워드, TS·Node.js의 enum 비지원 범위는 2026-10-12에 다시 확인했습니다(Core Guidelines 앵커는 소문자 `rc-struct`형 `<a name>`으로 갱신). Core Guidelines 원문의 문서 날짜는 C++ 표준 릴리스일이 아닙니다. Godot 릴리스·빌드 사실의 정본은 [Godot와 C++ 게임 개발](/game/godot-cpp.md)과 [godot-cpp 빌드·실행 검증](/game/godot-build.md)입니다.
+- **확인일:** C/C++·Godot 근거는 2026-09-26, 다국어 의미·적용 범위는 2026-09-27에 확인했습니다. 인용 URL·앵커와 godot-cpp 10.0.0 핀의 C++17 플래그·`#pragma once`·`memnew`·`ClassDB::bind_integer_constant`, C# 14 `field` 키워드, TS·Node.js의 enum 비지원 범위는 2026-10-12에 다시 확인했습니다(Core Guidelines 앵커는 소문자 `rc-struct`형 `<a name>`으로 갱신). 2026-10-15에는 C# 14 `field` 키워드와 .NET 10 출시일(2025-11-11), Node.js 타입 스트리핑 stable(v24.12·v25.2)과 `--experimental-transform-types` 제거(v26.0.0), `erasableSyntaxOnly`, Core Guidelines 앵커 9개, 언어별 의미 근거 링크의 응답과 Go·Python·MDN 앵커를 다시 확인했습니다([C# 14](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-14), [.NET 10 릴리스 노트](https://github.com/dotnet/core/blob/main/release-notes/10.0/10.0.0/README.md), [Node.js TypeScript 문서](https://nodejs.org/api/typescript.html)). Core Guidelines 원문의 문서 날짜는 C++ 표준 릴리스일이 아닙니다. Godot 릴리스·빌드 사실의 정본은 [Godot와 C++ 게임 개발](/game/godot-cpp.md)과 [godot-cpp 빌드·실행 검증](/game/godot-build.md)입니다.
 - **언어별 의미 근거:** [Go exported identifiers](https://go.dev/ref/spec#Exported_identifiers), [gofmt](https://go.dev/doc/effective_go#formatting)·[세미콜론 삽입](https://go.dev/doc/effective_go#semicolons), [Python 예약 식별자](https://docs.python.org/3/reference/lexical_analysis.html#reserved-classes-of-identifiers), [C# 프로퍼티](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties), [JS constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/constructor)·[private elements](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_elements), [JS 줄바꿈·ASI](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#automatic_semicolon_insertion)를 확인했습니다. 소스의 네이밍 예제는 언어 의미의 근거이며 이 문서의 스타일 규칙 전체를 대체하지 않습니다.
 
 ## 관리 범위

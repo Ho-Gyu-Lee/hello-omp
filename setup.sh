@@ -31,7 +31,7 @@ if ! command -v omp >/dev/null 2>&1; then
   exit 1
 fi
 if ! command -v bun >/dev/null 2>&1; then
-  echo "ERROR: bun not found on PATH; Bun is required for OKF validation" >&2
+  echo "ERROR: bun not found on PATH; Bun 1.2.21+ is required for the OKF validation, OKF/skill deployment and managed-item sync scripts" >&2
   exit 1
 fi
 

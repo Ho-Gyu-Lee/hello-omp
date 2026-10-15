@@ -3,7 +3,7 @@ type: Rule
 title: 게임 네트워크 복구·전달 의미론
 description: 증분 복제의 복구와 전달 의미론, 전송 계층·RPC의 구분, 모바일 경로 전환과 세션 복구의 규칙을 다룬다.
 tags: [game, client, server, networking, synchronization, recovery, transport, mobile, session]
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # 게임 네트워크 복구·전달 의미론
@@ -35,10 +35,10 @@ timestamp: 2026-10-12T00:00:00Z
 
 ### 모바일 경로 전환과 세션 복구
 
-- TCP 재접속, [QUIC의 살아 있는 연결 migration](https://www.rfc-editor.org/rfc/rfc9000.html#section-9), 여러 경로의 동시 사용, 게임 세션 resume을 구분합니다. CID는 transport 상태의 라우팅 식별자이지 계정·캐릭터 권위나 만료된 연결을 복원하는 증명이 아닙니다. 주소가 바뀌어도 같은 transport owner로 도달해야 하며, CID 라우팅만으로 Gateway 장애 시 상태가 복제되지는 않습니다.
+- TCP 재접속, [QUIC의 살아 있는 연결 migration](https://www.rfc-editor.org/rfc/rfc9000.html#section-9), 여러 경로의 동시 사용, 게임 세션 resume을 구분합니다. QUIC Connection ID(CID)는 transport 상태의 라우팅 식별자이지 계정·캐릭터 권위나 만료된 연결을 복원하는 증명이 아닙니다. 주소가 바뀌어도 같은 transport owner로 도달해야 하며, CID 라우팅만으로 Gateway 장애 시 상태가 복제되지는 않습니다.
 - [Android NetworkCallback](https://developer.android.com/develop/connectivity/network-ops/reading-network-state)·[Apple NWPathMonitor](https://developer.apple.com/documentation/network/nwpathmonitor)는 경로 관찰 신호입니다. Wi-Fi/셀룰러 표기나 사용 가능 알림을 인증된 서비스 도달성으로 대체하지 않습니다. 정상 연결을 모든 알림마다 끊거나 reachability 사전 검사만으로 접속을 막지 않으며, 경로 신호와 실제 I/O·애플리케이션 timeout을 함께 사용합니다. 주소 캐시·진행 중 DNS와 주소군별 접속 후보도 회선 세대에 맞춰 처리해 이전 경로의 주소 하나만 무한 재사용하지 않습니다. TLS 검증용 서비스 identity는 dial IP와 분리합니다.
 - 연결·DNS·TLS·재시도는 한 소유자의 상태 전이와 attempt generation으로 묶고, 낡은 callback·취소된 재시도를 무효화합니다. 재시도 간격·횟수·대기 자원에는 예산을 둡니다. 네이티브 작업 스레드도 [iOS 앱 suspension](https://developer.apple.com/documentation/uikit/extending-your-app-s-background-execution-time)과 [Android Doze의 네트워크 제한](https://developer.android.com/training/monitoring-device-state/doze-standby)을 우회하지 못합니다.
 - 소켓 연결/TLS handshake 성공과 권위 full-state 설치 완료는 별개입니다. 프로세스 내부의 token·명령 이력 보존으로 앱 프로세스 종료 후 복구까지 보장하지 않습니다. 재실행·grace 만료·거절은 재인증·권위 상태 복구·미확정 결과 처리 계약을 따릅니다.
 - 전송 선택은 같은 입력/명령·복제 부하에서 인증된 READY 복구, 상태 나이, 입력→권위 결과의 꼬리 지연, 중복 실행·미확정 결과, CPU wakeup·메모리·단말 에너지로 비교합니다. HTTP 처리량이나 영상 FPS를 게임 지연으로 치환하지 않습니다. [STORM, USENIX ATC 2025](https://www.usenix.org/system/files/atc25-hu-liekun.pdf)은 이동 중 서로 다른 품질의 경로를 함께 사용하면 단일 경로보다 영상 지연/프레임률이 나빠질 수 있음을 보인 사례이며, 해당 수치를 모든 게임·단말의 성능 예측으로 사용하지 않습니다.
 - 크로스플랫폼 전송 구현을 공유해도 앱 수명·소켓별 네트워크 문맥 같은 OS 통합이 사라지지는 않습니다. 엔진의 공통 알림을 재사용하고 부족한 연결 문맥만 작은 경계에 둡니다. 그 경계에 송수신·TLS·재시도·게임 세션 상태 머신을 복제하지 않으며, 라이브러리가 이름을 받는다는 사실만으로 플랫폼의 connect-by-name 의미를 제공한다고 판단하지 않습니다.
-- [Apple TN3151](https://developer.apple.com/documentation/technotes/tn3151-choosing-the-right-networking-api)은 크로스플랫폼 코드의 BSD sockets 사용을 허용하지만 시스템 resolver·Happy Eyeballs·소켓별 원래 DNS 이름 연관(`ne_socket_set_domains`)·성립된 소켓의 viability 관찰을 별도 책임으로 둡니다. 수동 DNS→주소 연결은 Happy Eyeballs를 구현해도 VPN On Demand와 호환되지 않는다고 설명합니다. domain tagging은 content filter 등에 문맥을 주는 수단이며 이 제한을 해소한다는 근거는 아닙니다(조회 2026-10-08). 이미 연결된 VPN 경로는 별도 검증 대상입니다. 자체 TLS/CA 검증은 Apple의 시스템 신뢰 평가 권고와 다른 선택이므로 Safari/OS의 신뢰·폐기·사용자/기업 anchor 정책과 동등하다고 주장하지 않습니다.
+- [Apple TN3151](https://developer.apple.com/documentation/technotes/tn3151-choosing-the-right-networking-api)은 크로스플랫폼 코드의 BSD sockets 사용을 허용하지만 시스템 resolver·Happy Eyeballs·소켓별 원래 DNS 이름 연관(`ne_socket_set_domains`)·성립된 소켓의 viability 관찰을 별도 책임으로 둡니다. 수동 DNS→주소 연결은 Happy Eyeballs를 구현해도 VPN On Demand와 호환되지 않는다고 설명합니다. domain tagging은 content filter 등에 문맥을 주는 수단이며 이 제한을 해소한다는 근거는 아닙니다(조회 2026-10-08, 재확인 2026-10-15). 이미 연결된 VPN 경로는 별도 검증 대상입니다. 자체 TLS/CA 검증은 Apple의 시스템 신뢰 평가 권고와 다른 선택이므로 Safari/OS의 신뢰·폐기·사용자/기업 anchor 정책과 동등하다고 주장하지 않습니다.

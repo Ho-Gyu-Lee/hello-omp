@@ -3,12 +3,12 @@ type: Reference
 title: 에이전트 생태계 동향과 적용 판단
 description: 2026-08-26~09-26과 2026-09-26~10-12 두 기간의 공식 변경(OMP 릴리스·MCP·OKF 사양·에이전트 도구 벤더)과 GitHub 월간 Trending 관측(09-26, 10-12)을 구분하고 OMP 지침의 반영·유지·미채택 근거를 연결한다.
 tags: [tools, research, trends, github, skills, review, memory, sandbox, mcp]
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # 에이전트 생태계 동향과 적용 판단
 
-이 문서는 날짜가 고정된 조사 기록이다. 현재 순위·지원 사양의 정본이 아니며, 재조사 기준은 [정확성](/accuracy.md), 실행 정책은 각 연결 concept을 따른다. 인기 프로젝트를 설치하는 권고 목록이 아니다. 조사는 2026-08-26~09-26 기록(이 절 아래의 앞 절들)과 2026-09-26~10-12 후속 조사(마지막 절들)로 나뉘며, 앞 기록은 당시 시점의 이력이다.
+이 문서는 날짜가 고정된 조사 기록이다. 현재 순위·지원 사양의 정본이 아니며, 재조사 기준은 [정확성](/accuracy.md), 실행 정책은 각 연결 concept을 따른다. 인기 프로젝트를 설치하는 권고 목록이 아니다. 조사는 2026-08-26~09-26 기록(이 절 아래의 앞 절들)과 2026-09-26~10-12 후속 조사(마지막 절들)로 나뉘며, 앞 기록은 당시 시점의 이력이다. 본문의 '현행'·'최신'·'설치본'은 각 조사일(2026-09-26 또는 2026-10-12) 기준 표기이며 현재 값이 아니다. 현재 버전·사양은 `omp --version`과 연결 concept의 확인 표기로 다시 확인한다.
 
 ## 조사 범위와 근거의 종류
 
@@ -70,7 +70,7 @@ timestamp: 2026-10-12T00:00:00Z
 ### 조사 범위와 근거의 종류
 
 - 공식 변경의 대상 기간: **2026-09-26~2026-10-12**(조사일). OMP 날짜는 GitHub 릴리스 페이지의 UTC 게시 시각이며 변경 내역(CHANGELOG)의 날짜와 하루 차이가 날 수 있다. 벤더 날짜는 각 공식 changelog의 게시일이다.
-- 설치본 OMP는 18.10.0이며 [v18.10.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.10.0)(2026-10-12)이 조사일 기준 최신 릴리스다. 도구·설정 이름은 설치본의 `omp://` 문서와 `src/` 소스로 대조했다.
+- 조사일(2026-10-12)의 설치본 OMP는 18.10.0이었고 [v18.10.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.10.0)(2026-10-12)이 당시 최신 릴리스였다. 도구·설정 이름은 그 설치본의 `omp://` 문서와 `src/` 소스로 대조했다.
 - 이 기간의 전체 릴리스 목록이 아니라 이 레포 지침(도구·스킬·MCP·위임·설정 검증)과 관련된 항목만 선별했다. Gemini CLI·Codex CLI·Copilot CLI의 릴리스 노트는 정독하지 않았다(릴리스 존재만 관측).
 - 인기 관측: **2026-10-12**, [GitHub Trending / This month](https://github.com/trending?since=monthly), Language=Any, Spoken=Any, 반환된 22개 저장소. 아래 값은 같은 응답의 표시값이며 임의 기간의 정확한 증가량이 아니다. 표의 6개는 README 앞부분을 읽었고 설치·보안 감사·성능 비교는 하지 않았다. 저자의 성능·안전성 주장은 독립 검증 결과로 채택하지 않는다.
 
@@ -92,10 +92,10 @@ timestamp: 2026-10-12T00:00:00Z
 
 ### 사양 대조: MCP·Agent Skills·OKF
 
-- MCP: 현행 revision은 [2026-07-28](https://modelcontextprotocol.io/specification/versioning)이며 이 기간에 새 revision은 없다([릴리스 목록](https://github.com/modelcontextprotocol/modelcontextprotocol/releases) 최신 확인). 07-28 revision은 `initialize` 핸드셰이크를 제거한 stateless 모델이다([변경 내역](https://modelcontextprotocol.io/specification/2026-07-28/changelog)). 기간 안 채택 관측은 [Python SDK v2.3.0](https://github.com/modelcontextprotocol/python-sdk/releases/tag/v2.3.0)(10-02)의 클라이언트 `server/discover` 프로브(`mode="auto"`)와 아래 Claude Code의 기본 협상이다. 반면 OMP 18.10.0은 2025-11-25 `initialize`를 보내므로 [MCP 정책](/tools/mcp.md)에 「사양 revision과 OMP 클라이언트 호환」을 추가했고 서버 전환을 가정하지 않는다.
+- MCP: 조사일(2026-10-12)의 현행 revision은 [2026-07-28](https://modelcontextprotocol.io/specification/versioning)이었고 이 기간에 새 revision은 없었다([릴리스 목록](https://github.com/modelcontextprotocol/modelcontextprotocol/releases) 최신 확인). 07-28 revision은 `initialize` 핸드셰이크를 제거한 stateless 모델이다([변경 내역](https://modelcontextprotocol.io/specification/2026-07-28/changelog)). 기간 안 채택 관측은 [Python SDK v2.3.0](https://github.com/modelcontextprotocol/python-sdk/releases/tag/v2.3.0)(10-02)의 클라이언트 `server/discover` 프로브(`mode="auto"`)와 아래 Claude Code의 기본 협상이다. 반면 당시 설치본 OMP 18.10.0은 2025-11-25 `initialize`를 보내므로 [MCP 정책](/tools/mcp.md)에 「사양 revision과 OMP 클라이언트 호환」을 추가했고 서버 전환을 가정하지 않는다.
 - Agent Skills: [사양](https://agentskills.io/specification)의 구성(`name`·`description`·`license`·`compatibility`·`metadata`·실험적 `allowed-tools`)은 [저장소](https://github.com/agentskills/agentskills)의 마지막 커밋이 2026-08-09라 이 기간에 바뀌지 않았다. [스킬 사용](/tools/skills.md)을 유지한다.
 - Docker MCP gateway [v0.44.1](https://github.com/docker/mcp-gateway/releases/tag/v0.44.1)(09-23, 기간 직전)과 [brave-search-mcp-server v2.1.4](https://github.com/brave/brave-search-mcp-server/releases/tag/v2.1.4)(09-17)이 조사일 기준 최신이며 `dynamic-tools`·`--dry-run`·Brave 도구 목록은 [MCP 정책](/tools/mcp.md) 서술과 같다. 기간 밖의 현행 대조이며 신규 발표로 세지 않는다.
-- OKF: 현행은 [v0.2](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md)다. 발표는 [2026-07-25 Google Cloud 블로그](https://cloud.google.com/blog/products/data-analytics/okf-v0-2-adds-trust-signals)였고, 사양 저장소는 2026-08에 `GoogleCloudPlatform/open-knowledge-format`으로 옮겨졌다. 마지막 사양 커밋은 2026-08-21(모든 시각 값에 명시적 UTC 오프셋 요구)이며 v0.3은 제안 단계다([#16](https://github.com/GoogleCloudPlatform/open-knowledge-format/issues/16) 등). v0.2는 `sources`·`generated`·`verified`·`status`·`stale_after`와 `Attested Computation`을 선택 항목으로 더하고, `timestamp`를 `generated.at`으로 대체한다(v0.1 형식으로도 읽힘). 소비 모델은 `index.md`의 한 줄 설명으로 고르고(§8), frontmatter로 관련성·신뢰를 판단한 뒤 고른 개념의 본문만 읽는 방식이다. 발표문은 개념을 간결하게 두라고 권한다. 이 번들은 v0.1 frontmatter를 유지하고, 2026-10-12에 여러 독립 주제를 담은 큰 개념을 주제별 개념으로 나눴다([학습 축적](/learning/accumulation.md) 「기록 위치」 4). [Knowledge Catalog 연동](https://cloud.google.com/blog/products/data-analytics/scale-okf-bundles-across-an-organization-with-knowledge-catalog)(2026-08-27, 이전 조사 기간에서 누락)은 조직 단위 검색·IAM 공유용이라 개인 파일형 번들에는 채택하지 않는다. `okf.md`·`useokf.com` 등은 Google이 아닌 제3자 사이트·도구다.
+- OKF: 조사일(2026-10-12)의 현행은 [v0.2](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md)였다. 발표는 [2026-07-25 Google Cloud 블로그](https://cloud.google.com/blog/products/data-analytics/okf-v0-2-adds-trust-signals)였고, 사양 저장소는 2026-08에 `GoogleCloudPlatform/open-knowledge-format`으로 옮겨졌다. 마지막 사양 커밋은 2026-08-21(모든 시각 값에 명시적 UTC 오프셋 요구)이며 v0.3은 제안 단계였다([#16](https://github.com/GoogleCloudPlatform/open-knowledge-format/issues/16) 등). v0.2는 `sources`·`generated`·`verified`·`status`·`stale_after`와 `Attested Computation`을 선택 항목으로 더하고, `timestamp`를 `generated.at`으로 대체한다(v0.1 형식으로도 읽힘). 소비 모델은 `index.md`의 한 줄 설명으로 고르고(§8), frontmatter로 관련성·신뢰를 판단한 뒤 고른 개념의 본문만 읽는 방식이다. 발표문은 개념을 간결하게 두라고 권한다. 이 번들은 v0.1 frontmatter를 유지하고, 2026-10-12에 여러 독립 주제를 담은 큰 개념을 주제별 개념으로 나눴다([학습 축적](/learning/accumulation.md) 「기록 위치」 4). [Knowledge Catalog 연동](https://cloud.google.com/blog/products/data-analytics/scale-okf-bundles-across-an-organization-with-knowledge-catalog)(2026-08-27, 이전 조사 기간에서 누락)은 조직 단위 검색·IAM 공유용이라 개인 파일형 번들에는 채택하지 않는다. `okf.md`·`useokf.com` 등은 Google이 아닌 제3자 사이트·도구다.
 
 ### 에이전트 도구 벤더의 공식 변경 — 관련 주제 선별
 
@@ -109,7 +109,7 @@ timestamp: 2026-10-12T00:00:00Z
 | 2026-10-02 | [Copilot code review API·기본 effort](https://github.blog/changelog/2026-10-02-copilot-code-review-api-support-and-new-default-effort-level): REST/GraphQL로 리뷰 요청, 기본 effort `Balanced`(09-28 적용) | 제품 설정이다. OMP reviewer의 검토 계약·모델 배정은 바꾸지 않는다. |
 | 2026-10-01 | [Copilot dynamic workflows](https://github.blog/changelog/2026-10-01-dynamic-workflows-in-copilot-cli-and-the-copilot-app): 코드로 정의하는 다중 에이전트 오케스트레이션(`/fleet`과 구분) | OMP의 `task`·`workpool()`과 별개 제품 기능이다. 채택하지 않는다. |
 | 2026-10-08 | [Codex 변경 내역](https://developers.openai.com/codex/changelog): GPT-6.1 Sol Ultrafast(Pro $500과 일부 Enterprise·Edu, Enterprise 기본 off) | 설치본이 `/fast ultra`(OMP 18.4.4)를 지원하나 이 프로필은 사용하지 않는다. 사용량 소모·계정 가용성은 별도로 확인한다. |
-| 2026-10-14 시행(공지 09-14) | Codex 변경 내역: GPT-5.5가 ChatGPT·ChatGPT Work·Codex에서 10월 14일 은퇴(API 제외), GPT-5.3-Codex-Spark는 09-14 중단 | 이 프로필의 역할·fallback은 `gpt-6-astra`·`gpt-6.1-sol`·`gpt-6-luna`만 쓰므로 영향이 없다(`config/settings.conf`). OMP는 `openai-codex`의 카탈로그 기본 모델을 `gpt-5.5`로 선언하므로(`omp://provider-quirks.md`) 역할을 명시하지 않는 호출 경로가 생기면 은퇴 뒤 별도 확인한다. |
+| 2026-10-14 시행(공지 09-14) | Codex 변경 내역: GPT-5.5가 ChatGPT·ChatGPT Work·Codex에서 10월 14일 은퇴(API 제외), GPT-5.3-Codex-Spark는 09-14 중단 | 이 프로필의 역할·fallback은 `gpt-6-astra`·`gpt-6.1-sol`·`gpt-6-luna`만 쓰므로 영향이 없다(`config/settings.conf`). OMP는 `openai-codex`의 카탈로그 기본 모델을 `gpt-5.5`로 선언하므로(`omp://provider-quirks.md`) 역할을 명시하지 않는 호출 경로가 생기면 은퇴 뒤 별도 확인한다. 후속 확인(2026-10-15): 은퇴는 10-14 19:00 UTC에 ChatGPT 로그인 Codex에서 시행됐고 API·API 키 인증 Codex 세션은 대상이 아니다([Codex 변경 내역](https://developers.openai.com/codex/changelog)). OMP 18.11.0의 `omp://provider-quirks.md`도 `openai-codex` 기본 모델을 `gpt-5.5`로 선언한다. |
 
 모델 출시(Claude Haiku 5.5 10-07, GPT-6.1 Sol 09-29)는 [에이전트 가이드](/agents/guide.md)의 2026-10-08 기록이 정본이며, 2026-10-12에 공식 모델 목록([Anthropic](https://platform.claude.com/docs/en/models/overview)·[OpenAI](https://developers.openai.com/api/docs/models))의 현행 구성과 다시 대조했다.
 
@@ -131,7 +131,7 @@ timestamp: 2026-10-12T00:00:00Z
 - Archify: 09-26 기록의 「실제 요구일 때만 별도 산출물을 검토」는 이후 2026-09-30 커밋(`c76a7dd`)에서 고정 배포본(v3.0.1)을 요청 기반 스킬로 채택하며 갱신됐다. 기본 Mermaid·터미널 보고는 유지하고 승인된 프로젝트 유지 선언이 있는 프로젝트에서만 지도를 갱신한다([프로젝트 지도](/project-navigation.md), [스킬 사용](/tools/skills.md)).
 - Copilot local sandboxing: 09-23 기록의 public preview·기본 off는 10-07 GA로 바뀌었다. OMP의 동등 기능 부재·미활성 판단은 그대로다.
 - OMP `hub`: 18.3.0의 「폐기 방향」은 18.10.0 내장 도구 목록(`src/tools/builtin-names.ts`)에서 제거된 것으로 확인했다([기본 도구](/tools/builtin.md)).
-- 앞 기록의 OMP 18.3.x 서술은 당시 설치본(18.3.2) 기준 이력이다. 현재 서술은 [기본 도구](/tools/builtin.md)·[MCP 정책](/tools/mcp.md)·[스킬 사용](/tools/skills.md)이 정본이며 18.10.0에서 재확인했다.
+- 앞 기록의 OMP 18.3.x 서술은 당시 설치본(18.3.2) 기준 이력이다. 현재 서술은 [기본 도구](/tools/builtin.md)·[MCP 정책](/tools/mcp.md)·[스킬 사용](/tools/skills.md)이 정본이며 조사일(2026-10-12)에 설치본 18.10.0으로 재확인했다.
 
 ### 후속 조사의 채택 결과 범위
 

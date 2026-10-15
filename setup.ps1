@@ -23,7 +23,7 @@ if (-not (Get-Command omp -ErrorAction SilentlyContinue)) {
   exit 1
 }
 if (-not (Get-Command bun -ErrorAction SilentlyContinue)) {
-  Write-Error "bun not found on PATH; Bun is required for OKF validation"
+  Write-Error "bun not found on PATH; Bun 1.2.21+ is required for the OKF validation, OKF/skill deployment and managed-item sync scripts"
   exit 1
 }
 

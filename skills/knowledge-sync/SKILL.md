@@ -14,10 +14,10 @@ description: hello-omp 설정 레포의 원격 변경(공유 지식·OMP 설정�
 - **작업 디렉터리 `W`:** `R/.omp-artifacts/knowledge-sync-<UTC yyyymmddTHHMMSSZ>-<4자리 hex>/`입니다. 백업·로그·검증 결과를 모두 여기에 남기고 지우지 않습니다.
 - **금지:**
   - 원격 반영: `push`·`rebase`·`--force`.
-  - 작업 내용 폐기: `reset --hard`·`clean`·`checkout -- .`·`restore .`.
+  - 작업 내용 폐기: `reset --hard`·`clean`·`checkout -- .`·`restore .`. 작업 트리를 바꾸지 않는 `restore --staged -- <파일>`은 4단계에서만 허용합니다.
   - 한쪽 버전 통째 선택: `-X ours/theirs`, 양쪽 내용을 읽지 않은 파일 전체 `checkout --ours/--theirs`.
   - 검사 우회: `--no-verify`·`--no-gpg-sign`. 사용자가 명시적으로 승인한 경우만 예외입니다.
-- **예외로 허용하는 명령:** 아래 4단계 조건을 만족할 때 이 실행이 만든 stash 한 개의 `git stash drop`만 허용합니다.
+- **예외로 허용하는 명령:** 4단계에서 충돌 없이 복원했을 때, 이 실행이 만든 stash 한 개의 `git stash drop`만 허용합니다.
 - **ref 표기:** `@{u}`, `stash@{n}` 같은 ref는 작은따옴표로 감쌉니다. PowerShell이 `@{`를 해시 리터럴로 해석하기 때문입니다. upstream은 1단계에서 전체 ref 이름(`refs/remotes/origin/main` 등)으로 확정한 뒤 그 이름(`U`)을 씁니다.
 
 ## 0. 준비
@@ -36,7 +36,7 @@ description: hello-omp 설정 레포의 원격 변경(공유 지식·OMP 설정�
 5. `git -C R fetch --prune`.
 6. `git -C R log --oneline HEAD..U`가 비어 있으면 받을 변경이 없습니다. 이때는 적용이 끝난 상태인지 확인합니다.
    - `bun W/sync-check.ts is-applied R C`가 성공하면 같은 HEAD를 같은 설정 폴더 `C`에 적용한 기록이 있는 것입니다. "받을 변경 없음, 적용 완료"를 보고하고 끝냅니다. 한 clone을 여러 OMP 프로필(설정 폴더)에 적용할 수 있으므로 HEAD만 같고 설정 폴더가 다른 기록은 인정하지 않습니다.
-   - 실패하면 이전 실행의 setup이 실패했거나, 직접 pull한 뒤 setup을 실행하지 않았거나, 이 설정 폴더에 이 스킬을 처음 쓰는 경우입니다. 7·8은 건너뛰고 9·10을 기록한 뒤 2–5단계 없이 6·7단계로 적용과 검증을 마칩니다.
+   - 실패하면 이전 실행의 setup이 실패했거나, 직접 pull한 뒤 setup을 실행하지 않았거나, 이 설정 폴더에 이 스킬을 처음 쓰는 경우입니다. 이 단계의 항목 7·8은 건너뛰고 항목 9·10을 수행한 뒤, 2–5단계 없이 6단계(적용)와 7단계(검증)로 갑니다.
 7. 받을 변경과 로컬 상태를 기록합니다.
    - 받을 변경 `git -C R diff --name-status HEAD...U`를 `W/incoming.txt`에, 아직 push하지 않은 로컬 커밋 `git -C R log --oneline U..HEAD`를 `W/unpushed.txt`에 남깁니다.
    - `git -C R rev-parse HEAD`를 `W/pre-head.txt`에 남깁니다.
@@ -62,7 +62,7 @@ description: hello-omp 설정 레포의 원격 변경(공유 지식·OMP 설정�
 
 `git -C R merge --no-overwrite-ignore --no-edit --ff U`
 
-`--ff`는 가능하면 fast-forward하고 아니면 merge 커밋을 만듭니다. 사용자 설정 `merge.ff`와 `pull.rebase`에 영향받지 않습니다. `--no-overwrite-ignore`는 fast-forward에서만 무시 파일을 지키므로, 무시 파일 보호는 1단계 8의 충돌 검사가 맡습니다.
+`--ff`는 가능하면 fast-forward하고 아니면 merge 커밋을 만듭니다. 사용자 설정 `merge.ff`와 `pull.rebase`에 영향받지 않습니다. `--no-overwrite-ignore`는 fast-forward에서만 무시 파일을 지키므로, 무시 파일 보호는 1단계 항목 8의 충돌 검사가 맡습니다.
 
 결과별 처리:
 
@@ -83,18 +83,25 @@ description: hello-omp 설정 레포의 원격 변경(공유 지식·OMP 설정�
 
 `S`가 없으면 건너뜁니다.
 
-1. `git -C R stash apply --index S`. staged와 unstaged 구분까지 그대로 복원합니다.
-2. 충돌 없이 끝났으면 `git -C R stash list --format="%gd %H"`에서 `S`의 ref를 바로 직전에 다시 찾아 `git -C R stash drop '<그 ref>'` 합니다.
-3. `--index` 적용이 index 충돌로 실패하면 `git -C R stash apply S`로 작업 트리만 다시 적용합니다. 이 경우 stash는 지우지 않고 남겨 보고합니다. staged 상태는 `W/index.patch`에 남아 있습니다.
-4. 충돌이 나면 5단계 규칙으로 해소합니다. 결과는 커밋하지 않습니다. 해소한 파일은 `git add`로 해소를 표시한 뒤 `git -C R restore --staged -- <파일>`로 다시 미스테이징합니다. 이 경우에도 stash는 지우지 않고 남겨 두며, 사용자가 확인한 뒤에만 지웁니다.
-5. 적용 자체가 실패하면(예: untracked 파일이 이미 있다는 오류) 강제로 덮어쓰지 않습니다. `S`와 `W/worktree.patch`·`W/index.patch`·`W/untracked/` 위치를 보고하고 사용자에게 맡깁니다.
+1. `git -C R stash apply --index S`. staged와 unstaged 구분까지 그대로 복원하려는 시도이며 결과는 다음 셋 중 하나입니다.
+   - **충돌 없이 성공:** `git -C R stash list --format="%gd %H"`에서 `S`의 ref를 바로 직전에 다시 찾아 `git -C R stash drop '<그 ref>'` 합니다.
+   - **index 적용 실패:** 출력에 `error: conflicts in index. Try without --index.`가 있습니다. stash에 담긴 staged 변경을 현재 HEAD 위에 적용하지 못한 것이며 작업 트리는 바뀌지 않습니다(`git -C R status --porcelain`이 비어 있는지 확인합니다). `git -C R stash apply S`로 작업 트리만 다시 적용합니다. 이 경우 stash는 지우지 않고 남겨 보고합니다. staged 상태는 `W/index.patch`에 남아 있습니다. 다시 적용한 결과가 작업 트리 병합 충돌이면 다음 항목으로 처리합니다.
+   - **작업 트리 병합 충돌:** `git -C R diff --name-only --diff-filter=U`에 파일이 있습니다. 출력은 `CONFLICT (content)`뿐 아니라 `CONFLICT (modify/delete)`·`CONFLICT (add/add)`·이름 변경 충돌 등일 수 있고, 내용 충돌이 아니면 충돌 마커가 없을 수도 있습니다. `--index`로 적용했다면 `Index was not unstashed.`도 함께 나옵니다. 이는 위 index 적용 실패와 다릅니다. 작업 트리 충돌 때문에 staged 상태가 stash와 같게 복원되지 않았다는 뜻이며 복원 기준은 `W/index.patch`입니다. 복원이 이미 일부 적용된 상태이므로 다시 적용하지 않고 그 자리에서 5단계 규칙으로 해소합니다. 결과는 커밋하지 않습니다. 해소한 파일은 `git add`로 해소를 표시한 뒤 `git -C R restore --staged -- <파일>`로 다시 미스테이징합니다. 이 경우에도 stash는 지우지 않고 남겨 두며, 사용자가 확인한 뒤에만 지웁니다.
+2. 적용 자체가 실패하면(예: untracked 파일이 이미 있다는 오류) 강제로 덮어쓰지 않습니다. `S`와 `W/worktree.patch`·`W/index.patch`·`W/untracked/` 위치를 보고하고 사용자에게 맡깁니다.
 
 ## 5. 충돌 해소 규칙
 
-먼저 근거를 모읍니다.
+3단계(병합)와 4단계(stash 복원)의 충돌에 공통으로 적용합니다. 두 단계에서 `:2:`·`:3:`과 "로컬"·"원격"이 가리키는 쪽이 반대이므로, 먼저 어느 단계의 충돌인지 정합니다. 4단계의 `S`는 2단계에서 보관한 미커밋 작업이고, 병합 전 HEAD는 `W/pre-head.txt`에 있습니다(`<pre-head>`).
 
-- 세 버전: `git -C R show :1:<path>`(공통 조상), `:2:`(로컬), `:3:`(원격).
-- 양쪽 이력: `git -C R log --format="%h %s" <merge-base>..HEAD -- <path>`, `<merge-base>..U -- <path>`.
+| 충돌이 난 단계 | `:1:` | `:2:` | `:3:` | 충돌 마커 |
+|---|---|---|---|---|
+| 3단계 병합 | 공통 조상 | **로컬** — `HEAD`(병합을 실행한 쪽) | **원격** — `U` | `<<<<<<< HEAD` … `>>>>>>> <U>` |
+| 4단계 stash 복원 | stash의 기준 커밋(= `<pre-head>`) | **원격** — `HEAD`(병합으로 원격이 반영된 현재 커밋) | **로컬** — `S`(미커밋 작업) | `<<<<<<< Updated upstream` … `>>>>>>> Stashed changes` |
+
+이 규칙에서 "로컬"은 이 clone에서 만든 쪽(미푸시 커밋·미커밋 작업), "원격"은 push된 쪽입니다. 먼저 근거를 모읍니다.
+
+- 세 버전: `git -C R show :1:<path>`, `:2:`, `:3:`(대응은 위 표).
+- 양쪽 이력: 3단계는 로컬 `git -C R log --format="%h %s" <merge-base>..HEAD -- <path>`와 원격 `<merge-base>..U -- <path>`입니다. 4단계는 원격이 `git -C R log --format="%h %s" <pre-head>..HEAD -- <path>`, 로컬이 `git -C R diff <pre-head> S -- <path>`입니다.
 - 양쪽의 `okf/log.md` 항목.
 
 한쪽 버전을 통째로 택하지 않습니다. 두 변경이 같을 때만 예외입니다.
@@ -128,30 +135,30 @@ description: hello-omp 설정 레포의 원격 변경(공유 지식·OMP 설정�
 
 ## 6. 적용 (setup 전체)
 
-병합(fast-forward 포함)이 성공했거나, 1단계 6에서 적용이 끝나지 않은 상태를 확인했을 때만 실행합니다. setup은 OKF만이 아니라 OMP 설정과 배포물 전체를 적용합니다.
+병합(fast-forward 포함)이 성공했거나, 1단계 항목 6에서 적용이 끝나지 않은 상태를 확인했을 때만 실행합니다. setup은 OKF만이 아니라 OMP 설정과 배포물 전체를 적용합니다.
 
 - **실행:**
   - macOS/Linux: `R`에서 `sh setup.sh`.
   - Windows: PowerShell에서 `& 'R\setup.ps1'`. 실행 정책이 막으면 `powershell -NoProfile -ExecutionPolicy RemoteSigned -File 'R\setup.ps1'`로 실행합니다. 이 실행 정책은 그 프로세스에만 적용됩니다.
-- **출력:** `W/setup.log`에 남기고, 멈춘 단계(`[n/8]`)를 확인합니다.
+- **출력:** `W/setup.log`에 남기고, 멈춘 setup 단계(`[n/8]`)를 확인합니다.
 - **사전 점검 뒤 단계에서 멈춘 경우:** setup은 트랜잭션이 아니므로 그 전 단계는 이미 적용된 상태입니다. 예를 들어 `[1/8]`에서 `Invalid value`로 멈추면 그 앞의 설정 키는 이미 바뀌었습니다. 오류 줄을 그대로 보고하고, 병합 커밋과 복원된 작업은 그대로 둡니다.
   - 원격의 잘못된 값이 원인이면 원격에서 고친 뒤 다시 받도록 안내합니다. 로컬에서 값을 임의로 고치지 않습니다.
   - 로컬 원인(복원한 미커밋 concept의 유효성 오류, Windows 파일 잠금 등)이면 원인을 고친 뒤 같은 실행에서 setup을 새 로그(`W/setup-2.log` 등)로 다시 실행하고 7단계로 갑니다.
-  - setup이 끝나지 않아도 7단계의 `verify`는 실행해 로컬 지식을 확인합니다. 적용을 마치지 못하면 완료 기록(`W/applied.json`)을 남기지 않으므로, 다음 실행이 1단계 6에서 setup을 다시 수행합니다.
-- **사전 점검에서 멈춘 경우:** `deploy-okf --check`에서 멈췄으면 아무것도 바뀌지 않았습니다. 다음은 메시지를 따르되, 어느 쪽을 남길지는 사용자에게 묻습니다.
+  - setup이 끝나지 않아도 7단계의 `verify`는 실행해 로컬 지식을 확인합니다. 적용을 마치지 못하면 완료 기록(`W/applied.json`)을 남기지 않으므로, 다음 실행이 1단계 항목 6에서 setup을 다시 수행합니다.
+- **사전 점검에서 멈춘 경우:** setup의 사전 점검(`omp`·`bun` 확인, `title.generator` 지원 확인, 설정 폴더와 레포 루트 비교, `deploy-skills --check`, `deploy-okf --check`)에서 멈췄으면 설정과 배포물은 바뀌지 않았습니다(설정 폴더가 없었다면 폴더만 만들어졌을 수 있습니다). `deploy-okf --check`가 멈춘 원인은 다음 셋 중 하나이며 메시지를 따르되, 어느 쪽을 남길지는 사용자에게 묻습니다.
   - 로컬 지식 이전 충돌: 레포 사본과 설정 폴더 사본이 다른 경우입니다.
   - 로컬 지식 유효성 오류.
   - 이전 setup이 지운 흔적: 이 경우 메시지의 `--restore`를 제안합니다.
-- **단계별 의미:**
-  - 1: `config/settings.conf` 적용.
-  - 2: 전역·advisor 지침.
-  - 3: 공개 OKF(로컬 `learned/` 보존).
-  - 4–7: 확장·에이전트·명령·스킬.
-  - 8: 원격에서 지운 관리 항목 정리와 설정값 검증. 지운 설정 키는 `omp config reset`, 지운 파일·스킬은 `C/.managed-retired-<stamp>/`로 이동합니다. 로컬에서 고친 사본은 그대로 두고 경고합니다.
+- **setup 단계(`[n/8]`, 이 스킬의 단계 번호와 다름)별 의미:**
+  - `[1/8]`: `config/settings.conf` 적용.
+  - `[2/8]`: 전역·advisor 지침.
+  - `[3/8]`: 공개 OKF(로컬 `learned/` 보존).
+  - `[4/8]`–`[7/8]`: 확장·에이전트·명령·스킬.
+  - `[8/8]`: 원격에서 지운 관리 항목 정리와 설정값 검증. 지운 설정 키는 현재 값이 setup이 적용한 값 그대로일 때만 `omp config reset`으로 되돌리고, 지운 파일·스킬은 `C/.managed-retired-<stamp>/`로 이동합니다. 로컬에서 바꾼 설정값과 고친 사본은 그대로 두고 경고합니다.
 
 ## 7. 검증
 
-1. `bun W/sync-check.ts verify W`가 모든 로컬 지식 파일을 `intact`로 보고해야 합니다.
+1. `bun W/sync-check.ts verify W`가 종료 코드 0과 `verify: <n> intact, 0 restored, 0 problem(s) of <n> snapshot file(s)`를 출력해야 합니다. 모든 로컬 지식 파일이 스냅샷과 같다는 뜻입니다.
    - `missing`과 `changed`는 덮어쓰거나 자동 복원하지 않고 경로와 스냅샷 사본 위치를 보고합니다. setup은 로컬 지식을 지우지 않으므로, 실행 중에 다른 세션이 지우거나 고쳤을 수 있습니다.
    - 사용자가 복원을 확인한 경우에만 `bun W/sync-check.ts verify W --restore-missing`으로 없는 파일을 복원합니다. 기존 파일은 덮어쓰지 않습니다. 그다음 다시 확인합니다.
 2. setup 출력에서 다음을 확인하고 보고합니다.
@@ -161,13 +168,13 @@ description: hello-omp 설정 레포의 원격 변경(공유 지식·OMP 설정�
 4. 레포 상태를 확인합니다.
    - `git -C R status`와 `git -C R log --oneline -3`.
    - `git -C R stash list`가 `W/stash-list-before.txt`와 같은지 확인합니다. 차이는 남겨 둔 이 실행의 stash 하나뿐이어야 합니다.
-5. setup 출력에 `[8/8]`의 `settings verified:` 줄이 있고(setup이 끝까지 실행됨) 1의 `verify`에 `missing`·`changed`가 없으면 `bun W/sync-check.ts mark-applied R C W`로 현재 HEAD와 설정 폴더 `C`의 실제 경로를 `W/applied.json`에 남깁니다. `[8/8]`의 경고는 보고하되 이 기록을 막지 않습니다. 다음 실행은 이 기록으로 같은 설정 폴더에 적용이 끝났는지 판단합니다.
+5. setup 출력에 `[8/8]`의 `settings verified:` 줄이 있고(setup이 끝까지 실행됨) 이 단계 항목 1의 `verify`에 `missing`·`changed`가 없으면 `bun W/sync-check.ts mark-applied R C W`로 현재 HEAD와 설정 폴더 `C`의 실제 경로를 `W/applied.json`에 남깁니다. `[8/8]`의 경고는 보고하되 이 기록을 막지 않습니다. 다음 실행은 이 기록으로 같은 설정 폴더에 적용이 끝났는지 판단합니다.
 
 ## 8. 보고
 
 다음을 한국어로 보고합니다.
 
-- **받은 변경:** 커밋 수, 그리고 영역별 파일 목록입니다. 영역은 `okf/`, `rules/`, `config/`, `skills/`, `extensions/`, `commands/`, `agents/`, `scripts/`, `setup.*`입니다.
+- **받은 변경:** 커밋 수, 그리고 영역별 파일 목록입니다. 영역은 `okf/`, `rules/`, `config/`, `skills/`, `extensions/`, `commands/`, `agents/`, `scripts/`, `setup.*`이며 그 밖의 파일(`README.md`, `AGENTS.md`, `.gitignore` 등)은 "기타"로 묶습니다.
 - **충돌:** 충돌 파일마다 무엇을 근거로 어떻게 해소했는지 적고, 사용자가 결정한 항목은 따로 표시합니다.
 - **병합 결과:** fast-forward였는지 로컬 merge 커밋을 만들었는지 적습니다. merge 커밋이면 sha를 적습니다. push는 하지 않았으며, 사용자가 확인한 뒤 직접 push합니다.
 - **미커밋 작업:** 복원 결과와 stash를 남겼는지 적습니다.

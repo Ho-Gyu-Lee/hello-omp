@@ -1,7 +1,7 @@
 # Agent-created working scripts and evidence (not canonical project files)
 /.omp-artifacts/
 
-# Local smoke-test deployment targets
+# Legacy local smoke-test deployment targets (current verification deployments go under .omp-artifacts/ above)
 .tmp-omp-test*/
 .tmp omp test*/
 
@@ -10,6 +10,8 @@
 
 # omp state if PI_CODING_AGENT_DIR is accidentally pointed at the repo
 agent.db*
+
+# macOS Finder metadata
 .DS_Store
 
 # Legacy location of local-only learned concepts, kept ignored as a guard against committing them.

@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 게임 서버 영속화·장애 체크리스트
-description: 게임 서버에서 결과 공개와 내구 저장 시점을 나누고, 영속 저장·콘텐츠 identity·소유권 이동·서비스 링크 장애의 검증과 복구 기준을 정리한다.
-tags: [game, server, checklist, single-writer, persistence, durability, failover, sqlite, heartbeat]
-timestamp: 2026-10-14T00:00:00Z
+description: 게임 서버에서 결과 공개와 내구 저장 시점을 나누고, 영속 저장·콘텐츠 identity·소유권 이동·서비스 링크 장애·프로세스 인스턴스 식별·컨테이너 이전·통합 시험 전제의 검증과 복구 기준을 정리한다.
+tags: [game, server, checklist, single-writer, persistence, durability, failover, sqlite, heartbeat, fencing, container]
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # 게임 서버 영속화·장애 체크리스트
@@ -20,7 +20,7 @@ timestamp: 2026-10-14T00:00:00Z
   - 저장 쪽이 최종 검증권을 갖는다. 거절되면 그 유저만 끊고 DB 상태로 다시 로드한다([NDC2014 「분산서버 구축의 ABC」](https://ndcreplay.nexon.com/NDC2014/sessions/NDC2014_0046.html) 슬라이드 62-63쪽).
   - 로그아웃·재로그인·서버 이동 같은 소유권 이동은 옛 소유자의 마지막 레코드가 적용되고 옛 소유자의 늦은 쓰기가 펜싱된 뒤에만 허용한다.
   - 손실 범위는 "마지막 n초"가 아니라 "저장 확인을 받지 못한 모든 변경"으로 선언한다.
-  - 확정 뒤 공개할 결과는 콘텐츠별 등급으로 선언하고, 한 가지 규칙으로 고정하지 않는다. 대표 후보는 캐릭터 간 가치 이동(거래·우편·경매)과 결제다. 이런 결과는 관련 엔티티를 동결하고 한 트랜잭션과 멱등 키로 처리한 뒤 공개한다. 한 캐릭터 안의 결과는 그 결과를 담은 레코드가 저장 확인될 때까지 그 유저에게 보낼 응답만 보류해도 된다. 다만 다른 관찰자에게 보이는 공유 효과가 있으면 미확정 상태가 노출되지 않게 따로 설계한다.
+  - 내구 확정(B·C) 뒤에 공개할 결과의 범위는 콘텐츠별 등급으로 선언하고, 한 가지 규칙으로 고정하지 않는다. 대표 후보는 캐릭터 간 가치 이동(거래·우편·경매)과 결제다. 이런 결과는 관련 엔티티를 동결하고 한 트랜잭션과 멱등 키로 처리한 뒤 공개한다. 한 캐릭터 안의 결과는 그 결과를 담은 레코드가 저장 확인될 때까지 그 유저에게 보낼 응답만 보류해도 된다. 다만 다른 관찰자에게 보이는 공유 효과가 있으면 미확정 상태가 노출되지 않게 따로 설계한다.
 
   사례는 갈린다:
   - 오딘: 메모리가 1차이고 DB는 n초 주기 백업이다([Games on AWS 2022 10쪽](https://www.slideshare.net/slideshow/8-mmorpg-300-games-on-aws-2022/254068948)). n 값과 경제 예외는 공개되지 않았다.
@@ -29,11 +29,14 @@ timestamp: 2026-10-14T00:00:00Z
   - TrinityCore: 거래를 한 트랜잭션에 담지만, 커밋을 비동기 실행기에 넘기고 완료를 기다리지 않은 채 성공을 보낸다([`TradeHandler.cpp`](https://github.com/TrinityCore/TrinityCore/blob/master/src/server/game/Handlers/TradeHandler.cpp), [`DatabaseWorkerPool.cpp`](https://github.com/TrinityCore/TrinityCore/blob/master/src/server/database/Database/DatabaseWorkerPool.cpp)). C의 근거가 아니다.
 
   B에서는 큐 확인을 디스크 내구로 읽지 않는다. NATS JetStream R3의 PubAck는 과반 복제 뒤에 오지만 fsync는 `sync_interval` 기본 2분 주기라서, 그 창 안에 여러 노드에 OS 장애가 나면 확인된 쓰기도 잃을 수 있다([Surviving node loss](https://docs.nats.io/learn/jetstream/surviving-node-loss), [Replication and R=3](https://docs.nats.io/learn/clustering/replication-and-r3), 확인 2026-10-12). `sync_interval: always`는 이 창을 닫지만 쓰기 지연·처리량을 대가로 치른다.
-- [ ] 단일 작성자 SQLite 서비스는 캐시한 prepared statement를 scope 종료(성공·실패·조기 반환 포함)마다 reset한다. 결과를 다 읽지 않은 SELECT가 `SQLITE_ROW`에 머물면 이후 COMMIT 뒤에도 같은 연결의 읽기 트랜잭션이 남아 WAL checkpoint가 진행되지 않고 WAL이 계속 커진다([SQLite 포럼 설명](https://sqlite.org/forum/forumpost/9fba47556b): 열린 SELECT가 있는 연결은 checkpoint를 실행할 수 없다. [WAL 문서](https://sqlite.org/wal.html#avoiding_excessively_large_wal_files): 열린 읽기 트랜잭션이 있으면 checkpoint가 WAL을 reset하지 못해 WAL이 한없이 커질 수 있다. 확인 2026-10-12). checkpoint 임계값을 넘는 커밋 뒤 WAL 크기·완전 checkpoint를 회귀로 확인한다. 식별 metadata는 테이블이 없는 빈 DB에서만 초기화하고, 테이블이 있는데 metadata가 없는 DB는 어떤 변경 전에도 fail-closed로 거부한다.
+- [ ] 단일 작성자 SQLite 서비스는 캐시한 prepared statement를 scope 종료(성공·실패·조기 반환 포함)마다 reset한다. 결과를 다 읽지 않은 SELECT가 `SQLITE_ROW`에 머물면 이후 COMMIT 뒤에도 같은 연결의 읽기 트랜잭션이 남아 WAL checkpoint가 진행되지 않고 WAL이 계속 커진다([SQLite 포럼 설명](https://sqlite.org/forum/forumpost/9fba47556b): 열린 SELECT가 있는 연결은 checkpoint를 실행할 수 없다. [WAL 문서](https://sqlite.org/wal.html#avoiding_excessively_large_wal_files): 열린 읽기 트랜잭션이 있으면 checkpoint가 WAL을 reset하지 못해 WAL이 한없이 커질 수 있다. 확인 2026-10-12). checkpoint 임계값을 넘는 커밋 뒤 WAL 크기·완전 checkpoint를 회귀로 확인한다.
 - [ ] 단일 스레드도 비동기 대기 전후에 다른 명령이 끼어들 수 있다. 예약/pending 상태 또는 적용 시 버전 검증 등으로 중복 소비와 낡은 완료의 덮어쓰기를 막는다. 분산 거래는 한 로직 스레드만으로 원자적이지 않다.
-- [ ] 조건부 갱신(`UPDATE … SET gold = gold - ? WHERE id = ? AND gold >= ?`)은 statement별 영향 행 수([`sqlite3_changes`](https://sqlite.org/c3ref/changes.html))가 기대값과 같을 때만 성공으로 보고, 다르면 트랜잭션 전체를 되돌린다. 묶음 전체의 성공 flag나 영향 행 합계만 보면 0행 일치를 성공으로 오인하고 어느 조건이 실패했는지 알 수 없다. 결과를 모르는 timeout 뒤 재시도에 대비해 작업 ID를 업무 갱신과 같은 트랜잭션에서 먼저 `(계정·캐릭터 ID, 작업 ID)` 쌍의 UNIQUE 기록([`INSERT … ON CONFLICT DO NOTHING`](https://sqlite.org/lang_upsert.html))으로 남긴다. 클라이언트가 고른 ID를 전역 UNIQUE로 두면 다른 사용자의 결과를 받거나 그 작업을 막을 수 있다. 그 INSERT의 영향 행이 0이면 이미 적용된 작업이므로 업무 갱신을 실행하지 않고 처음 실행 때 작업 ID와 함께 저장한 결과를 돌려준다. 요청 내용의 digest도 함께 저장해 같은 작업 ID에 다른 내용이 오면 저장 결과를 돌려주지 않고 거부한다. 권한·문법 같은 영구 오류는 재시도하지 않는다. 값은 문자열 조립 대신 bind로 넘기고 수치·시각은 locale과 무관한 형식(정수·UTC epoch)으로 저장한다. 모델 전체를 덮어쓰는 갱신 대신 서버가 계산하는 증감이나 version 비교 갱신을 쓴다(SQLite 문서 조회 2026-10-11).
+- [ ] 조건부 갱신(`UPDATE … SET gold = gold - ? WHERE id = ? AND gold >= ?`)은 statement별 영향 행 수([`sqlite3_changes`](https://sqlite.org/c3ref/changes.html))가 기대값과 같을 때만 성공으로 보고, 다르면 트랜잭션 전체를 되돌린다. 묶음 전체의 성공 flag나 영향 행 합계만 보면 0행 일치를 성공으로 오인하고 어느 조건이 실패했는지 알 수 없다(SQLite 문서 조회 2026-10-11). 다음을 함께 지킨다.
+  - 작업 ID 기록: 결과를 모르는 timeout 뒤 재시도에 대비해 작업 ID를 업무 갱신과 같은 트랜잭션에서 먼저 `(계정·캐릭터 ID, 작업 ID)` 쌍의 UNIQUE 기록([`INSERT … ON CONFLICT DO NOTHING`](https://sqlite.org/lang_upsert.html))으로 남긴다. 클라이언트가 고른 ID를 전역 UNIQUE로 두면 다른 사용자의 결과를 받거나 그 작업을 막을 수 있다.
+  - 재시도 처리: 그 INSERT의 영향 행이 0이면 이미 적용된 작업이므로 업무 갱신을 실행하지 않고 처음 실행 때 작업 ID와 함께 저장한 결과를 돌려준다. 요청 내용의 digest도 함께 저장해 같은 작업 ID에 다른 내용이 오면 저장 결과를 돌려주지 않고 거부한다. 권한·문법 같은 영구 오류는 재시도하지 않는다.
+  - 값 전달·저장: 값은 문자열 조립 대신 bind로 넘기고 수치·시각은 locale과 무관한 형식(정수·UTC epoch)으로 저장한다. 모델 전체를 덮어쓰는 갱신 대신 서버가 계산하는 증감이나 version 비교 갱신을 쓴다.
 - [ ] 영향 행 확인의 회귀 테스트는 행을 미리 지우는 방식으로 만들지 않는다. 그러면 앞선 조회의 NOT_FOUND나 INSERT 분기만 지나가 새 검사에 닿지 않는다. 대상 UPDATE에만 `BEFORE UPDATE` trigger와 `SELECT RAISE(IGNORE)`를 걸면 사전 조회는 통과하고 그 statement만 오류 없이 0행으로 끝난다([SQLite CREATE TRIGGER](https://sqlite.org/lang_createtrigger.html)). 이 상태에서 실패 상태값, 같은 transaction의 앞선 쓰기 rollback(여러 행 묶음이면 앞 행까지 포함), 성공 receipt 미기록, trigger 제거 뒤 재시도 성공을 확인한다. 정확한 replay·캐시된 실패·변경 없는 행 건너뛰기·0..N행이 정상인 일괄 정리는 그대로 통과하는지도 함께 확인한다(2026-10-11 적용, 수정 전 코드에서 실패함을 확인).
-- [ ] 내구 저장소가 콘텐츠 identity(공개·비공개 카탈로그 전체와 맵 바이트의 digest)에 결속돼 있으면 표시 전용 필드·아이콘 경로·맵 재게시처럼 판정과 무관해 보이는 변경도 identity를 바꿔 기존 DB를 열 수 없게 만든다. 구현 전에 식별 입력을 코드로 확인하고, 데이터 배치(식별 대상 카탈로그/별도 표시 데이터)와 기존 DB 처리(백업 후 새 DB·명시적 재결속 도구)를 사용자 결정으로 드러낸다. 계정 credential·provision digest도 identity에 묶였다면 DB만 옮기면 재프로비저닝이 거부되므로 같은 세대로 함께 보존·교체한다. 산출물을 다시 생성하기 전에 이전 identity와 일치하는 데이터셋을 보존해야 복구가 가능하며, 검사 우회·자동 reset으로 불일치를 감추지 않는다.
+- [ ] 내구 저장소가 콘텐츠 identity(공개·비공개 카탈로그 전체와 맵 바이트의 digest)에 결속돼 있으면 표시 전용 필드·아이콘 경로·맵 재게시처럼 판정과 무관해 보이는 변경도 identity를 바꿔 기존 DB를 열 수 없게 만든다. 구현 전에 식별 입력을 코드로 확인하고, 데이터 배치(식별 대상 카탈로그/별도 표시 데이터)와 기존 DB 처리(백업 후 새 DB·명시적 재결속 도구)를 사용자 결정으로 드러낸다. 계정 credential·provision digest도 identity에 묶였다면 DB만 옮기면 재프로비저닝이 거부되므로 같은 세대로 함께 보존·교체한다. 산출물을 다시 생성하기 전에 이전 identity와 일치하는 데이터셋을 보존해야 복구가 가능하며, 검사 우회·자동 reset으로 불일치를 감추지 않는다. identity를 기록해 두는 저장소 metadata는 테이블이 없는 빈 DB에서만 초기화하고, 테이블이 있는데 metadata가 없는 DB는 어떤 변경 전에도 fail-closed로 거부한다.
 - [ ] 클라이언트·서버가 공유하는 권위 코드와 실행 데이터를 별도 레포·디렉터리로 옮길 때는 identity가 파일 위치가 아니라 카탈로그 값과 맵 바이트에만 의존하는지 코드로 먼저 확인한다. 카탈로그 안의 리소스 경로 문자열(예: 맵 경로)은 identity 입력이므로 바꾸지 않고, 데이터 파일은 줄바꿈 변환 없이 바이트 그대로 옮긴다. 옮긴 뒤 같은 binary로 계산한 identity를 이전 값과 비교해 같을 때만 기존 DB를 그대로 쓴다. 서버가 옮겨진 데이터 root를 기준으로 리소스 경로를 해석하면, 개발 실행 클라이언트도 같은 집합의 경로를 같은 root로 바꿔 읽어야 두 쪽이 다른 바이트를 보지 않는다.
 - [ ] 존 이동은 old owner 정지/fencing, 상태 인계, new owner 활성화, 라우팅 교체와 실패 복구를 하나의 계약으로 정한다. 중간 실패·늦은 입력·중복 완료에도 소유자가 둘이 되거나 명령이 이중 적용되지 않아야 한다.
 - [ ] 파티·인스턴스 멤버십은 재생성·교체 때 바뀌는 개체 ID가 아니라 캐릭터·세션의 안정 ID로 저장한다. 보조 index(개체 ID→연결)는 ID 할당 **뒤**에 등록하고 끊김·교체·로그아웃의 모든 경로에서 제거한다. 할당 전에 등록하면 0이나 이전 ID로 매핑되어 조회가 실패한다. 멤버를 제거할 때는 남은 멤버뿐 아니라 제거된 본인에게도 그룹 ID가 담긴 탈퇴 통지를 보내고(해산과 구분), 클라이언트는 현재 그룹과 다른 ID의 늦은 통지를 무시한다.
@@ -50,23 +53,24 @@ timestamp: 2026-10-14T00:00:00Z
   - **송신 경로:** 막힌 PONG의 재시도가 다른 업무 대기(중요 제어 송신 대기 등) 게이트에 묶이면 건강한 링크가 만료된다. 재시도는 매 pass 독립으로 돌리고 전역 송신 slot을 응답 트래픽이 다 쓰지 않게 연결당 PONG 몫을 남기며, 응답 전용 서비스는 수신 event를 pass당 상한까지만 처리해 PING 흐름이 송신을 굶기지 못하게 한다.
   - **검증:** 각 서비스를 만료값 미만·초과로 SIGSTOP/SIGCONT하고, 연결은 유지한 채 한 방향 frame만 버리는 relay로 방향별 감시를 확인한다. 시계 주입 순수 헬퍼의 경계(정확히 만료 시각, 재시도 간격, 시계 점프, 포화 산술)는 단위 테스트로 고정한다.
 - [ ] 콘텐츠 프로세스 장애는 내구 상태·재생 정책으로 복구한다. 프로세스 생존과 로직 진행을 별도로 감시하고 정지한 owner를 대체할 때 기존 owner의 쓰기 권한을 차단한다.
-- [ ] 실행 자동화의 종료 대상은 재사용 가능한 PID가 아니라 프로세스 인스턴스에 결박한다. PID·시작 시각을 확인한 뒤 별도 `kill`을 호출해도 검사와 신호 사이의 재사용 경합은 남는다. Linux의 [pidfd 신호](https://man7.org/linux/man-pages/man2/pidfd_send_signal.2.html)는 확보한 인스턴스를 계속 가리킨다.
-  - 직접 `fork`한 자식은 자동 회수나 다른 reaper 없이 pidfd를 확보한 뒤 실행을 허용한다. 자식이 먼저 끝나도 좀비를 아직 회수하지 않았다면 PID가 유지되지만, `SIGCHLD=SIG_IGN`·`SA_NOCLDWAIT`·다른 회수 경로가 있으면 이 보장이 성립하지 않는다([pidfd_open의 조건](https://man7.org/linux/man-pages/man2/pidfd_open.2.html)).
+- [ ] 실행 자동화(테스트 harness·이전 도구처럼 프로세스를 띄우고 종료하는 스크립트·도구)의 종료 대상은 재사용 가능한 PID가 아니라 프로세스 인스턴스에 결박한다. PID·시작 시각을 확인한 뒤 별도 `kill`을 호출해도 검사와 신호 사이의 재사용 경합은 남는다. Linux의 [pidfd 신호](https://man7.org/linux/man-pages/man2/pidfd_send_signal.2.html)는 확보한 인스턴스를 계속 가리키며, 그 프로세스가 끝나 회수된 뒤에는 다른 프로세스로 옮겨 가지 않고 `ESRCH`로 실패한다(확인 2026-10-15).
+  - 직접 `fork`한 자식은 부모가 pidfd를 확보한 뒤에만 자식 작업을 실행하게 한다. 자식이 먼저 끝나도 좀비를 아직 회수하지 않았다면 PID가 재사용되지 않고 pidfd가 그 좀비를 가리키지만, `SIGCHLD=SIG_IGN`·`SA_NOCLDWAIT`·프로그램 안의 다른 회수 경로(다른 스레드의 `wait`, 비동기 시그널 핸들러)가 하나라도 있으면 이 보장이 성립하지 않는다([pidfd_open의 조건](https://man7.org/linux/man-pages/man2/pidfd_open.2.html)). 그 경우에는 `fork` 뒤 `pidfd_open` 대신 `clone`의 `CLONE_PIDFD`로 자식과 pidfd를 함께 만든다(같은 문서, man-pages 6.19, 확인 2026-10-15).
   - 기존 프로세스를 나중에 포착할 때는 “확보 뒤 신호가 안전함”과 “처음 확보한 것이 원래 실행임”을 구분한다. `/proc`의 [starttime은 clock tick 단위](https://man7.org/linux/man-pages/man5/proc_pid_stat.5.html)이므로 고유 실행 세대라고 가정하지 않는다. 자기 launch의 제어 채널에서 얻은 새 세대 식별과 실제 부모 관계 등 독립된 근거로 검증하며, 발견한 대상의 값을 기대값으로 다시 채택하지 않는다. 이는 협력하는 실행 도구의 동일성 계약이지 악성 동일 UID 프로세스에 대한 샌드박스가 아니다.
   - proxy·관찰자·로그 reader 종료를 실제 서비스 종료나 reap으로 바꾸지 않는다. 종료 확인은 신뢰된 구조화된 lifecycle 상태로 보존하고, 길이 제한으로 잘릴 수 있는 로그 문자열이나 Promise의 rejection에서 추론하지 않는다. 일반 테스트 자식의 EOF 정리와 영속 데이터 이전 guardian의 EOF 잠금 유지는 서로 다른 정책이다.
-- [ ] 보호된 이전 작업은 검토한 실행 입력을 실행별 불변 manifest로 고정한다. controller가 확인한 공유 설정 파일을 하위 helper가 다시 읽게 두면 검토 대기 중 변경된 다른 DB·원본·namespace를 먼저 건드릴 수 있다. 실제 검토 근거에 manifest 해시를 포함하고, 출력 불일치를 작업 뒤에 발견하는 것을 대상 제한으로 대신하지 않는다.
+- [ ] 검토·승인을 거쳐 실행하는 영속 데이터 이전 작업(보호된 이전 작업)은 검토한 실행 입력을 실행별 불변 manifest로 고정한다. controller가 확인한 공유 설정 파일을 하위 helper가 다시 읽게 두면 검토 대기 중 변경된 다른 DB·원본·namespace를 먼저 건드릴 수 있다. 실제 검토 근거에 manifest 해시를 포함하고, 출력 불일치를 작업 뒤에 발견하는 것을 대상 제한으로 대신하지 않는다.
 - [ ] 서버를 서비스당 컨테이너로 옮길 때 프로세스 식별(PID·`/proc/<pid>/stat`의 시작 tick)에 기대는 소유권 검사가 있는지 먼저 찾는다. 컨테이너마다 PID namespace가 다르면 다음 두 가지가 일어난다.
   - 저장소 서비스가 상대 프로세스의 생존을 자기 `/proc`에서 확인하는 등록이 거절된다.
   - 새 컨테이너에서 하는 사망 증명은 옛 프로세스를 볼 수 없어 늘 통과한다. 그래서 펜싱이 아니다.
-
-  같은 PID namespace를 함께 쓰게 하는 방식([Compose `pid: "service:<name>"`](https://docs.docker.com/reference/compose-file/services/#pid))은 검사를 그대로 살리지만 상대 컨테이너의 수명에 묶이는 임시 방편이다. 사망 증명은 컨테이너 수준(그 project의 실행 중 컨테이너 없음)으로 대신 확인한다. 근본 해결은 lease·epoch 펜싱이다.
+  - pidfd 신호도 호출자가 대상과 같은 PID namespace이거나 그 조상 namespace에 있어야 보낼 수 있다([pidfd_send_signal](https://man7.org/linux/man-pages/man2/pidfd_send_signal.2.html), 확인 2026-10-15).
+  - 같은 PID namespace를 함께 쓰게 하는 방식([Compose `pid: "service:<name>"`](https://docs.docker.com/reference/compose-file/services/#pid))은 검사를 그대로 살리지만 상대 컨테이너의 수명에 묶이는 임시 방편이다. 사망 증명은 컨테이너 수준(그 project의 실행 중 컨테이너 없음)으로 대신 확인한다. 근본 해결은 lease·epoch 펜싱이다.
   - 컨테이너 수준 사망 증명은 겹친 호출에서도 성립해야 한다. 그래서 state별 배타 잠금(예: 고정 이름의 일회용 준비 컨테이너)을 먼저 잡고, 그 잠금 안에서 실행 중 컨테이너를 확인한다.
     - 실행 단계는 project 컨테이너가 실제로 실행된 뒤에 잠금을 놓는다. 준비 컨테이너를 지운 뒤 compose를 띄우면 그 사이 수백 ms 공백에 두 번째 호출이 검사를 통과한다.
     - 넘김 대기 중 상태 조회가 실패하면 넘김으로 보지 않는다.
     - 정리는 자기가 만든 ID만 한다. 이름으로 강제 삭제하면 동시에 실행 중인 다른 준비 작업을 죽인다.
-  - 비루트 사용자가 쓸 데이터 디렉터리는 이미지에 소유자·모드를 정해 두면, 처음 mount하는 빈 named volume이 그 소유자·모드를 이어받는다([Docker volumes](https://docs.docker.com/engine/storage/volumes/)의 "populate a volume using a container").
-  - 네이티브 서비스를 [distroless](https://github.com/GoogleContainerTools/distroless) `cc` 이미지(glibc·libstdc++·libgcc만 있고 shell·패키지 관리자가 없음)에 올릴 때는 다음을 함께 바꾼다.
-    - 빌드 단계를 실행 이미지와 같은 배포판으로 맞춘다. 더 새 배포판에서 만든 binary는 실행 이미지에 없는 `GLIBC_`·`GLIBCXX_` 심볼 버전을 요구할 수 있다. `objdump -T`로 요구 버전을, 실행 이미지의 dpkg 상태로 libc6·libstdc++6 버전을 확인한다. 2026-10-13 관찰에서 `cc-debian13`은 glibc 2.41·GCC 14 libstdc++였다.
+- [ ] 서버를 컨테이너 이미지로 옮길 때는 실행 환경에 대한 가정을 함께 확인한다.
+  - 비루트 사용자가 쓸 데이터 디렉터리는 이미지에 소유자·모드를 정해 두면, 처음 mount하는 빈 named volume이 그 소유자·모드를 이어받는다. [Docker volumes](https://docs.docker.com/engine/storage/volumes/)의 "Populate a volume using a container"는 마운트 위치의 내용 복사를, [moby `copyExistingContents`](https://github.com/moby/moby/blob/master/daemon/container/container_unix.go) 주석은 복사 때 소유권 설정을 설명한다(확인 2026-10-15). 대상 volume이 비어 있지 않거나 `volume-nocopy`를 쓰면 복사하지 않는다.
+  - 네이티브 서비스를 [distroless](https://github.com/GoogleContainerTools/distroless) `cc` 이미지에 올릴 때 `cc`는 `static`의 CA 인증서·tzdata·root `/etc/passwd` 항목과 glibc·libssl에 libstdc++·libgcc 계열 패키지를 더한 구성이고 shell·패키지 관리자는 없다([cc README](https://github.com/GoogleContainerTools/distroless/blob/main/cc/README.md), [base README](https://github.com/GoogleContainerTools/distroless/blob/main/base/README.md), [cc/config.bzl](https://github.com/GoogleContainerTools/distroless/blob/main/cc/config.bzl), 확인 2026-10-15). 이때 다음을 함께 바꾼다.
+    - 빌드 단계를 실행 이미지와 같은 배포판으로 맞춘다. 더 새 배포판에서 만든 binary는 실행 이미지에 없는 `GLIBC_`·`GLIBCXX_` 심볼 버전을 요구할 수 있다. `objdump -T`로 요구 버전을, 실행 이미지의 dpkg 상태로 libc6·libstdc++6 버전을 확인한다. 2026-10-13 관찰에서 `cc-debian13`은 glibc 2.41·GCC 14 libstdc++였다(Debian 13 trixie의 [libc6](https://packages.debian.org/trixie/libc6) 2.41과 `cc/config.bzl`의 `gcc-14-base`와 일치, 확인 2026-10-15).
     - `:latest`는 root로 실행되는 이동 태그다. `:nonroot` 같은 사용자 태그를 digest로 고정하고, 기존 volume의 소유 uid가 있으면 `USER`를 그 uid로 둔다. passwd 항목이 없어도 숫자 uid로 실행된다.
     - shell을 쓰던 healthcheck(`CMD-SHELL`)는 exec 형식의 작은 검사 binary로 바꾼다. PKI 생성·provision·migrate처럼 shell·CLI가 필요한 준비 작업은 같은 binary를 담은 별도 도구 이미지에서 실행한다. 실행 이미지 안 디버깅은 `:debug-nonroot` 태그(busybox shell)로 잠시 바꿔 한다.
     - 실제 작업에서 서비스 이미지는 약 58MB가 됐고, 같은 수락 시험(container 5개 healthy, 클라이언트 4개 통과)을 다시 통과했다. 독립 검토는 서비스가 시스템 CA·passwd·locale·shell에 기대지 않는지를 코드로 확인했다.
@@ -84,4 +88,4 @@ timestamp: 2026-10-14T00:00:00Z
 ## 근거와 적용 한계
 
 - 공개 발표 사례(오딘 Games on AWS 2022)의 적용 한계는 [게임 서버 체크리스트의 근거와 적용 한계](/game/server-checklist.md#근거와-적용-한계)를 따른다.
-- 서비스 링크 생존 확인의 수치는 각 라이브러리·프레임워크의 소스·공식 문서에서 2026-10-11에 확인한 기본값이며 권장값이 아니다. LiteNetLib·ENet·kcp2k·yojimbo·Valve GNS·Akka·Erlang·Orleans·Linux TCP keepalive·TrinityCore 값은 2026-10-12에 소스·공식 문서로 다시 확인했고 RakNet 값은 다시 확인하지 못했다. TrinityCore는 WoW 서버의 비공식 에뮬레이터라 그 설정값은 Blizzard의 실제 값이 아니다. FFXIV·WoW·EVE의 공식 공개 자료([FFXIV Lodestone 네트워크 안내](https://na.finalfantasyxiv.com/lodestone/topics/detail/82254b55f875f3c3fb85b2c578a14f5c38a5cba1), [GDC 2013 WoW JAM](https://media.gdcvault.com/gdc2013/slides/822575Rumsey_Joe_Network_Serialization_and%20(1).pdf), [EVE Tranquility Tech IV](https://www.eveonline.com/news/view/tranquility-tech-iv))는 서버 간 메시지 라우팅·PROXY/SOL 분리 같은 구조를 다루며 내부 링크의 생존 확인 값은 밝히지 않는다.
+- 서비스 링크 생존 확인의 수치는 각 라이브러리·프레임워크의 소스·공식 문서에서 2026-10-11에 확인한 기본값이며 권장값이 아니다. LiteNetLib·ENet·kcp2k·yojimbo·Valve GNS·Akka·Erlang·Orleans·Linux TCP keepalive·TrinityCore 값은 2026-10-12에 소스·공식 문서로 다시 확인했고, RakNet 값(10s·Debug 30s)은 2026-10-15에 보관소의 [`ReliabilityLayer.cpp`](https://github.com/facebookarchive/RakNet/blob/master/Source/ReliabilityLayer.cpp) `timeoutTime` 초기값으로 확인했다. TrinityCore는 WoW 서버의 비공식 에뮬레이터라 그 설정값은 Blizzard의 실제 값이 아니다. FFXIV·WoW·EVE의 공식 공개 자료([FFXIV Lodestone 네트워크 안내](https://na.finalfantasyxiv.com/lodestone/topics/detail/82254b55f875f3c3fb85b2c578a14f5c38a5cba1), [GDC 2013 WoW JAM](https://media.gdcvault.com/gdc2013/slides/822575Rumsey_Joe_Network_Serialization_and%20(1).pdf), [EVE Tranquility Tech IV](https://www.eveonline.com/news/view/tranquility-tech-iv))는 서버 간 메시지 라우팅·PROXY/SOL 분리 같은 구조를 다루며 내부 링크의 생존 확인 값은 밝히지 않는다.

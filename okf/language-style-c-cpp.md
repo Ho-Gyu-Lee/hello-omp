@@ -3,12 +3,14 @@ type: Rule
 title: C/C++ 전용 코딩 규칙
 description: 언어 공통 코딩 스타일에 더해 C/C++ 코드를 작성·수정할 때만 적용하는 배치·선언, C++·C 언어 규칙, 헤더·공개 경계 기준입니다.
 tags: [rule, c, cpp, coding-style, readability, ownership, raii, header, namespace, initialization]
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # C/C++ 전용 코딩 규칙
 
-상위 개념: [언어 공통 코딩 스타일](/language-style.md)
+상위 개념: [언어 공통 코딩 스타일](/language-style.md). 장 번호는 분리 전 번호를 유지하므로 1~3장(우선순위·네이밍·배치)과 7장(에이전트 적용 규칙)은 상위 문서에, 4~6장은 이 문서에 있습니다. 아래 「배치·선언 (C/C++)」은 상위 문서 3장의 C/C++ 전용 부분입니다.
+
+이 문서의 현대 C++ 기본값(스마트 포인터·RAII·`enum class`·`constexpr`·`nullptr` 등)은 새로 작성하는 코드에 적용합니다. 기존 코드를 이 기본값으로 현대화하라는 지시가 아니며, 그런 변경은 [코딩 스타일의 보존 원칙](/coding-style.md#간결성-over-engineering-금지)과 요청 범위를 따릅니다.
 
 ## 배치·선언 (C/C++)
 

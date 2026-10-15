@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: godot-cpp 빌드·등록·디버깅·export와 실행 검증
-description: godot-cpp 확장의 API·ABI 호환성, SCons 빌드와 로드 경로, 클래스 등록·이름 계약, 디버깅·export, 프로젝트 설정·addon 의존성과 smoke 절차를 정리합니다.
+description: godot-cpp 확장의 API·ABI 호환성, SCons 빌드와 로드 경로, 클래스 등록·시그널·이름 계약, 디버깅·export, 프로젝트 설정·addon 의존성과 smoke 절차를 정리합니다.
 tags: [game, godot, cpp, gdextension, build, scons, abi, export, debugging, macos, smoke-test]
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # godot-cpp 빌드·등록·디버깅·export와 실행 검증
@@ -50,7 +50,7 @@ macos.debug.arm64 = "./libgame.macos.template_debug.arm64.dylib"
 macos.release.arm64 = "./libgame.macos.template_release.arm64.dylib"
 ```
 
-`compatibility_minimum="4.7.2"`는 이 예제의 **제품 지원 하한 선택**입니다. `api_version=4.7` 자체가 4.7.2를 요구한다는 의미가 아닙니다. 더 낮은 엔진을 지원하려면 실제 API와 동작을 확인하고 둘을 함께 설정합니다. 4.7.2 소스는 feature가 모두 충족되는 key 중 **tag 수가 가장 많은 항목**을 선택하고, 같은 tag 수에서는 먼저 발견한 항목을 유지합니다. 공식 manifest 설명의 top-to-bottom 문구보다 이 고정 소스 동작을 우선하며, key 중복·동률은 만들지 않습니다. [핀의 library matcher](https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/core/extension/gdextension_library_loader.cpp) manifest는 라이브러리 로드뿐 아니라 export에 포함할 대상 선택에도 사용됩니다. 필요한 외부 동적 라이브러리는 `[dependencies]`에 선언하고 macOS 앱에서는 `Contents/Frameworks` 배치를 확인합니다. [manifest 계약](https://docs.godotengine.org/en/4.7/engine_details/engine_api/gdextension/gdextension_file.html)
+`compatibility_minimum="4.7.2"`는 이 예제의 **제품 지원 하한 선택**입니다. `api_version=4.7` 자체가 4.7.2를 요구한다는 의미가 아닙니다. 더 낮은 엔진을 지원하려면 실제 API와 동작을 확인하고 둘을 함께 설정합니다. 4.7.2 소스는 feature가 모두 충족되는 key 중 **tag 수가 가장 많은 항목**을 선택하고, 같은 tag 수에서는 먼저 발견한 항목을 유지합니다. 공식 manifest 설명의 "순서대로 매칭한다(Entries are matched in order)"는 문구보다 이 고정 소스 동작을 우선하며, key 중복·동률은 만들지 않습니다. [핀의 library matcher](https://github.com/godotengine/godot/blob/ed1daf0bf001b61586d9930840f2f1394092c079/core/extension/gdextension_library_loader.cpp) manifest는 라이브러리 로드뿐 아니라 export에 포함할 대상 선택에도 사용됩니다. 필요한 외부 동적 라이브러리는 `[dependencies]`에 선언하고 macOS 앱에서는 `Contents/Frameworks` 배치를 확인합니다. [manifest 계약](https://docs.godotengine.org/en/4.7/engine_details/engine_api/gdextension/gdextension_file.html)
 
 **로드 순서:** 프로젝트 검색/import → `.gdextension` 발견 → feature에 맞는 라이브러리 로드 → `entry_symbol` 호출 → 초기화 수준별 클래스 등록 → scene/resource의 클래스 인스턴스화입니다. 누락된 library, 다른 CPU, 미해결 dependency, entry symbol 오타, 클래스 등록 누락을 이 순서로 조사합니다.
 
@@ -193,6 +193,6 @@ open ./project/build/Game.app
 - [ ] **게임 동작:** 실제 확장 메서드를 호출하고 property/signal 소비자가 관찰하는 상태를 확인합니다. 물리 처리·입력·scene 전환·객체 제거 경로를 지나갑니다. headless 실행만으로 시각 출력·오디오·입력 검증을 대체하지 않습니다.
 - [ ] **수명/스레드:** scene 재진입, `queue_free` 뒤 deferred 결과, 워커 취소, Resource 공유/복제, 종료 시 누수·dangling 접근을 확인합니다.
 - [ ] **native debug:** entry와 게임 코드 breakpoint가 실제로 멈추고 올바른 library와 스택을 확인할 수 있어야 합니다.
-- [ ] **export:** debug와 release 앱을 각각 실행하여 라이브러리가 포함·로드되고 같은 기능이 동작하는지 확인합니다. 모든 지원 OS/CPU에서 별도 빌드·실행하며 Web/모바일은 해당 SDK와 export 제약까지 확인합니다.
+- [ ] **export:** debug와 release 앱을 각각 실행하여 라이브러리가 포함·로드되고 같은 기능이 동작하는지 확인합니다. 모든 지원 OS/CPU에서 별도 빌드·실행하며 Web/모바일은 해당 SDK와 export 제약까지 확인합니다. Web의 전송·스레드·GDExtension 지원 조건은 [Web export 항목](/game/godot-simulation.md#전투실시간-네트워크4xmmorpg의-부하)을 따릅니다.
 - [ ] **server:** 서버를 제공한다면 dedicated preset/headless 산출물에 실제 클라이언트를 연결하고 권위 상태·재접속·순서/손실 경계를 검증합니다. headless 시작만으로 서버 기능 검증을 완료하지 않습니다.
 - [ ] **성능:** [성능 수락 기준](/game/godot-simulation.md#성능-수락-기준)의 부하·release 비교·꼬리 지연·과부하·동작 보존 기준으로 실제 게임 코어를 측정합니다. C++ 빌드 성공이나 빈 headless 실행을 성능 개선의 증거로 삼지 않습니다.

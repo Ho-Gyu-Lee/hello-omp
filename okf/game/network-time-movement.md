@@ -3,7 +3,7 @@ type: Rule
 title: 게임 네트워크 시간·이동 검증
 description: 서버 권위 구조에서 시간의 소유권과 단위를 정하고, 이동 속도·시간 예산 검증과 접촉 트리거 전환 요청을 다루는 규칙이다.
 tags: [game, client, server, networking, synchronization, time, movement, validation, transition]
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # 게임 네트워크 시간·이동 검증
@@ -16,14 +16,14 @@ timestamp: 2026-10-12T00:00:00Z
 - 로컬 단조 경과시간, 서버가 실제 처리한 시뮬레이션 tick/시간, 클라이언트의 서버 기준시각 추정, 지연된 원격 표시 시각, 필요한 경우의 선행 예측 시각을 구분합니다. 클라이언트 추정기·표시 보정이 서버 시계를 변경하거나 추가 이동 시간을 승인하지 못하게 합니다.
 - 서버 기준시계와 처리한 논리 tick은 pause·부하·따라잡기 제한으로 다른 의미를 가질 수 있습니다. 필요한 대응 기준점을 결과와 함께 전달하며 `floor(추정 서버시간 × tickRate)`만으로 실제 처리 완료 tick을 단정하지 않습니다. 명령 sequence 역시 tick과 별개의 순서 식별자입니다.
 - 절대 시각/누적량은 정밀도를 보존하는 정수 duration/tick 또는 double을 사용하고 작은 단위의 float를 계속 더해 정본 시각을 만들지 않습니다. 변환의 단위·범위·오버플로와 tick 간격의 잔여량을 다룹니다. 순수 코어에는 승인된 시뮬레이션 시간 문맥을 전달하고 OS/엔진 시계 조회는 호스트 경계에 둡니다.
-- 네트워크 동기화의 RTT·offset·drift는 측정과 추정입니다. 송수신/큐잉 측정 지점을 정의하고 초기 동기화·이상 표본·신선도·재접속/epoch 교체를 처리합니다. 네 timestamp 방식도 편도 지연 비대칭을 제거하지 못하며 RTT/2나 표본 분산만으로 정확한 편도 지연·절대 동기 오차를 보장하지 않습니다.
+- 네트워크 동기화의 RTT·offset·drift는 측정과 추정입니다. 송수신/큐잉 측정 지점을 정의하고 초기 동기화·이상 표본·신선도·재접속/epoch 교체를 처리합니다. NTP식 네 timestamp(요청 송신·서버 수신·서버 송신·응답 수신) 방식도 편도 지연 비대칭을 제거하지 못하며 RTT/2나 표본 분산만으로 정확한 편도 지연·절대 동기 오차를 보장하지 않습니다.
 - 실측으로 표시하는 핑은 실제 요청 송신부터 대응 응답 수신까지 단조 시계로 측정합니다. 로컬 연결이라는 이유로 0을 대입하지 않습니다. 애플리케이션 RTT에는 해당 측정 경로의 큐잉·서버 처리가 포함되며, 처리시간을 뺀 전송 지연 추정과 구분합니다. 소수 정밀도의 원값을 보존하고 UI에서만 반올림합니다. 아직 측정하지 않았거나 만료된 표본은 유효한 0과 구분하고, 상관 ID·세대·echo 시각이 맞지 않는 응답으로 표본 나이를 갱신하지 않습니다.
 - 초기 기준점 설정과 실행 중 보정을 구분합니다. offset 추정의 갱신을 게임이 소비하는 시각에 그대로 점프 적용하지 않고, 연속 시각의 역행·진행률 제한·큰 불연속의 명시적 재동기화 정책을 정합니다. 표시/예측 시각의 조정과 서버의 승인된 시뮬레이션 진행량은 별개입니다.
 - 같은 프로세스의 로컬 클라이언트/서버도 시간의 작성자와 읽는 측을 구분하고 명령·결과의 시간 계약을 유지합니다. 같은 기준시계의 알려진 대응을 사용할 수 있으며 소켓·직렬화·가짜 RTT를 필수로 만들지 않습니다. 원격 추정 계산은 전송과 분리하여 서로 다른 가상 시계·지연·drift로 검증할 수 있습니다. 제품 로컬 경로와 원격 조건을 가정한 검증을 혼동하지 않습니다.
 - 고정 스텝·송신 주기·렌더 주기는 별개입니다(시뮬레이션 틱·복제 송신 주기·클라이언트 렌더 프레임을 구분합니다). 다른 제품의 tick rate·보간 지연·catch-up 배율과 참고 글의 예시 갱신 빈도를 그대로 채택하지 않으며, 공통 시간 시스템이 결정성·스피드핵 방어·전체 rollback을 자동 제공한다고 표현하지 않습니다. 동기화 표본·pending 요청·보간/예측 이력은 개수와 보존 범위를 제한합니다.
 
-근거와 적용 범위(조회 2026-09-29):
-- [Riot LoL Unified Clock, 2017-10-10](https://www.riotgames.com/en/news/determinism-league-legends-unified-clock): 공통 시간 구현·여러 clock instance·명확한 API·정밀도·offset filtering·같은 프로세스의 master/replica와 가상 네트워크 검증입니다. 당시 LoL은 가변 스텝을 유지했으며 이를 고정 스텝이나 VALORANT의 구현으로 바꾸어 인용하지 않습니다.
+근거와 적용 범위(조회 2026-09-29, 아래 링크는 2026-10-15에 재확인):
+- [Riot LoL Unified Clock, 2017-10-10](https://www.riotgames.com/en/news/determinism-league-legends-unified-clock): 공통 시간 구현·여러 clock instance·명확한 API·정밀도·offset filtering·같은 프로세스의 master/replica와 가상 네트워크 검증입니다. 당시 LoL은 가변 스텝을 유지했으며(근거: 같은 시리즈의 [Implementation 글](https://www.riotgames.com/en/news/determinism-league-legends-implementation)이 고정 스텝 서버 클록 대신 측정한 frame delta time을 목표 frame rate로 제한해 쓰고 가변 frame delta time을 유지했다고 서술) 이를 고정 스텝이나 VALORANT의 구현으로 바꾸어 인용하지 않습니다.
 - [VALORANT netcode, 2020-07-28](https://www.riotgames.com/en/news/peeking-valorants-netcode): 고정 movement step과 렌더 분리, 클라이언트/서버 tick 대응, 입력 버퍼·권위 보정입니다. 공개된 128 Hz와 버퍼 수치는 해당 슈터의 선택입니다.
 - [Mirror 고정 소스의 NetworkTime](https://github.com/MirrorNetworking/Mirror/blob/c4f3739966e151f405be1762d33502794fd034ff/Assets/Mirror/Core/NetworkTime.cs): `localTime`, 서버/host의 local clock, remote client의 buffered `time`/`unscaledTime`, 별도의 `predictedTime`을 구분합니다. [time-sync 가이드](https://mirror-networking.gitbook.io/docs/manual/guides/time-sync)의 “클라이언트와 서버가 같은 값” 설명을 정확히 동일한 현재 시각으로 해석하지 않습니다. 설명·예제 API보다 적용 revision의 코드를 우선하고 Mirror의 Unity/static 구조 자체를 다른 엔진에 강제하지 않습니다.
 - [Valve의 Yahn Bernier 작성 논문 원문 보관본](https://web.cs.wpi.edu/~claypool/courses/4513-B03/papers/games/bernier.pdf): 서버 권위, timestamp 이력의 지연 보간, 자기 입력 예측과 별도 hit rewind를 구분합니다. 9쪽 각주 6은 시계 대응을 가정하고 smoothing을 별도 문제로 두므로 이 논문을 완성된 NTP 동기화 구현으로 인용하지 않습니다.
@@ -41,14 +41,14 @@ timestamp: 2026-10-12T00:00:00Z
 - 무효 보고를 정본·last-good으로 채택하지 않되 정상 권위 시뮬레이션은 계속 진행할 수 있습니다. 거부 요청의 처리 완료 ACK·거부 기록·이상 징후 누적은 별도 계약입니다. 단일 속도/시간 불일치를 치트 확정이나 영구 제재로 연결하지 않고, 먼저 잘못된 이동의 이득을 차단하고 권위 상태로 보정합니다.
 - 클라이언트 좌표 보고를 검증하는 구조에서는 보정의 **전달 경로**를 따로 설계합니다. 보고하는 owner는 보통 자기 개체에 대한 서버 복제를 무시하므로, 보정을 owner에게 명시적으로 보내지 않으면 owner는 자기 위치를 유지하고 다음 보고가 다시 위반이 되는 영구 불일치에 빠집니다. 보정 회신은 연결별 빈도 상한으로 증폭을 막습니다. 보정 직전에 출발한 in-flight 보고가 반복 보정을 만들지 않게 하려면 보정 세대를 두고, 현재 세대보다 오래된 보고는 적용하지도 이동 예산에 반영하지도 않고 버리는 방식을 검토합니다(검사를 건너뛰는 예외로 만들지 않습니다). 보고자가 계산한 축별 변경 플래그를 보정 값과 함께 그대로 중계하면 관찰자는 빠진 축을 자기 이전 표본으로 채워 보정이 사라지므로, 보정 값은 전체 상태로 중계하거나 관찰자 baseline과 다시 비교한 플래그로 보냅니다. 클라이언트가 요청한 순간이동을 거부할 때는 요청자에게만 권위 위치로 되돌립니다.
 
-근거는 [Epic Character Movement의 timestamp 검증·서버 재구성·보정](https://dev.epicgames.com/documentation/unreal-engine/understanding-networked-movement-in-the-character-movement-component-for-unreal-engine), [Roblox 이동 검증의 지연·누적기·예외 한계](https://create.roblox.com/docs/scripting/security/network-ownership), [서버 검증과 탐지·제재의 분리](https://create.roblox.com/docs/scripting/security/server-side-detection)입니다. 조회일은 2026-09-29입니다. Roblox 이동 검증 문서의 `server authority beta` 문구는 [2026-07-09 정식 공개 공지](https://devforum.roblox.com/t/full-release-ship-fair-and-competitive-games-with-server-authority/4727993)와 불일치하므로 출시 상태의 근거로 사용하지 않습니다. 엔진별 구현 사례이지 모든 MMORPG의 도입률이나 특정 게임의 방어 완료 증거가 아닙니다.
+근거는 [Epic Character Movement의 timestamp 검증·서버 재구성·보정](https://dev.epicgames.com/documentation/unreal-engine/understanding-networked-movement-in-the-character-movement-component-for-unreal-engine), [Roblox 이동 검증의 지연·누적기·예외 한계](https://create.roblox.com/docs/scripting/security/network-ownership), [서버 검증과 탐지·제재의 분리](https://create.roblox.com/docs/scripting/security/server-side-detection)입니다. 조회일은 2026-09-29입니다. Roblox 이동 검증 문서의 `server authority beta` 문구는 [2026-07-09 정식 공개 공지](https://devforum.roblox.com/t/full-release-ship-fair-and-competitive-games-with-server-authority/4727993)와 불일치하므로(두 문서 모두 2026-10-15에 다시 확인) 출시 상태의 근거로 사용하지 않습니다. 엔진별 구현 사례이지 모든 MMORPG의 도입률이나 특정 게임의 방어 완료 증거가 아닙니다.
 
 ## 접촉 트리거 기반 전환 요청
 
-- 지역 이동·상호작용 같은 접촉 트리거는 클라이언트가 요청 시점을 정하더라도 서버가 거리·생존·busy·미확정 명령을 다시 검사합니다. 클라이언트의 접촉 거리(트리거 반경+배우 반경)는 서버 허용 거리 안에 여유를 두고, 상수는 컴파일/정적 검사로, 동적 콘텐츠는 로드 시 검증으로 관계를 고정합니다. 위반하는 판정 데이터는 사용하지 않습니다. 수신 권위 위치로 접촉을 계산하면 예측 위치 기준의 거리 초과 거부를 줄일 수 있지만, 서버의 현재 위치 재검증을 대체하지는 않습니다.
+- 지역 이동·상호작용 같은 접촉 트리거는 클라이언트가 요청 시점을 정하더라도 서버가 거리·생존·busy·미확정 명령을 다시 검사합니다. 클라이언트의 접촉 거리(트리거 반경+접촉 주체(actor) 반경)는 서버 허용 거리 안에 여유를 두고, 상수는 컴파일/정적 검사로, 동적 콘텐츠는 로드 시 검증으로 관계를 고정합니다. 위반하는 판정 데이터는 사용하지 않습니다. 수신 권위 위치로 접촉을 계산하면 예측 위치 기준의 거리 초과 거부를 줄일 수 있지만, 서버의 현재 위치 재검증을 대체하지는 않습니다.
 - 대기(비소비)·요청 중·일시 거부·최종 소비를 구분합니다. 요청 중에는 중복 전송하지 않으며 목적지 준비 실패·rollback은 최종 소비로 남겨 같은 접촉의 로드/실패 반복을 막습니다. 서버가 미실행·일시 거부임을 명시한 경우에만 별도 재시도 상태로 옮깁니다. 이 상태에서는 새 권위 표본당 최대 한 번과 재시도 간격·총 횟수 예산을 함께 적용하고, 예산 소진 시 최종 소비합니다. timeout처럼 실행 여부를 모르는 결과를 일시 거부로 취급하지 않습니다. 최종 소비는 벗어남이나 사용자의 명시적 재요청으로만 다시 활성화합니다.
 - 모달·채팅·포커스 상실·미확정 명령처럼 곧 풀리는 대기 상태는 접촉을 소비하지 않고 해제 뒤 한 번 시도합니다. 자동 사냥처럼 해당 전환이 목표에 없는 자동 조작의 접촉은 비전환·소비 정책을 선택할 수 있습니다. 지역 간 자동 길찾기처럼 전환이 목표인 경우는 구분하고 서버 검증을 유지합니다. 명시적 재요청 때 자동 조작을 끌지는 제품 계약으로 정하며, 재활성화는 해당 트리거에 한정합니다.
 - 도착점은 목적지의 자동 발동 트리거 반경 밖에 두거나, 도착 트리거가 한 번 벗어나기 전에는 재발동하지 않게 해 ping-pong을 막습니다. 소비 상태의 전체 초기화는 확정된 지역 교체·teardown에서만 수행하고 표시 revision 변화나 rollback으로 지우지 않습니다.
-- 전환 직전의 **정지(quiescence) 조건은 결과 ACK가 아니라 상태 prefix까지** 포함합니다. 신뢰 결과(수락/완료 같은 reliable 결과)가 먼저 도착해 ACK가 전진했더라도, 그 결과를 반영한 자기 권위 snapshot의 처리 경계가 요청 sequence에 도달하기 전에 지역/세션 전환을 시작하면 전환 commit이 source downlink를 버리고 identity가 바뀌어 이미 승인된 결과를 '불명'으로 처리하게 됩니다(권위 상태는 남지만 클라이언트의 일회성 성공 표시가 유실). 전환 입구에서 미확정 결과의 state prefix를 기다리고, 그동안 사용자의 전환 의도는 보존했다가 확정 뒤 다시 판정합니다. 결과와 snapshot 전달을 분리해 늦추는 회귀로 확인합니다.
+- 전환 직전의 **정지(quiescence) 조건은 결과 ACK가 아니라 상태 prefix까지** 포함합니다. 신뢰 결과(수락/완료 같은 reliable 결과)가 먼저 도착해 ACK가 전진했더라도, 그 결과를 반영한 자기 권위 snapshot의 처리 경계가 요청 sequence에 도달하기 전에 지역/세션 전환을 시작하면 전환 commit이 source downlink를 버리고 identity가 바뀌어 이미 승인된 결과를 '불명'으로 처리하게 됩니다(권위 상태는 남지만 클라이언트의 일회성 성공 표시가 유실). 전환 입구에서 미확정 결과의 state prefix를 기다리고, 그동안 사용자의 전환 의도는 보존했다가 확정 뒤 다시 판정합니다. 결과와 snapshot 전달을 분리해 늦추는 회귀로 확인합니다. 전환 통지를 보낸 뒤의 downlink 차단과 새 지역 full state 설치는 [복구·전달 의미론](/game/network-delivery.md#복구전달-의미론)의 '지역·인스턴스 전환의 downlink 차단' 항목을 따릅니다.
 - 전환을 수락한 뒤 클라이언트가 자산을 준비하는 동안 원본 상태가 계속 진행된다면, 확정 직전 재검증의 실패를 **스스로 풀리는 거절**(publication 대기·행동 진행 중·명령 정산)과 **확정 거절**(사망·전투 진입·유해 상태·출구 이탈)로 나눕니다. 확정 거절은 그 자리에서 precommit 중단을 통지합니다. 모든 실패를 조용히 재시도하면, 서버의 전환 만료가 클라이언트 단계 기한보다 길 때 정상 거절이 클라이언트 연결 실패로 바뀝니다. 실제 경로 회귀로 고정합니다(준비 보류 → 원본 무효화 → 준비 완료 → 기한 안의 중단 확인). 수정 전 동작에서 실패하는지도 확인합니다.
 - 판정은 엔진 비의존 순수 함수로 분리해 포함 경계·대기/소비/재활성화·재시도 예산·무할당을 단위 검사합니다. 실제 장면에서는 접촉 1회 전환, 최종 실패 후 무재시도, 일시 거부의 유한 재시도, 제품의 자동 조작 정책에 따른 전환 여부, 도착 후 무의도 재전환 방지를 확인합니다.

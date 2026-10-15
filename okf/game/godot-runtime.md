@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: Godot C++ Scene·물리·Resource 수명과 경계
-description: Scene 생명주기와 소유권(에디터 복제·부분 생성 보호 포함), 물리·프레임·스레드 경계, Resource 직렬화와 성능·서버 권위 선택의 규칙을 정리합니다.
+description: Scene 생명주기와 소유권(에디터 복제·부분 생성 보호 포함), 물리·프레임·스레드 경계, Resource 직렬화·저장 정밀도·표시 데이터 자원 수락과 성능·서버 권위 선택의 규칙을 정리합니다.
 tags: [game, godot, cpp, gdextension, physics, ownership, performance, threading, resource, serialization]
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # Godot C++ Scene·물리·Resource 수명과 경계
@@ -55,5 +55,5 @@ timestamp: 2026-10-12T00:00:00Z
 - **저장 경계:** `ADD_PROPERTY`의 기본 usage에는 storage/editor가 포함되지만 임의 C++ 멤버가 모두 자동 저장되는 것은 아닙니다. `PROPERTY_USAGE_EDITOR`만 둔 값은 저장되지 않습니다. 저장할 의미 있는 값과 런타임 캐시·포인터·작업 상태를 분리하고 save→새 프로세스 load로 확인합니다. [property usage](https://docs.godotengine.org/en/4.7/engine_details/architecture/object_class.html#properties-set-get)
 - **네트워크 경계:** scene/resource 파일과 엔진 객체 포인터를 곧바로 외부 프로토콜로 취급하지 않습니다. 명시적 메시지 타입·스키마 버전·길이/범위·entity generation을 검증합니다. 프로퍼티 노출은 네트워크 복제나 서버 권한 검증이 아닙니다.
 - **성능 선택:** 측정 조건·지표는 [성능 수락 기준](/game/godot-simulation.md#성능-수락-기준)을 따르며, 먼저 CPU/GPU·메인 스레드·메모리·프레임/tick 지연의 병목을 실제 목표 기기에서 확인합니다. 핫패스에서 반복 Node 탐색, 문자열/Variant 변환, 작은 바인딩 호출, 불필요한 할당·복사를 줄입니다. `Packed*Array` 대량 접근은 `ptr()`/`ptrw()`로 경계 호출을 줄일 수 있으나 resize·copy-on-write 이후에도 포인터가 유효하다고 가정하지 않습니다. Variant를 거친 인자 수정이 호출자 배열에 그대로 반영된다고 가정하지 않습니다. [godot-cpp Packed arrays](https://docs.godotengine.org/en/4.7/tutorials/scripting/cpp/core_types.html#packed-arrays)
-- **서버 선택:** Godot 4는 일반 바이너리의 `--headless` 또는 dedicated-server export를 사용할 수 있습니다. export에는 editor 바이너리가 필요하고 운영 서버에는 export template 기반 산출물을 사용합니다. `dedicated_server` feature와 시각 리소스 stripping은 패키징 선택이며 권위 검증을 제공하지 않습니다. 삭제한 자원을 server scene이 참조하지 않는지 확인합니다. [공식 dedicated server 지침](https://docs.godotengine.org/en/4.7/tutorials/export/exporting_for_dedicated_servers.html)
+- **서버 선택:** Godot 4는 editor 또는 export template 바이너리에 `--headless`를 주어 실행하거나 dedicated-server export를 사용할 수 있습니다. 운영 서버에는 export template 기반 산출물을 사용하고, 그 export를 만드는 데는 editor 바이너리가 필요합니다. `dedicated_server` feature와 시각 리소스 stripping은 패키징 선택이며 권위 검증을 제공하지 않습니다. 삭제한 자원을 server scene이 참조하지 않는지 확인합니다. [공식 dedicated server 지침](https://docs.godotengine.org/en/4.7/tutorials/export/exporting_for_dedicated_servers.html)
 - 클라이언트는 권위·예측·보간·표시 상태를 분리하고 서버는 입력 형식·권한·순서·불변조건 검증 후 accepted 상태만 저장/전파합니다. 자세한 기준은 [게임 네트워크 동기화](/game/network-sync.md), [게임 보안](/security/game.md), [클라이언트 체크리스트](/game/client-checklist.md), [서버 체크리스트](/game/server-checklist.md)를 재사용합니다.
