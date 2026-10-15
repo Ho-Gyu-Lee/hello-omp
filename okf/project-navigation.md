@@ -61,7 +61,7 @@ timestamp: 2026-10-15T00:00:00Z
 - **게임 화면 촬영:** 실제 플레이와 실시간 동작을 보여 줄 때는 OS·외부 화면 녹화 도구(예: OBS Studio)로 찍는다. Godot Movie Maker(`--write-movie`·`--fixed-fps`·`--quit-after`)는 비실시간 offline 렌더라 출력의 프레임 간격이 항상 완벽하므로 연출·애니메이션 시연에는 쓰되 끊김·성능의 증거로 쓰지 않는다. 출력 형식 중 OGV는 편집기 빌드에서만 기록되고 웹 브라우저에서 재생되지 않으며, AVI(MJPEG)·PNG 시퀀스+WAV도 브라우저에 보이려면 MP4(H.264)나 WebM으로 변환한다([Godot 4.7 Creating movies](https://docs.godotengine.org/en/4.7/tutorials/animation/creating_movies.html), 확인 2026-10-15). 웹 UI는 실제 브라우저에서 캡처한다. 녹화·변환 도구(FFmpeg 등)가 없으면 설치하지 않고 없는 전제를 보고한다. 설치는 별도 승인 대상이다.
 - **재생 방식:** 몇 초 안에 반복되는 동작은 GIF나 음소거 반복 영상(`<video autoplay muted loop>`)으로 바로 보이게 한다. 소리가 필요하거나 긴 시연은 `poster`를 둔 영상으로 두어 사용자가 재생한다. 음소거됐거나 오디오 트랙이 없는 영상은 일반적으로 자동 재생되지만 브라우저·사용자 설정에 따라 막힐 수 있으므로([MDN Autoplay guide](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Autoplay), 확인 2026-10-15) 짧은 반복 영상에도 `controls`나 명시적인 재생 버튼을 둔다. 지도는 로컬 파일로도 열리므로 자료는 진입점 기준 상대 경로로 넣고, 선택되지 않은 영역의 영상은 재생하지 않는다.
 - **저장과 크기:** 게시본은 선언한 지도 경로의 `media/` 아래에 두고, 필요한 구간만 자르고 해상도·프레임 수를 줄여 크기를 관리한다. GitHub는 50 MiB를 넘는 파일에 경고하고 100 MiB를 넘는 파일을 막으며 저장소는 1 GB 미만을 권장한다([GitHub 대용량 파일 문서](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github), 확인 2026-10-15). 큰 영상을 Git LFS·릴리스·외부 저장소 중 어디에 둘지는 사용자가 정하며, 임의로 LFS를 도입하거나 외부에 올리지 않는다.
-- **공개 범위:** 캡처에 자격증명·내부 접속 정보·개인정보·운영 계정 정보가 나오지 않는지 게시 전에 확인한다. 구매 에셋·서드파티 화면이 들어간 자료는 저장소를 외부에 공개하기 전에 라이선스를 확인한다([Godot 에셋·에디터](/game/godot-assets-editor.md)의 에셋 사용 권리).
+- **공개 범위:** 캡처에 자격증명·내부 접속 정보·개인정보·운영 계정 정보가 나오지 않는지 게시 전에 확인한다. 구매 에셋·서드파티 화면이 들어간 자료는 저장소를 외부에 공개하기 전에 라이선스를 확인한다([공통 에셋·에디터 기준](/development/assets-editor.md#반입권리와-조립)의 에셋 사용 권리).
 
 ## 관계와 상태를 사실대로 표시
 

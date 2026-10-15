@@ -57,7 +57,7 @@ timestamp: 2026-10-15T00:00:00Z
 - 계층 분리(presentation/business/data), 단일 책임, 느슨한 결합(인터페이스 의존). 간단한 스크립트/프로토타입엔 적용 제외.
 
 ## 서버 특화
-- 메모리·네트워크 운영 항목(힙 할당·풀링·버퍼 재사용·직렬화 비용·비동기 I/O)은 [게임 서버 체크리스트](/game/server-checklist.md)를 따르고, C/C++의 RAII·소유권은 [C/C++ 전용 코딩 규칙](/language-style-c-cpp.md)을 따른다. 다른 언어는 해당 런타임의 수명 모델을 따르며 C/C++ 규칙을 옮기지 않는다([언어 공통 코딩 스타일](/language-style.md)).
+- 메모리·네트워크 운영 항목(힙 할당·풀링·버퍼 재사용·직렬화 비용·비동기 I/O)은 [공통 서버 체크리스트](/development/server-checklist.md)를 따르고, C/C++의 RAII·소유권은 [C/C++ 전용 코딩 규칙](/language-style-c-cpp.md)을 따른다. 다른 언어는 해당 런타임의 수명 모델을 따르며 C/C++ 규칙을 옮기지 않는다([언어 공통 코딩 스타일](/language-style.md)).
 - 동시성: 정확성·객체 수명·요구되는 진행 보장을 먼저 만족하는 단순한 동기화를 사용한다. 경합·처리량·꼬리 지연을 측정한 뒤 필요한 락 범위 축소·샤딩·lock-free를 선택하며 다중 필드·교차 shard 불변조건과 트랜잭션 경계를 보존한다. 데드락·기아·메모리 순서를 확인하고 lock-free에는 ABA·안전한 메모리 회수·알고리즘의 진행 조건도 검증한다. lock-free를 wait-free나 개별 요청의 유한 대기 보장으로 해석하지 않는다.
 - 입력 상태: 외부 입력은 형식·범위·권한·상태 불변조건을 검증하고 정규화한 뒤에만 저장 상태와 통계를 갱신한다. 거부된 값으로 baseline·캐시·집계치를 오염시키지 않는다.
 - **런타임 간 정수 정밀도:** 64비트 식별자·세대·sequence를 JSON으로 주고받을 때 소비자의 수 표현 범위를 계약에 포함한다. JavaScript `Number`의 안전 정수 상한은 [`Number.MAX_SAFE_INTEGER`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER), 즉 `2^53-1`이다. 그 범위를 넘는 값은 생산자부터 정규화된 10진 문자열 등 손실 없는 형식으로 내보내고 소비자가 문법·범위를 검증한 뒤 필요하면 `BigInt`로 해석한다. `JSON.parse`로 이미 반올림된 숫자를 `String()`·타입 단언으로 감싸도 원래 값은 복구되지 않는다. 복구·소유권 증명·조건부 갱신에는 안전 상한 밖의 서로 다른 값이 경계를 왕복해도 구별되는 회귀를 둔다.

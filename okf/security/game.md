@@ -1,7 +1,7 @@
 ---
 type: Rule
 title: 게임 클라/서버 보안
-description: 서버 권위(AI 판정 신뢰 경계 포함)·예측/보정·커맨드(타 플레이어 대상 요청 포함)·경제·정보 가시성·세션/통신(재개 토큰·TLS 0-RTT 재시도, UDP 연결 식별·주소 검증, 제어 채널 분리, 설치 단위 게스트 식별 비밀 포함)·클라이언트 보안.
+description: 서버 권위(AI 판정 신뢰 경계 포함)·예측/보정·커맨드·경제·정보 가시성·세션/통신(재개 토큰·TLS 0-RTT·UDP 식별/주소 검증·제어 채널·게스트 비밀), replay/rate limit 구분과 스크립트·native 플러그인 신뢰 경계.
 tags: [security, game, server-authority, client, server, networking, ai-decision]
 timestamp: 2026-10-15T00:00:00Z
 ---
@@ -44,8 +44,10 @@ timestamp: 2026-10-15T00:00:00Z
 
 ## 세션/통신 보안
 - 리플레이 공격 방지: session generation·sequence·command ID·허용 window를 검증하고 재접속 후 이전 generation 패킷을 자동 수락하지 않는다.
+- 명령 도착률 제한은 replay identity·중복 실행 방지의 대체가 아닙니다. 지연된 정상 입력도 한꺼번에 도착할 수 있으므로 자원/행동 빈도 제한과 session·sequence·command ID의 중복 판정을 분리합니다. 근거: *Game Programming Gems* 한국어판 PDF p.162–165, [DTLS 1.3 수신창](https://www.rfc-editor.org/rfc/rfc9147.html#section-4.5.1). 책의 MD5·LCG-XOR·암호 코드 은닉은 안전한 프로토콜로 채택하지 않습니다.
 - 세션 재개 증명은 만료·회전·폐기가 가능해야 하며 로그에 남기지 않는다. 재개 식별자는 작은 세대 번호가 아니라 CSPRNG로 만든 충분한 길이의 토큰으로 두고 상수 시간으로 비교한다. 서버 재시작처럼 서비스 인스턴스가 바뀌면 이전 토큰은 유효하지 않으며, 이를 토큰 불일치와 구별해 만료로 알린다. 재개 시 identity·권한·replay window를 다시 결합하고 이전 연결과 동시 재개의 정책을 명시한다.
 - 패킷 위변조 탐지와 전송 기밀성은 검증된 프로토콜을 사용한다. 비정상 연결·resume·resync 요청은 rate limit하고 자원 상한을 둔다.
+- 기존 자체 AEAD 전송을 검토해야 한다면 같은 키에서의 nonce 유일성, 재시작/재접속/wrap·키 사용 한도, 의미 있는 평문 헤더의 AAD 인증을 확인합니다. 암호화가 길이·발생 시점까지 숨기지는 않으며 그 은닉이 실제 요구일 때만 padding/송신 패턴의 비용·한계를 별도 평가합니다. UDP의 최대 평문은 암호 프레이밍·태그 등을 뺀 PMTU 예산입니다. 자체 암호 프로토콜을 새로 만들거나 전 게임에 padding을 강제하는 규칙은 아닙니다([AEAD RFC 5116](https://www.rfc-editor.org/rfc/rfc5116.html), [TLS 1.3 보장 범위](https://www.rfc-editor.org/rfc/rfc9846.html), [DTLS PMTU](https://www.rfc-editor.org/rfc/rfc9147.html#section-4.4); *Game Programming Gems 3* 한국어판 PDF p.652–660의 원리를 현행 사양으로 보강, 2026-10-15).
 - 공개망에서 bearer 재개 토큰은 서버 identity가 검증된 암호화 채널로만 전달한다. TCP에는 TLS를 사용하고, 신뢰 인증서 경로와 사전에 정한 서비스 이름을 [RFC 9525](https://www.rfc-editor.org/info/rfc9525/)에 따라 검증한다. 접속 IP나 서버가 제시한 이름을 기대 identity로 바꾸지 않으며 실패 시 평문·검증 해제 fallback을 금지한다. token 회전은 분실된 재개 응답·중복 요청과 소비자의 수락 계약까지 함께 다룬다.
 - TLS session resumption·QUIC migration은 게임 명령의 중복 실행을 막지 않는다. [TLS 1.3 RFC 9846 §8](https://www.rfc-editor.org/rfc/rfc9846.html#section-8)(2026-07-11 발행, RFC 8446을 대체, 확인 2026-10-15)은 0-RTT와 애플리케이션 재시도를 별개의 replay 원인으로 다룬다. early data는 기본 비활성으로 두며 별도 안전성 계약 없이 구매·전투·소유권을 바꾸는 세션 resume 같은 상태 변경 메시지를 보내지 않는다. 0-RTT를 끄더라도 일반 재시도의 멱등성·미확정 결과 처리는 유지한다.
 - UDP 위의 자체·reliable 전송(KCP·ENet 등)은 연결 식별을 클라이언트가 고른 ID나 모든 클라이언트가 공유하는 상수(빌드에 포함된 공통 키 등)로 하지 않는다. 서버가 발급한 추측 불가능한 토큰(cookie)과 수신 endpoint를 함께 확인하고, 주소 변경은 인증된 패킷으로 경로를 검증한 뒤에만 반영한다.
@@ -66,3 +68,5 @@ timestamp: 2026-10-15T00:00:00Z
 ## 게임 클라이언트 보안
 - 로컬 세이브·설정·패킷 등 클라 데이터를 무검증 신뢰 금지 → 서버 재검증.
 - 재화·전투 결과·확률 등 민감 판정은 서버에서 확정한다. 클라 무결성·메모리 변조 탐지는 위협 모델에 따라 도입하는 보조 신호이며, 탐지 미도입·신호 부재·정상 판정이 서버 검증을 우회하거나 클라 결과를 신뢰할 근거가 되지 않는다.
+- **모드·스크립트·네이티브 플러그인:** 바이너리화는 변조 방지가 아니며 컴파일 시 검사만으로 외부 바이트코드를 신뢰하지 않습니다. Lua 5.4는 바이너리 청크 내부 코드의 일관성을 검사하지 않아 악의적인 bytecode 실행이 인터프리터를 크래시시킬 수 있다고 명시합니다. 신뢰하지 않는 입력에 텍스트 전용 로드를 선택해도 host API·파일/프로세스 접근·native module 로드·메모리/실행 예산을 제한하지 않으면 sandbox가 아닙니다([Lua load](https://www.lua.org/manual/5.4/manual.html#pdf-load), [실행 예산](/development/execution.md#타이머이벤트스크립트)).
+- 네이티브 플러그인은 같은 프로세스 권한의 코드입니다. 좁은 인터페이스나 버전 검사만으로 악성 코드가 격리되지 않습니다. 승인된 코드만 로드하고 라이브러리/의존 라이브러리 검색 경로를 통제합니다([Windows DLL security](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-security)). 출하 빌드의 확률 고정·무적·임의 상태 주입 훅도 무인가 사용 경로로 남기지 않습니다. 이는 『게임 프로그래머를 위한 C++』 PDF p.298–315, *Game Programming Tricks of the Trade* 한국어판 PDF p.360–361, 437–439, *Game Coding Complete* 한국어판 PDF p.614–624의 가정을 현행 보안 경계에 대조한 기준입니다(2026-10-15).

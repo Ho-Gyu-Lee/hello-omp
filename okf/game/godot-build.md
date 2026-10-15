@@ -195,4 +195,4 @@ open ./project/build/Game.app
 - [ ] **native debug:** entry와 게임 코드 breakpoint가 실제로 멈추고 올바른 library와 스택을 확인할 수 있어야 합니다.
 - [ ] **export:** debug와 release 앱을 각각 실행하여 라이브러리가 포함·로드되고 같은 기능이 동작하는지 확인합니다. 모든 지원 OS/CPU에서 별도 빌드·실행하며 Web/모바일은 해당 SDK와 export 제약까지 확인합니다. Web의 전송·스레드·GDExtension 지원 조건은 [Web export 항목](/game/godot-simulation.md#전투실시간-네트워크4xmmorpg의-부하)을 따릅니다.
 - [ ] **server:** 서버를 제공한다면 dedicated preset/headless 산출물에 실제 클라이언트를 연결하고 권위 상태·재접속·순서/손실 경계를 검증합니다. headless 시작만으로 서버 기능 검증을 완료하지 않습니다.
-- [ ] **성능:** [성능 수락 기준](/game/godot-simulation.md#성능-수락-기준)의 부하·release 비교·꼬리 지연·과부하·동작 보존 기준으로 실제 게임 코어를 측정합니다. C++ 빌드 성공이나 빈 headless 실행을 성능 개선의 증거로 삼지 않습니다.
+- [ ] **성능:** [성능 수락 기준](/development/runtime-diagnostics.md#성능-수락-기준)의 부하·release 비교·꼬리 지연·과부하·동작 보존 기준으로 실제 게임 코어를 측정합니다. C++ 빌드 성공이나 빈 headless 실행을 성능 개선의 증거로 삼지 않습니다.

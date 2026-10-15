@@ -12,12 +12,12 @@ timestamp: 2026-10-15T00:00:00Z
 
 ## 하위 개념
 
-* [Godot C++ 성능 중심 시뮬레이션 코어](/game/godot-simulation.md) - 성능 병목을 C++ 코어로 옮기는 경계와 메모리·로딩(UI 리소스·threaded-load 회수 포함)·물리·네트워크 부하(Web export 전송·스레드·확장 제약 포함)의 설계, 로컬 인게임과 서버 이관 기준, 성능 수락 기준을 정리합니다.
+* [Godot C++ 성능 중심 시뮬레이션 코어](/game/godot-simulation.md) - C++ 코어·SceneTree 경계, 관찰 수명·UI/월드 로딩·모바일 표현, 물리·네트워크/Web export 부하와 서버 이관에 공통 메모리·성능 수락 기준을 적용합니다.
 * [godot-cpp 빌드·등록·디버깅·export와 실행 검증](/game/godot-build.md) - godot-cpp 확장의 API·ABI 호환성, SCons 빌드와 로드 경로, 클래스 등록·시그널·이름 계약, 디버깅·export, 프로젝트 설정·addon 의존성과 smoke 절차를 정리합니다.
 * [Godot C++ Scene·물리·Resource 수명과 경계](/game/godot-runtime.md) - Scene 생명주기와 소유권(에디터 복제·부분 생성 보호 포함), 물리·프레임·스레드 경계, Resource 직렬화·저장 정밀도·표시 데이터 자원 수락과 성능·서버 권위 선택의 규칙을 정리합니다.
-* [Godot UI 재사용과 입력·텍스트·HUD 표시](/game/godot-ui.md) - 재사용 UI의 계약과 터치·입력 처리, 레이아웃·텍스트·폰트·C++ 문자열 인코딩, 창과 HUD 표시 및 입력 검증 규칙을 정리합니다.
-* [Godot 2D 시야·카메라와 자동 사냥 대상](/game/godot-2d-view.md) - 2D 시야와 이동감·이동 애니메이션, 저속 자동 이동의 경로 재계획, 아이소메트릭 맵 가장자리 카메라, 화면 안 공격 사거리와 자동 사냥 대상 선택 규칙을 정리합니다.
-* [Godot 에셋 팩·타일 조립·렌더 정밀도와 에디터 미리보기](/game/godot-assets-editor.md) - 구매 에셋 팩 검수와 AI 사용 권리, 타일 조립·앞뒤 정렬, 생성 건물 다양성, 렌더 데이터 정밀도와 에디터 미리보기 규칙을 정리합니다.
+* [Godot UI 재사용과 입력·텍스트·HUD 표시](/game/godot-ui.md) - 게임 UI 어댑터와 Godot 입력·모달/pick·Control 배치, 폰트·C++ 문자열 인코딩·실제 창/HUD 검증의 API·버전별 적용 규칙입니다.
+* [Godot 2D 시야·카메라와 자동 사냥 대상](/game/godot-2d-view.md) - Godot 2D 게임의 비교 근거, 화면 안 공격 사거리와 자동 사냥 대상 선택을 공통 투영·카메라·애니메이션·경로 계약에 연결합니다.
+* [Godot 에셋 팩·타일 조립·렌더 정밀도와 에디터 미리보기](/game/godot-assets-editor.md) - Godot TileMap/에디터와 게임 판정·표시의 조립, 충돌·앞뒤 정렬, 렌더 데이터 정밀도와 저장되지 않는 미리보기 규칙입니다. 구매/AI 사용 권리는 공통 에셋 정본에 연결합니다.
 
 ## 확인 기준과 버전 고정
 

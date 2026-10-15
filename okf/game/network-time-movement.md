@@ -1,7 +1,7 @@
 ---
 type: Rule
 title: 게임 네트워크 시간·이동 검증
-description: 서버 권위 구조에서 시간의 소유권과 단위를 정하고, 이동 속도·시간 예산 검증과 접촉 트리거 전환 요청을 다루는 규칙이다.
+description: 서버가 승인한 게임 시간·논리 tick과 클라이언트 추정/표시의 경계, 이동 속도·시간 예산 검증과 접촉 트리거 전환 요청을 다룹니다. 시계 추정·RTT는 공통 정본에 연결합니다.
 tags: [game, client, server, networking, synchronization, time, movement, validation, transition]
 timestamp: 2026-10-15T00:00:00Z
 ---
@@ -10,20 +10,15 @@ timestamp: 2026-10-15T00:00:00Z
 
 상위 개념: [게임 네트워크 동기화](/game/network-sync.md)
 
-## 공통 시간 계층과 네트워크 시간
+## 게임 시간 계층과 권위
 
-- 속도·쿨다운·보정처럼 시간에 의존하는 규칙보다 시간의 소유권·단위·기준점을 먼저 정의합니다. 공통 구현/계약을 사용하는 것과 모든 용도를 하나의 `GetTime()` 값으로 처리하는 것은 다릅니다. 기능별 독립 시계·임의 float 누적을 만들지 않고 도메인과 단위를 API에 드러냅니다.
+단위·정밀도·시계 추정·실측 RTT와 표본 집계는 [공통 시간·RTT 계약](/development/network-time.md)을 따릅니다.
+
 - 로컬 단조 경과시간, 서버가 실제 처리한 시뮬레이션 tick/시간, 클라이언트의 서버 기준시각 추정, 지연된 원격 표시 시각, 필요한 경우의 선행 예측 시각을 구분합니다. 클라이언트 추정기·표시 보정이 서버 시계를 변경하거나 추가 이동 시간을 승인하지 못하게 합니다.
 - 서버 기준시계와 처리한 논리 tick은 pause·부하·따라잡기 제한으로 다른 의미를 가질 수 있습니다. 필요한 대응 기준점을 결과와 함께 전달하며 `floor(추정 서버시간 × tickRate)`만으로 실제 처리 완료 tick을 단정하지 않습니다. 명령 sequence 역시 tick과 별개의 순서 식별자입니다.
-- 절대 시각/누적량은 정밀도를 보존하는 정수 duration/tick 또는 double을 사용하고 작은 단위의 float를 계속 더해 정본 시각을 만들지 않습니다. 변환의 단위·범위·오버플로와 tick 간격의 잔여량을 다룹니다. 순수 코어에는 승인된 시뮬레이션 시간 문맥을 전달하고 OS/엔진 시계 조회는 호스트 경계에 둡니다.
-- 네트워크 동기화의 RTT·offset·drift는 측정과 추정입니다. 송수신/큐잉 측정 지점을 정의하고 초기 동기화·이상 표본·신선도·재접속/epoch 교체를 처리합니다. NTP식 네 timestamp(요청 송신·서버 수신·서버 송신·응답 수신) 방식도 편도 지연 비대칭을 제거하지 못하며 RTT/2나 표본 분산만으로 정확한 편도 지연·절대 동기 오차를 보장하지 않습니다.
-- 실측으로 표시하는 핑은 실제 요청 송신부터 대응 응답 수신까지 단조 시계로 측정합니다. 로컬 연결이라는 이유로 0을 대입하지 않습니다. 애플리케이션 RTT에는 해당 측정 경로의 큐잉·서버 처리가 포함되며, 처리시간을 뺀 전송 지연 추정과 구분합니다. 소수 정밀도의 원값을 보존하고 UI에서만 반올림합니다. 아직 측정하지 않았거나 만료된 표본은 유효한 0과 구분하고, 상관 ID·세대·echo 시각이 맞지 않는 응답으로 표본 나이를 갱신하지 않습니다.
-- 초기 기준점 설정과 실행 중 보정을 구분합니다. offset 추정의 갱신을 게임이 소비하는 시각에 그대로 점프 적용하지 않고, 연속 시각의 역행·진행률 제한·큰 불연속의 명시적 재동기화 정책을 정합니다. 표시/예측 시각의 조정과 서버의 승인된 시뮬레이션 진행량은 별개입니다.
-- 같은 프로세스의 로컬 클라이언트/서버도 시간의 작성자와 읽는 측을 구분하고 명령·결과의 시간 계약을 유지합니다. 같은 기준시계의 알려진 대응을 사용할 수 있으며 소켓·직렬화·가짜 RTT를 필수로 만들지 않습니다. 원격 추정 계산은 전송과 분리하여 서로 다른 가상 시계·지연·drift로 검증할 수 있습니다. 제품 로컬 경로와 원격 조건을 가정한 검증을 혼동하지 않습니다.
 - 고정 스텝·송신 주기·렌더 주기는 별개입니다(시뮬레이션 틱·복제 송신 주기·클라이언트 렌더 프레임을 구분합니다). 다른 제품의 tick rate·보간 지연·catch-up 배율과 참고 글의 예시 갱신 빈도를 그대로 채택하지 않으며, 공통 시간 시스템이 결정성·스피드핵 방어·전체 rollback을 자동 제공한다고 표현하지 않습니다. 동기화 표본·pending 요청·보간/예측 이력은 개수와 보존 범위를 제한합니다.
 
 근거와 적용 범위(조회 2026-09-29, 아래 링크는 2026-10-15에 재확인):
-- [Riot LoL Unified Clock, 2017-10-10](https://www.riotgames.com/en/news/determinism-league-legends-unified-clock): 공통 시간 구현·여러 clock instance·명확한 API·정밀도·offset filtering·같은 프로세스의 master/replica와 가상 네트워크 검증입니다. 당시 LoL은 가변 스텝을 유지했으며(근거: 같은 시리즈의 [Implementation 글](https://www.riotgames.com/en/news/determinism-league-legends-implementation)이 고정 스텝 서버 클록 대신 측정한 frame delta time을 목표 frame rate로 제한해 쓰고 가변 frame delta time을 유지했다고 서술) 이를 고정 스텝이나 VALORANT의 구현으로 바꾸어 인용하지 않습니다.
 - [VALORANT netcode, 2020-07-28](https://www.riotgames.com/en/news/peeking-valorants-netcode): 고정 movement step과 렌더 분리, 클라이언트/서버 tick 대응, 입력 버퍼·권위 보정입니다. 공개된 128 Hz와 버퍼 수치는 해당 슈터의 선택입니다.
 - [Mirror 고정 소스의 NetworkTime](https://github.com/MirrorNetworking/Mirror/blob/c4f3739966e151f405be1762d33502794fd034ff/Assets/Mirror/Core/NetworkTime.cs): `localTime`, 서버/host의 local clock, remote client의 buffered `time`/`unscaledTime`, 별도의 `predictedTime`을 구분합니다. [time-sync 가이드](https://mirror-networking.gitbook.io/docs/manual/guides/time-sync)의 “클라이언트와 서버가 같은 값” 설명을 정확히 동일한 현재 시각으로 해석하지 않습니다. 설명·예제 API보다 적용 revision의 코드를 우선하고 Mirror의 Unity/static 구조 자체를 다른 엔진에 강제하지 않습니다.
 - [Valve의 Yahn Bernier 작성 논문 원문 보관본](https://web.cs.wpi.edu/~claypool/courses/4513-B03/papers/games/bernier.pdf): 서버 권위, timestamp 이력의 지연 보간, 자기 입력 예측과 별도 hit rewind를 구분합니다. 9쪽 각주 6은 시계 대응을 가정하고 smoothing을 별도 문제로 두므로 이 논문을 완성된 NTP 동기화 구현으로 인용하지 않습니다.

@@ -18,25 +18,54 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 
 ## 보안
 * [보안 개요](/security/overview.md) - 즉시 경고·취약점 설명·민감정보와 Git 원격 자격증명 처리·외부 자료의 신뢰 경계·요청 범위에 따른 외부 코드 실행
-* [게임 보안](/security/game.md) - 서버 권위·AI 판정 신뢰 경계·예측/보정·커맨드(타 플레이어 대상 요청)·경제·정보 가시성·세션/통신(재개 토큰·TLS 0-RTT 재시도·UDP 연결 식별·주소 검증·제어 채널 분리)·설치 단위 게스트 식별 비밀
+* [게임 보안](/security/game.md) - 서버 권위·AI 판정·예측/보정·커맨드·경제·정보 가시성·세션/통신(재개 토큰·TLS 0-RTT·UDP 식별/주소 검증·제어 채널·게스트 비밀), replay/rate limit 구분과 스크립트·native 플러그인 신뢰 경계
 * [코드 리뷰 보안 체크리스트](/security/review-checklist.md) - 공통 서버·애플리케이션·게임 클라·게임 서버
 * [요청 서명 정규화 계약](/security/signing-canonicalization.md) - 크로스 런타임 서명 베이스 불일치: 키 정렬·값 문자열화·기대 키 집합
 
+## 데이터베이스
+* [데이터베이스 목차](/database/index.md) - 도메인과 분리한 관계형 저장·동시성·캐시 기준을 안내한다.
+* [관계형 DB 설계·인덱스·동시성과 캐시](/database/design.md) - 접근 패턴·PK/인덱스·실행계획, 참조 무결성·앱/SP·트랜잭션·DDL/격리·재시도·동적 캐시와 SQLite 조건부 갱신·멱등 영수증.
+
+## 공통 개발
+* [공통 개발 목차](/development/index.md) - 앱·웹·서비스와 게임에서 재사용하는 실행·데이터·네트워크·UI·표현 기준. 게임/Godot 예시는 해당 기능·API·버전의 조건부 사례다.
+* [이벤트 루프·작업·스크립트의 실행 경계](/development/execution.md) - 순회 중 생성/파괴·재진입, 병렬 작업의 snapshot·쓰기 소유권·콜백·합류/종료, 타이머와 스크립트 예산·실패 전파.
+* [런타임 진단·메모리·성능 측정](/development/runtime-diagnostics.md) - 프로파일·계측 편향·경과/CPU 시간, 데이터 배치·메모리 예산/수명·할당/풀/고갈, 로그·수집 경로 라벨/심각도·심볼/덤프와 제품별 성능 수락.
+* [서버 프로토콜·메모리·큐 운영 기준](/development/server-checklist.md) - 동시성·비동기 수명, 메시지 등록/폭·codec 수락, 큐 상한·공정성·accept 고갈과 Asio/TLS·allocator 계측.
+* [서비스 영속성·생존 감시·프로세스와 소유권 수명](/development/service-lifecycle.md) - 비동기 재진입·복제/디스크 내구 확인·identity 결속, heartbeat·장애 격리, PID/pidfd·불변 이전 입력·컨테이너와 fencing.
+* [데이터 형식·콘텐츠 변환·저장 복원](/development/data-formats.md) - 파일/wire 인코딩·압축·호환, 저작 데이터 검증, 객체 그래프 복원·오디오 청크 수락과 부분 생성의 보호/게시.
+* [참조 데이터의 저작·배포·로딩·버전 전환](/development/data-lifecycle.md) - 논리 모델/물리 패키징·저작 입력, CDN/DB/메모리 게시·활성화/복구, 조회 인덱스·LINQ와 초기 로딩 측정.
+* [난수·절차 생성·재현 계약](/development/randomness.md) - 스트림·시드·분포/알고리즘 버전·소비 순서, 비복원 선택·생성 유효성/종료, 고수준 기록과 실제 입력/표시 검증의 경계.
+* [시계 도메인·네트워크 시간과 RTT 계측](/development/network-time.md) - 단조 시간·단위/기준점·정밀도, 원격 offset/drift·RTT 추정의 한계, probe 표본화·메인루프/캡처 교란과 WSL 관찰.
+* [메시지 전달·송신 공정성과 연결 복구](/development/network-delivery.md) - 메시지 전달/만료·묶음·outbox/버퍼 소유권, TCP/I/O/RPC·HOL·공정한 송신, 모바일 경로/세션 복구와 전송 열화 검증.
+* [네트워크 프레이밍·비동기 I/O·연결 종료](/development/network-io.md) - TCP 분할/병합·부분 송수신·처리 예산, readiness/실패 completion·연산별 수명, half-close·TLS 종료와 접속 부하 한계.
+* [연결 경로·릴레이·음성 토폴로지](/development/network-topology.md) - signaling·직접/릴레이 경로의 도달성·주소 노출과 업무 권위의 분리, 음성 mesh·중계·믹싱의 비용/장애 조건.
+* [UI 재사용·입력과 표시 검증](/development/ui-input.md) - UI/도메인 책임, 입력 의미·포인터 수명·좌표/선택, 텍스트·폰트·레이아웃과 실제 OS 입력/픽셀·출처 검증.
+* [지역화·문자열·텍스트 입력](/development/localization.md) - 문장·복수형·문맥, 표시 로캘/프로토콜 분리, 사용자 생성 텍스트 번역의 원문 언어, Unicode 길이·키 배열·IME·줄바꿈과 실제 지원 언어 검증.
+* [수치와 공간 판정의 정확성](/development/numerics-spatial.md) - 오차·퇴화 입력·FP 모드·음수 격자, 좌표/회전·곡선/적분·저장 정밀도, 공간 인덱스·질의/충돌·높이맵과 직교/아이소메트릭 표시.
+* [렌더링·애니메이션의 좌표와 표현 계약](/development/rendering-animation.md) - 픽셀·알파·색공간, 메시·스킨·법선/접선, 투영·컬링·LOD·광학 근사, GPU 표시/소실 복구와 clip 정합.
+* [오디오의 로드·디코딩·스트리밍 계약](/development/audio-runtime.md) - 상주/압축/스트리밍·voice 가상화·소비 완료, 공간/시계·효과/평활화·실시간 callback 기한과 그래프 의존성.
+* [상태 기계·탐색과 이동 모델](/development/ai-navigation.md) - 상태 전이·지연 이벤트 수명, A* 정확성/작업 예산·clearance·회피/복구, 전술/퍼지/학습 모델과 제약 배치·주기적 재계획.
+* [에셋 검수·사용 권리와 조립 계약](/development/assets-editor.md) - 구매/생성 자산의 실제 내용·출처·라이선스/AI 사용 권리, 타일·투명 재질·제약 생성과 조립 수락.
+* [Android 라이브러리 의존성과 최종 패키지 검증](/development/android-dependencies.md) - 로컬 AAR/Maven 메타데이터·외부 의존성, 최종 APK/DEX의 클래스 정의·기기 오류 경로와 양성 대조.
+
 ## 게임 클라이언트/서버
-* [네트워크 동기화](/game/network-sync.md) - 상태 계층과 시간·순서·생명주기 원칙, 검증 기준, 학습 근거의 적용 범위를 정리하고 세부 주제는 하위 개념으로 안내한다.
-* [네트워크 시간·이동 검증](/game/network-time-movement.md) - 서버 권위 구조에서 시간의 소유권과 단위를 정하고, 이동 속도·시간 예산 검증과 접촉 트리거 전환 요청을 다루는 규칙이다.
-* [네트워크 예측·보간·보정](/game/network-prediction.md) - 클라이언트 예측·보정, 애니메이션 시간, 입력 처리 ACK와 재실행, 원격 보간과 판정 지연 보상의 규칙을 다룬다.
-* [네트워크 복구·전달 의미론](/game/network-delivery.md) - 증분 복제의 복구와 전달 의미론, 전송 계층·RPC의 구분, 모바일 경로 전환과 세션 복구의 규칙을 다룬다.
-* [클라이언트 체크리스트](/game/client-checklist.md) - 메모리·프레임·렌더링·수명·반응성·동기화 계약·재접속·끊김 처리 순서·정상 종료의 명시 로그아웃·수신 큐 상한·메인 스레드 수신 처리율·RTT 계측과 캡처 정지·실제 창 자동 검사의 OS 포커스·플랫폼·Unity Android 의존성 배포와 의존성 관리자(EDM4U 종료 예정·Unity EDM) 검증
-* [서버 체크리스트](/game/server-checklist.md) - 게임 서버의 공통 점검 항목(메모리·동시성·틱·상태 수락·권위 이전·가시성·콘텐츠 판정 데이터)과 Gateway·단일 로직 스레드의 분리, 상시 운영 메모리 계측, 큐·브로드캐스트·성능 검증과 근거의 적용 한계를 다루는 게임 서버 체크리스트.
-* [서버 영속화·장애 체크리스트](/game/server-persistence.md) - 게임 서버에서 결과 공개와 내구 저장 시점을 나누고, 영속 저장·콘텐츠 identity·소유권 이동·서비스 링크 장애·프로세스 인스턴스 식별·컨테이너 이전·통합 시험 전제의 검증과 복구 기준을 정리한다.
-* [Godot + C++ 개발](/game/godot-cpp.md) - Godot·godot-cpp 공식 버전 핀과 GDExtension·엔진 모듈 선택 기준, 검증 범위를 정리하고 세부 주제는 하위 개념으로 안내합니다.
-* [Godot 시뮬레이션 코어](/game/godot-simulation.md) - 성능 병목을 C++ 코어로 옮기는 경계와 메모리·로딩(UI 리소스·threaded-load 회수 포함)·물리·네트워크 부하(Web export 전송·스레드·확장 제약 포함)의 설계, 로컬 인게임과 서버 이관 기준, 성능 수락 기준을 정리합니다.
-* [godot-cpp 빌드·실행 검증](/game/godot-build.md) - godot-cpp 확장의 API·ABI 호환성, SCons 빌드와 로드 경로, 클래스 등록·시그널·이름 계약, 디버깅·export, 프로젝트 설정·addon 의존성과 smoke 절차를 정리합니다.
-* [Godot Scene·Resource 수명](/game/godot-runtime.md) - Scene 생명주기와 소유권(에디터 복제·부분 생성 보호 포함), 물리·프레임·스레드 경계, Resource 직렬화·저장 정밀도·표시 데이터 자원 수락과 성능·서버 권위 선택의 규칙을 정리합니다.
-* [Godot UI](/game/godot-ui.md) - 재사용 UI의 계약과 터치·입력 처리, 레이아웃·텍스트·폰트·C++ 문자열 인코딩, 창과 HUD 표시 및 입력 검증 규칙을 정리합니다.
-* [Godot 2D 시야·카메라](/game/godot-2d-view.md) - 2D 시야와 이동감·이동 애니메이션, 저속 자동 이동의 경로 재계획, 아이소메트릭 맵 가장자리 카메라, 화면 안 공격 사거리와 자동 사냥 대상 선택 규칙을 정리합니다.
-* [Godot 에셋·에디터](/game/godot-assets-editor.md) - 구매 에셋 팩 검수와 AI 사용 권리, 타일 조립·앞뒤 정렬, 생성 건물 다양성, 렌더 데이터 정밀도와 에디터 미리보기 규칙을 정리합니다.
+* [게임 목차](/game/index.md) - 게임 권위·동기화·콘텐츠 적용과 Godot 엔진별 구현/버전 관찰. 공통 개발·관계형 DB 기준은 위 독립 카테고리에서 찾는다.
+* [게임 네트워크 동기화](/game/network-sync.md) - 권위·예측·보간/표시 상태, 게임 시간·입력 순서/수명과 동기화 검증을 정리하고 세부 개념을 안내한다.
+* [게임 네트워크 시간·이동 검증](/game/network-time-movement.md) - 게임 시간/tick과 서버의 시간 승인, 이동 속도·시간 예산 검증, 접촉 트리거 전환 요청의 권위 경계.
+* [게임 네트워크 예측·보간·보정](/game/network-prediction.md) - 클라이언트 예측/보정·입력 처리 ACK/재실행, 애니메이션 시간·원격 보간과 판정 지연 보상.
+* [게임 네트워크 복구·전달 의미론](/game/network-delivery.md) - 증분 복제·baseline 복구, 입력/결과 보존·권위 이전·불연속 marker, 지역 전환/READY와 게임 세션 재개.
+* [게임 클라이언트 기능/성능 체크리스트](/game/client-checklist.md) - 게임 자원·프레임·수신 큐·동기화/재접속·정상 로그아웃과 공통 검증의 적용, Unity Android 배포·EDM4U/Unity EDM 이행 조건.
+* [게임 서버 기능/성능 체크리스트](/game/server-checklist.md) - 게임 상태 수락·권위 이전·가시성·콘텐츠 판정, Gateway/단일 로직 스레드·AOI/방송·복제와 게임 부하 검증.
+* [게임 서버 영속화·장애 체크리스트](/game/server-persistence.md) - 콘텐츠별 결과 공개/내구 A/B/C, 경제·위치 저장·존 이전·파티/던전 수명, 저장 대기/복제 view와 실제 게임 통합 시험.
+* [게임 정적 데이터의 분류·소비와 권위 경계](/game/static-data.md) - 콘텐츠 정의/설정과 플레이 상태의 구분, client/server 공개 대상·서버 비밀, 최초 플레이/판정 의존집합과 세션·존별 버전 적용.
+* [게임 기록·재생·락스텝의 권위와 진단](/game/random-replay.md) - 공통 난수/재현 계약의 게임 적용, 락스텝·desync·비공개 정보와 출하 테스트 훅/봇 검증의 경계.
+* [Godot와 C++ 게임 개발](/game/godot-cpp.md) - Godot/godot-cpp 공식 버전 핀, GDExtension/엔진 모듈 선택과 검증 범위를 정리하고 하위 개념을 안내한다.
+* [Godot C++ 성능 중심 시뮬레이션 코어](/game/godot-simulation.md) - C++ 코어/Godot 연결부·로컬 인게임/서버 이관, 관찰/AOI와 월드/UI 리소스 로딩, 물리·전투·4X/MMORPG 부하와 Web export 제약.
+* [godot-cpp 빌드·등록·디버깅·export와 실행 검증](/game/godot-build.md) - API/ABI 호환성·SCons/로드 경로·클래스/시그널/이름 등록, 디버깅/export·프로젝트 설정/addon 의존성과 smoke 전제.
+* [Godot C++ Scene·물리·Resource 수명과 경계](/game/godot-runtime.md) - Scene/Node 소유권·에디터 복제/부분 생성, 물리/프레임/스레드·Resource 직렬화/저장/공유와 Godot 성능·서버 권위 경계.
+* [Godot UI 재사용과 입력·텍스트·HUD 표시](/game/godot-ui.md) - 게임 UI 어댑터와 Godot의 모달/pick·터치/합성 mouse·포커스, Control/폰트·C++ 문자열과 실제 창/HUD의 API/버전별 적용.
+* [Godot 2D 시야·카메라와 자동 사냥 대상](/game/godot-2d-view.md) - 2D 게임 비교 근거의 적용 한계, 화면 안 월드 공격 사거리·실제 교전과 자동 사냥 대상 선택.
+* [Godot 에셋 팩·타일 조립·렌더 정밀도와 에디터 미리보기](/game/godot-assets-editor.md) - Godot 타일 조립·충돌/예측/권위 판정·앞뒤 정렬, TileMapLayer·GPU 데이터 텍스처와 비저장 에디터/F5 미리보기.
 
 ## 도구
 * [omp 기본 도구](/tools/builtin.md) - 세션별 가용성·lsp·AST·browser facade·백그라운드 작업·상태 유지 eval의 모듈 identity와 Bun 프로세스 종료 판정·IDE/원격 빌드 환경·UTF-8이 아닌 파일 편집·생성 이미지 국소 합성·TypeScript+Bun·MCP 경계 참조

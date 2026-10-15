@@ -1,7 +1,7 @@
 ---
 type: Checklist
 title: 게임 클라이언트 기능/성능 체크리스트
-description: 메모리·프레임·렌더링·에셋·수명·반응성·동기화 계약·재접속·끊김 처리 순서·정상 종료의 명시 로그아웃·수신 큐 상한·메인 스레드 수신 처리율·RTT 계측과 캡처 정지·실제 창 자동 검사의 OS 포커스·플랫폼과 Unity Android 의존성 배포·의존성 관리자(EDM4U 종료 예정·Unity EDM 이행) 실경로 검증 체크리스트.
+description: 게임 자원·프레임·반응성·동기화·재접속·정상 로그아웃·수신 처리와 Unity Android 의존성 배포를 점검하며, 공통 끊김 순서·RTT/캡처·포커스·Android 패키지 검증은 공통 정본에 연결합니다.
 tags: [game, client, performance, networking, checklist, unity, android, aar, edm4u, unity-edm]
 timestamp: 2026-10-15T00:00:00Z
 ---
@@ -18,15 +18,22 @@ timestamp: 2026-10-15T00:00:00Z
 - [ ] 반응성: 클라이언트 예측으로 즉시 피드백, 서버 보정(reconciliation) 수용
 - [ ] 동기화 계약: 상태 계층(권위·예측·보간 목표·표시 상태 분리), 시간/순서(원격 timestamp·적용 전/오래된 샘플), 외삽 오차 예산, 보정 시작점(이중 보정 금지), 불연속 전환(teleport·respawn·scene transfer·authority change)의 preserve/reset/recompute 정책을 [네트워크 동기화](/game/network-sync.md)의 '상태 계층'·'시간·순서·생명주기'와 [예측·보간·보정](/game/network-prediction.md) 기준으로 점검
 - [ ] 재접속: session/entity generation을 갱신하고 이전 generation의 패킷·대기 명령에 재검증·폐기 정책을 적용한 뒤 권위 상태로 재수렴(재접속 요청·epoch fence 기준은 [네트워크 복구·전달 의미론](/game/network-delivery.md))
-- [ ] 끊김 처리 순서: 네트워크 스레드가 끊김을 감지해도 게임 스레드가 아직 처리하지 않은 수신 메시지가 남아 있을 수 있음. 세션 상태 초기화(채널 이탈 통지·초기화 플래그 해제)는 같은 수신 큐에 종료 표시로 넣어 게임 스레드가 순서대로 처리하게 함. 다음 접속에서야 올라가는 generation은 재접속 대기 중 처리되는 이전 연결 메시지를 막지 못함
+- [ ] 수신 메시지와 끊김에 따른 세션 초기화 순서는 [공통 연결 종료 계약](/development/network-io.md#연결-종료와-부하-한계)을 적용한다.
 - [ ] 정상 종료와 로그아웃: 창 닫기·Alt+F4·Android Back 같은 정상 종료에서 명시 로그아웃을 보내지 않으면 서버는 연결 손실로 보고 재접속 유예 동안 캐릭터를 붙잡아 같은 계정의 즉시 재접속을 거절한다. 엔진의 자동 종료를 가로채(Godot는 `auto_accept_quit`·`quit_on_go_back`을 끄고 `NOTIFICATION_WM_CLOSE_REQUEST`와 Android 전용 `NOTIFICATION_WM_GO_BACK_REQUEST` 처리) 세션이 묶인 상태에서만 로그아웃을 한 번 보내고, 메인 스레드에서 transport를 계속 pump하며 서버의 연결 종료나 짧은 상한(수 초)까지 기다린 뒤 종료한다. 로그아웃 뒤에는 다른 송신과 상태를 바꾸는 진입점(이전 요청·설치·ACK·재접속)을 모두 막아 상한이 늘어나지 않게 한다. 지역 이전 확정과 겹치면 이전 binding의 로그아웃이 버려질 수 있으므로, 대기 중 이전 확정을 받으면 새 binding으로 한 번 더 보낸다. 연결 종료는 서버의 소유 반환 완료 증거가 아니다. 로그아웃을 보내지 못한 강제 종료는 이미 확인된 세션을 여전히 유예로 남기며, 확인되지 않은 신규 세션은 [네트워크 복구·전달 의미론](/game/network-delivery.md)의 grace 기준대로 유예 없이 정리된다. 검증은 종료 직후 같은 계정의 즉시 재접속으로 한다. Godot 속성·알림은 [SceneTree](https://docs.godotengine.org/en/stable/classes/class_scenetree.html)·[Node](https://docs.godotengine.org/en/stable/classes/class_node.html) stable 문서로 확인했다(2026-10-15).
 - [ ] 수신 큐 상한: 게임 루프가 멈춘 동안(일시정지·로딩) 네트워크 스레드가 받은 메시지를 무한히 쌓거나 고정 크기 풀이 고갈돼 크래시하지 않음. 개수·바이트 상한을 넘으면 연결을 끊고 권위 상태로 재동기화하며, 상한 안에서 밀린 큐는 프레임당 처리량을 늘려 따라잡음
 - [ ] 메인 스레드 수신 처리율: 수신을 게임 루프에서 프레임마다 소비하고 transport가 소비 전까지 다음 frame을 읽지 않는 구조라면, 수신 처리율은 FPS에 묶인다(프레임당 연결별 1개). 초당 정상 하향 frame 수(예: snapshot 주기+결과·시간 측정 응답)가 최저 지원 FPS보다 낮은지 확인하고, 로딩·장시간 정지 뒤 밀린 수신을 따라잡는 경로를 별도로 검증한다.
-- [ ] RTT·지연 표시 계측: 자동화 렌더 테스트의 화면 캡처(GPU readback·PNG 인코딩)는 메인 스레드를 멈춘다. 그동안 도착한 응답은 처리되지 않아 HUD RTT가 부풀려진다. 실측 사례에서 250ms마다 캡처하면 FPS가 3~4로 떨어지고 RTT가 525ms에서 2.6초까지 올랐으며, 캡처 없는 같은 실행은 7ms였다(통계량·표본 수는 기록하지 않았다). 네트워크 지연은 캡처 없는 관찰 실행으로 따로 측정하고, 캡처 시점의 HUD 수치를 지연 근거로 쓰지 않는다. HUD Ping 분위수의 집계 단위와 개발 PC의 WSL localhost 중계 경로는 [네트워크 동기화](/game/network-sync.md)의 '검증' 절 HUD Ping 항목을 따른다.
-- [ ] 실제 창 자동 검사와 OS 포커스: 포커스를 잃으면 이동·경로를 취소하는 제품 계약이 있으면, 실제 창에서 도는 자동 검사는 다른 프로세스가 전경 창을 가져가는 순간 이동이 막혀 기한 초과로 실패한다. 병렬 작업자(다른 에이전트·빌드·콘솔/셸 실행)가 새 콘솔 창을 열어도 포커스를 빼앗는다. 실제 창 실행 구간에는 창을 만드는 다른 실행을 직렬화하고(시작/종료 공지), 검사기는 포커스 변화와 전경 창을 실패마다 기록해 포커스 상실 실패와 다른 실패를 구분한다. 포커스가 유지된 실패는 포커스 원인으로 분류하지 않으며, 이후 통과한 재실행은 개별 실패의 원인을 입증하지 않는다.
+- [ ] RTT/캡처 교란은 [공통 시간 계측](/development/network-time.md#rtt-계측과-관찰-사례), 실제 창 검사의 포커스 간섭은 [공통 UI 검증](/development/ui-input.md#실제-입력화면-검증)을 적용한다.
 - [ ] 플랫폼: 모바일 발열·배터리, 해상도·주사율 차이 대응
-- [ ] Android 플러그인: 로컬 AAR의 외부 라이브러리 의존성을 Gradle/의존성 resolver에 명시하고, C# 컴파일과 별개로 최종 APK의 모든 DEX에 필요한 클래스 정의가 포함되는지 확인. 일반 AAR의 `implementation` 선언은 외부 라이브러리의 클래스나 Maven 메타데이터를 AAR 파일에 자동 합치지 않으며, Maven 배포는 의존성 메타데이터를 제공하지만 로컬 AAR 파일만 복사하는 경로에서는 이를 대신한다고 가정하지 않음([Android 라이브러리 문서](https://developer.android.com/studio/projects/android-library#psd-add-library-dependency)).
-- [ ] Android 클래스 누락: `NoClassDefFoundError`의 정확한 클래스와 호출 위치를 기기 로그→플러그인 바이트코드→최종 APK 정의로 대조. 클래스 참조 문자열만으로 포함을 판정하지 않고 알려진 포함 클래스로 검사기의 양성 대조를 수행. `androidx.core`와 `androidx.webkit`은 별도 artifact이며, [`WebViewAssetLoader`](https://developer.android.com/reference/androidx/webkit/WebViewAssetLoader)는 `androidx.webkit:webkit`에 속함. 이전 export나 에디터 실행을 현재 APK의 기기 실행 검증으로 대체하지 않음.
+- [ ] Android AAR 의존성과 최종 APK/DEX 클래스 정의는 [공통 Android 패키지 검증](/development/android-dependencies.md)을 적용하고, Unity 의존성 관리자 절차는 아래 엔진별 기준을 확인한다.
+
+## 세부 구현·검증 기준
+
+- 실행·수명·작업 종료·스크립트: [루프와 실행 경계](/development/execution.md).
+- 렌더/포즈·기능 지원·소실 복구: [렌더링·애니메이션](/development/rendering-animation.md). 좌표·기하·충돌: [수치·공간 판정](/development/numerics-spatial.md).
+- 동시 오디오·스트리밍: [오디오 런타임](/development/audio-runtime.md). 세이브/콘텐츠/파일 수락: [데이터 형식·저장](/development/data-formats.md).
+- 정적 정의의 대상별 배포·버전 활성화·논리 테이블/물리 패키징·메모리 인덱스·LINQ·초기 로딩: [데이터 생명주기](/development/data-lifecycle.md). 다운로드 완료와 실제 플레이 가능을 구분합니다. 게임 정적 데이터의 분류·공개·권위 경계는 [게임 정적 데이터](/game/static-data.md)를 따릅니다.
+- 경로·AI 상태: [AI·길찾기](/development/ai-navigation.md). 난수/입력 기록: [난수·재현](/development/randomness.md), 게임 락스텝/진단 훅: [게임 기록·재생](/game/random-replay.md). 번역/문자 입력: [지역화](/development/localization.md).
+- 계측·자원 고갈·출하 심볼/덤프: [런타임 진단](/development/runtime-diagnostics.md). 직접 transport 구현: [네트워크 I/O](/development/network-io.md).
 
 ## Unity Android 의존성 배포 검증
 

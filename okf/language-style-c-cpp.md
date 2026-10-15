@@ -194,6 +194,7 @@ bool CanAttack(const CombatState* state)
 - 널 포인터에는 `nullptr`를 사용합니다. C++ 코드에서 `NULL`·정수 `0`을 널 포인터의 기본 표현으로 사용하지 않습니다.
 - 새 C++ enum은 `enum class`를 기본으로 합니다. ABI·파일 포맷이 요구할 때만 underlying type을 명시하며 enum의 메모리 표현을 그대로 네트워크에 보내지 않습니다.
 - 가능한 값 초기화를 사용하고 narrowing을 피합니다. 단, 중괄호와 괄호의 의미가 다르면 의도를 우선합니다. `std::vector<int> values(10);`은 원소 10개이며 `std::vector<int> values{10};`은 값 10인 원소 하나입니다.
+- 단일 인자 생성자는 의도한 암시적 변환 계약이 없으면 `explicit`을 기본으로 검토합니다. 숨은 객체 구성·할당을 피하되, 값 의미가 맞는 타입까지 비복사로 만들거나 값 반환을 힙 반환으로 바꾸지 않습니다([Core Guidelines C.46](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-explicit)).
 
 ```cpp
 // Good
@@ -223,6 +224,8 @@ std::uint32_t packetId = ReadPacketId();
 - 입력은 작고 저렴하면 값, 큰 읽기 전용 객체면 `const T&`, 필수 수정 대상이면 `T&`, 선택적 대상이면 `T*`를 기본으로 합니다. 단순 접근만 하는 함수에 스마트 포인터를 넘겨 소유권 정책을 강제하지 않습니다. `std::unique_ptr<T>` 값 인수는 소유권 이전처럼 수명 계약이 필요한 경우에 사용합니다.
 - 메모리·파일·락·핸들은 RAII로 관리합니다. `new`/`delete`, `malloc`/`free`, `lock`/`unlock`을 일반 제어 흐름에 흩어 놓지 않습니다. 스마트 포인터를 쓰기 위해 불필요한 힙 할당을 만들지도 않습니다. C++14 이상에서는 적합한 경우 `std::make_unique`를 사용하고, C++11이라면 소유자 생성 안에서 즉시 획득하는 기존 RAII 패턴을 사용합니다.
 - 기본은 Rule of Zero입니다. 자원을 직접 소유하는 특수 타입만 복사·이동·소멸 정책 전체를 검토합니다. 복사 불가능한 타입은 명시하고, 기반 포인터로 삭제하는 다형적 계층은 적절한 가상 소멸자를 갖추거나 기반을 통한 삭제를 금지합니다.
+- 클래스별 `operator new`를 고정 슬롯 풀에 연결했다면 파생 타입의 요청 크기·정렬까지 수용하는지 확인합니다. 크기가 다른 요청을 일반 힙으로 넘기는 경우 해제도 실제 할당 출처와 짝을 맞춥니다. 기반 타입의 슬롯 크기로 파생 객체를 할당하지 않습니다([new 표현식](https://en.cppreference.com/w/cpp/language/new)).
+- 서로 다른 종류의 핸들·ID가 섞이는 경계는 generation 검증과 타입 혼용 방지를 별도로 검토합니다. `using` 정수 별칭은 다른 강한 타입이 아닙니다. 필요한 곳에만 값 기반 구별 타입을 쓰며, 세대 번호는 무효 예약값·되돌이·낡은 핸들의 최장 생존 기간과 발급률을 함께 설계합니다. 같은 슬롯/세대 재발급 뒤의 stale 참조를 동시 객체 수가 작다는 이유로 기각하지 않습니다.
 - `std::move`는 이동을 요청하는 cast이지 자체로 데이터를 옮기거나 성능을 보장하는 함수가 아닙니다. 이후 원래 값이 필요하지 않은 소유권 이전에만 사용합니다. 이동된 객체는 해당 타입이 보장하는 상태로만 사용합니다. `return localValue;`에 무조건 `std::move`를 붙여 copy elision을 방해하지 않습니다. `std::forward`는 forwarding reference를 받는 실제 전달 템플릿에서만 사용합니다.
 
 ```cpp
@@ -249,13 +252,19 @@ Godot 정수 상수·enum 바인딩(`BIND_CONSTANT`·`BIND_ENUM_CONSTANT`·`Clas
 
 ### 예외·RTTI·템플릿·람다·cast·매크로·STL
 
+- 기반의 가상 함수를 재정의하는 새/변경 선언에는 지원 표준의 `override`를 사용해 시그니처 불일치가 조용히 다른 함수가 되지 않게 합니다. 무관한 기존 계층 일괄 변경이나 새 인터페이스 매크로 도입은 하지 않습니다([override](https://en.cppreference.com/w/cpp/language/override)).
 - **예외:** 빌드·라이브러리·ABI 정책이 우선입니다. 예외를 사용하는 일반 C++ 프로젝트에서는 실패를 예외로 보고하고 RAII로 정리하는 기존 모델을 따릅니다. 예상 가능한 분기·부재에는 기존 상태값·결과 타입을 사용합니다. 예외가 꺼진 프로젝트에서는 명시적 오류 결과와 생성용 팩터리 등 지원되는 경로를 사용합니다. 스타일 문서만 근거로 `throw`나 `try`/`catch`를 추가하거나 예외를 켜지 않습니다. C ABI·플러그인·엔진 경계를 넘어 예외를 전파하지 않으며, 예외를 사용할 수 있는 경계에서 계약에 맞게 오류로 변환합니다. 소멸자는 예외를 내보내지 않습니다. `noexcept`는 실패 경로까지 계약을 보장할 때만 붙입니다.
+- **assert:** 내부 사전·사후 조건과 불변조건 진단에 사용하며, 콘텐츠·사용자 입력·파일/환경 오류 처리를 대신하지 않습니다. `NDEBUG`에서 사라지는 조건식에 필수 실행·상태 변경을 넣지 않습니다. 릴리스에서도 필요한 길이·권한·반복 상한 검사는 별도로 유지합니다. 불변조건 위반 뒤 무조건 계속하거나 손상 가능 상태를 자동 저장하지 않고, 해당 실패의 중단·복구 계약을 따릅니다([assert](https://en.cppreference.com/w/cpp/error/assert)).
 - **RTTI:** 켜짐·꺼짐을 프로젝트에서 확인합니다. RTTI가 허용된 일반 C++의 실제 다형적 타입 확인에만 `dynamic_cast`·`typeid`를 사용합니다. 가능하면 타입 조회보다 가상 동작·명시적 모델을 사용합니다. 엔진의 자체 타입 시스템이나 RTTI 비활성 빌드에 표준 RTTI를 무조건 들여오지 않습니다. 예외와 RTTI가 Godot에서 안전하다고 가정하지 않습니다.
 - **템플릿:** 동일 계약의 실제 타입 차이를 표현할 때 사용합니다. 단순 함수로 충분한 코드를 메타프로그래밍으로 바꾸지 않습니다. 타입 매개변수는 `typename`을 기본으로 하고 필요한 연산·제약을 드러냅니다. 지원 시 concepts를 사용할 수 있지만 낮은 표준에 새 표준 기능을 강제하지 않습니다. 사용하는 번역 단위에서 필요한 정의는 헤더에 제공하거나 명시적 인스턴스화 경계를 설계합니다.
 - **람다:** 짧고 사용 지점에 국한된 동작에 사용합니다. 저장되거나 비동기로 실행되는 람다는 명시적 캡처를 기본으로 하고 `[&]`나 `this` 캡처의 수명을 검토합니다. `[this]`는 객체의 수명을 연장하지 않습니다. 즉시 사용하는 짧은 알고리즘 람다에는 의도가 명확할 때 제한된 기본 캡처를 허용합니다. 여러 분기·처리를 담은 람다를 호출 인자·체인 안에 깊게 끼워 넣지 않고, 의미 있는 지역 람다나 기존 함수로 표현합니다. 분리해도 캡처·이동 시점·호출 방식·수명을 보존하며 이름을 붙이려고 `std::function`의 타입 소거·할당을 추가하지 않습니다. 큰 본문·반복되는 정책에는 이름 있는 함수를 사용합니다.
 - **cast:** 불필요한 cast를 없애고, 필요한 변환은 목적이 드러나는 `static_cast` 등으로 제한합니다. 정수 축소 변환은 cast 전에 범위를 검증합니다. `static_cast`가 범위 검사를 해준다고 가정하지 않습니다. C 스타일 cast는 C++의 기본값으로 사용하지 않습니다. `reinterpret_cast`는 레이아웃·정렬·수명·aliasing을 확인한 낮은 수준의 경계에만 격리합니다. `const_cast`로 원래 const 객체를 수정하지 않습니다. `dynamic_cast`는 앞의 RTTI 정책을 따릅니다.
 - **매크로:** 타입·상수·일반 함수는 `using`·`constexpr`·함수·템플릿으로 표현합니다. 매크로는 6장 헤더 보호 규칙에 따라 필요한 include guard, 조건부 컴파일, 플랫폼 export, 외부 프레임워크가 요구하는 용도에 한정합니다. 매크로에 여러 번 평가되는 인수나 숨은 제어 흐름을 넣지 않습니다. 필수 다중 문장 매크로는 `do { ... } while (0)` 구조를 사용하고 인수·식의 괄호와 평가 횟수를 검토합니다. 사용자 호출 뒤 세미콜론이 자연스럽게 작동해야 합니다.
 - **STL:** 검증된 표준 컨테이너·알고리즘·RAII 타입을 재사용합니다. 목적에 맞으면 연속 저장 컨테이너를 먼저 검토하되 자료구조를 무조건 하나로 고정하지 않습니다. 크기를 알 때 필요한 `reserve`를 고려하고 불필요한 할당·복사·참조 카운트 증가를 만들지 않습니다. iterator·참조 무효화와 view의 원본 수명을 지킵니다. 엔진 API 경계는 엔진이 요구하는 타입을 사용하고, 불필요한 표준/엔진 컨테이너 왕복 변환을 피합니다. 다른 컴파일러·런타임과의 안정 ABI에 STL 타입을 무검토로 노출하지 않습니다.
+- **컨테이너 순서·조회:** `set`·`map`·정렬·heap 비교자는 strict weak ordering을 만족해야 합니다. 거리 문턱·쌍별 epsilon 근접은 일반적으로 추이적 동치가 아니므로 정점 병합용 공간 검색과 순서 비교를 분리합니다. 연관 컨테이너에 함께 들어 있는 키의 비교 결과는 유지되어야 합니다. 키의 정렬 기준을 바꾸려면 영향받는 키를 **변경 전에** 제거/추출하고 변경 후 재삽입합니다. 카메라 위치처럼 전체 순서가 바뀌는 기준은 기존 컨테이너의 비교 상태를 고정한 채 새 기준으로 별도 컨테이너를 재구성하는 방법 등을 선택합니다. 변경 뒤 `erase(key)`부터 수행해 복구하려고 하지 않습니다. 직접 소유한 heap 배열은 변경 후 `make_heap` 등으로 복구한 다음 heap 연산을 재개하며, `priority_queue`도 불변 키/새 큐 구성과 `top()` 방향을 확인합니다([Compare](https://en.cppreference.com/w/cpp/named_req/Compare), [연관 컨테이너 비교 안정성](https://eel.is/c++draft/associative.reqmts.general#3)).
+- 부재를 허용하는 엔티티·세션 조회에 `map`/`unordered_map`의 `operator[]`를 쓰면 기본값이 삽입됩니다. 조회는 `find` 등으로, 생성은 의도한 삽입 경로로 구분합니다. 동률 순서가 게임 결과에 영향을 주면 명시적 tie-break를 정합니다. 입력 순서가 해시 순회·병렬 완료 순서이면 `stable_sort`만으로 결정성이 생기지 않습니다([map 조회](https://en.cppreference.com/w/cpp/container/map/operator_at), [sort](https://en.cppreference.com/w/cpp/algorithm/sort)).
+- **수치·외부 표현:** 허용오차·퇴화 입력·음수 격자 나눗셈·FP 최적화 조건은 [수치와 공간 판정](/development/numerics-spatial.md), 필드 폭·부호·바이트 순서·패킹과 저장 그래프는 [데이터 형식·저장](/development/data-formats.md)을 따릅니다. 배열 길이는 배열 타입이 남아 있는 곳에서 구합니다. 포인터나 배열 표기의 함수 매개변수에 `sizeof(array) / sizeof(array[0])`를 적용하지 않고 길이를 전달합니다(C++17 이상은 적합한 곳에서 `std::size`).
+- **allocator-aware 연산:** 상태 있는 allocator/`pmr`를 선택했다면 동등성은 서로의 할당을 해제할 수 있는 계약인지, copy/move/swap/splice의 전파·동등성 전제는 무엇인지 확인합니다. 비전파·비동등 allocator의 swap이나 서로 다른 allocator의 `list::splice`를 안전한 O(1) 이동으로 가정하지 않습니다. `memory_resource`는 모든 사용자보다 오래 살아야 하며 `monotonic_buffer_resource`의 개별 해제는 공간을 회수하지 않습니다. 초기 버퍼만으로 상한이 생기지 않고 upstream 할당·재할당 누적·소진 결과를 따로 정합니다([Allocator](https://en.cppreference.com/w/cpp/named_req/Allocator), [polymorphic_allocator](https://en.cppreference.com/w/cpp/memory/polymorphic_allocator), [monotonic_buffer_resource](https://en.cppreference.com/w/cpp/memory/monotonic_buffer_resource)).
 
 ```cpp
 // Good: 지역 범위 안에서 즉시 실행되는 명시적 캡처입니다.
@@ -340,6 +349,8 @@ include guard·전방 선언·ODR·`.h/.cpp/.c` 배치는 C/C++ 전용입니다.
 - **이름 공간 오염:** 헤더에 `using namespace`를 쓰지 않습니다. 구현에서도 `std::`를 기본으로 유지하고 긴 타입은 범위가 제한된 `using` 선언·별칭으로 줄입니다. 공개 헤더에서 내부 매크로·플랫폼 타입·불필요한 third-party include를 전파하지 않습니다.
 - **공개와 private API:** 공개 범위·확장점·설정의 기준은 [코딩 스타일의 공개 API와 확장성](/coding-style.md#공개-api와-확장성)을 따릅니다. C/C++에서는 private 상태마다 기계적인 getter/setter를 만들지 않고, 공개 API에는 입력 조건, 결과·오류, 소유권·수명, 필요할 때 스레드 제약을 명시합니다.
 - **외부 경계:** 공개 심볼·직렬화 키·스크립트 바인딩 이름의 변경은 스타일 정리가 아니라 호환성 변경입니다. 요청된 범위에서만 소비자·바인딩·직렬화·문서까지 함께 이전합니다. ABI가 필요한 경계에서는 예외·RTTI·allocator·STL·구조체 레이아웃의 호환 조건을 별도로 확인합니다.
+- **정적 등록:** 다른 번역 단위의 동적 초기화 순서에 레지스트리 사용을 의존시키지 않습니다. 자기 등록 객체만 든 정적 라이브러리의 object file은 링크되지 않을 수 있습니다. 명시적 등록 경로나 필요한 라이브러리에 한정한 링크 옵션을 선택하고, 실제 release 링크에서 필요한 타입을 생성할 수 있는지 확인합니다. 전역 dead-code 제거를 끄는 처방은 쓰지 않습니다([초기화](https://en.cppreference.com/w/cpp/language/initialization), [MSVC WHOLEARCHIVE](https://learn.microsoft.com/en-us/cpp/build/reference/wholearchive-include-all-library-object-files)).
+- **빌드 비용·인라인:** 공용 헤더에는 무관한 변경이 잦은 코드·ID를 몰아넣지 않고 소비자와 재빌드 파급을 확인합니다. PCH가 누락된 직접 include나 플랫폼 의존을 숨기지 않게 합니다. 독립 빌드·재사용이 필요한 모듈의 의존 방향을 비순환으로 두되 작은 코드를 일률 분할하지 않습니다. `inline`은 실제 호출 확장의 보장이 아니며, 강제 확장은 코드 크기·캐시·빌드 결합과 release 부하의 이득을 함께 비교합니다([Core Guidelines SF.9–11](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-source), [MSVC inline](https://learn.microsoft.com/en-us/cpp/cpp/inline-functions-cpp)).
 
 ```cpp
 // PlayerController.cpp: Good
@@ -370,3 +381,8 @@ size_t NsPacketGetHeaderSize(void);
 }
 #endif
 ```
+
+## 서적 근거의 적용 범위
+
+- 『게임 프로그래머를 위한 C++』(Noel Llopis, 한국어판 2004) 제공본 PDF p.151–156, 182–184, 225, 230–239, 348–349, 390–410, 413–429에서 암시적 구성·풀 상속·컨테이너·등록·빌드·assert의 검토 항목을 추출했습니다. p.225의 거리 문턱 비교자는 순서 계약을 위반하므로 예제 자체를 채택하지 않습니다. 현대 계약은 위 링크로 대조했습니다(2026-10-15). 당시의 `auto_ptr`·고정 vptr 크기·가상 호출 인라인 불가·컴파일러 성능 수치는 현재 규칙이 아닙니다.
+- *Game Programming Gems* 한국어판 1.6(PDF p.120–123)과 *Game Programming Gems 3* 한국어판 1.3·1.5·1.6(p.94–119)의 재정의 단절·핸들 종류/세대·allocator 동등성을 현재 표준에 대조해 보강했습니다(2026-10-15). C++98 우회 매크로·Singleton·세대 wrap 안전 확률을 기본값으로 삼지 않습니다.

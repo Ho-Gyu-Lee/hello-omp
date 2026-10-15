@@ -83,7 +83,7 @@ OMP 18.11.0의 [모델 문서](omp://models.md)·[설정 문서](omp://settings.
 
 | 작업 | 책임 배분 | 수락에 필요한 근거 |
 |---|---|---|
-| 복잡한 클라이언트·서버 구조 | Opus 메인이 요구·불변조건·경계를 정리하고 Sonnet `task`가 명확한 구현을 수행. Opus 작성 설계와 Sonnet 작성 구현은 Astra reviewer, fallback 등으로 OpenAI가 작성한 산출물은 아래 일회성 Anthropic reviewer로 교차 검토 | 소유권·서버 권위·동시성·내구성·복구와 부하/메모리/프레임 관측. [서버](/game/server-checklist.md)·[클라이언트](/game/client-checklist.md)·[보안](/security/game.md) 기준 |
+| 복잡한 클라이언트·서버 구조 | Opus 메인이 요구·불변조건·경계를 정리하고 Sonnet `task`가 명확한 구현을 수행. Opus 작성 설계와 Sonnet 작성 구현은 Astra reviewer, fallback 등으로 OpenAI가 작성한 산출물은 아래 일회성 Anthropic reviewer로 교차 검토 | 소유권·서버 권위·동시성·내구성·복구와 부하/메모리/프레임 관측. [공통 서버 운영](/development/server-checklist.md)·[서비스 수명](/development/service-lifecycle.md), 게임 적용은 [서버](/game/server-checklist.md)·[클라이언트](/game/client-checklist.md)·[보안](/security/game.md) 기준 |
 | 게임 아트 방향·UI/환경 | Opus 메인 또는 선택한 `@designer` 별칭 모델이 방향·대안·추천안을 정하고 Sonnet `task`가 구현. Astra `vision`은 실제 화면 교차 분석 | 참조 이미지와 스타일 제약, 실루엣·명도·색·스케일·시선 유도, 실제 카메라/HUD에서의 판독성. 대안 비교·선택 이유·트레이드오프 |
 | 레벨·전투 공간 | Opus가 플레이 목표·진행 구조를 정하고 Sonnet 작업자가 공간·기믹을 구현. Opus 작성 설계와 Sonnet 작성 구현은 Astra가 검토하고 OpenAI 작성 구현은 아래 Anthropic 독립 검토로 확인 | 이동 동선·시야·랜드마크·엄폐·적/보상 배치·실패/복구 경로를 greybox와 플레이로 검증. 탑뷰만 보고 실제 카메라의 가림·거리·길찾기를 통과로 보지 않음 |
 
