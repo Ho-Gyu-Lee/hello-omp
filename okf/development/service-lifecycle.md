@@ -1,7 +1,7 @@
 ---
 type: Checklist
 title: 서비스 영속성·생존 감시·프로세스와 소유권 수명
-description: 비동기 재진입·identity 결속, heartbeat·장애 격리, PID/pidfd·보호된 이전·컨테이너, 소유권 fencing과 운영 복구의 공통 계약입니다.
+description: 비동기 재진입·identity 결속, heartbeat·장애 격리, PID/pidfd·보호된 이전·컨테이너와 Windows 상시 감독, 소유권 fencing과 운영 복구의 공통 계약입니다.
 tags: [development, server, persistence, heartbeat, process, pidfd, container, fencing, lifecycle]
 timestamp: 2026-10-15T00:00:00Z
 ---
@@ -57,6 +57,11 @@ timestamp: 2026-10-15T00:00:00Z
     - `:latest`는 root로 실행되는 이동 태그다. `:nonroot` 같은 사용자 태그를 digest로 고정하고, 기존 volume의 소유 uid가 있으면 `USER`를 그 uid로 둔다. passwd 항목이 없어도 숫자 uid로 실행된다.
     - shell을 쓰던 healthcheck(`CMD-SHELL`)는 exec 형식의 작은 검사 binary로 바꾼다. PKI 생성·provision·migrate처럼 shell·CLI가 필요한 준비 작업은 같은 binary를 담은 별도 도구 이미지에서 실행한다. 실행 이미지 안 디버깅은 `:debug-nonroot` 태그(busybox shell)로 잠시 바꿔 한다.
     - 실제 작업에서 서비스 이미지는 약 58MB가 됐고, 같은 수락 시험(container 5개 healthy, 클라이언트 4개 통과)을 다시 통과했다. 독립 검토는 서비스가 시스템 CA·passwd·locale·shell에 기대지 않는지를 코드로 확인했다.
+- [ ] Windows 호스트에서 로그온 작업과 감독 스크립트로 컨테이너 stack을 상시 실행할 때는 콘솔·작업·재시작 정책의 경계를 함께 정한다.
+  - 대화형 세션의 작업이 띄운 콘솔 프로그램은 기본 터미널이 'Windows가 결정'(Windows 11)이면 Windows Terminal이 콘솔을 인수한다(`OpenConsole.exe -Embedding`). `powershell -WindowStyle Hidden`으로는 막히지 않는다. 그 창이나 탭을 닫으면 감독자와 같은 콘솔의 자식(compose 등)이 콘솔 닫기 신호로 끝나고, 작업 결과는 `0xC000013A`가 된다. `conhost.exe --headless <명령>`으로 띄우면 인수되지 않았다. 이 옵션은 문서화되지 않았으며, 2026-10-15 Windows 11 build 26300·Terminal 1.24에서 일회용 작업 두 개를 비교해 관찰한 결과다.
+  - `MultipleInstances=IgnoreNew` 작업은 이전 인스턴스가 아직 실행 중이면 새로 시작하지 않는다([TaskSettings.MultipleInstances](https://learn.microsoft.com/en-us/windows/win32/taskschd/tasksettings-multipleinstances)). 감독자를 정상 종료한 직후 다시 시작할 때는 작업 상태가 `Ready`로 돌아온 뒤 시작한다. 바로 시작한 요청은 조용히 무시되어 서비스가 내려간 채로 남았다.
+  - Docker `on-failure`는 0 종료나 수동 `docker stop`/`kill` 뒤에는 다시 띄우지 않고, daemon 재시작 뒤에도 띄우지 않는다([restart policies](https://docs.docker.com/engine/containers/start-containers-automatically/), 확인 2026-10-15). 감독자는 정책이 다루지 않는 상태(없음·exited·dead)만 수렴시키고 restarting은 정책에 맡긴다. 같은 문서는 restart 정책과 호스트 프로세스 관리자를 함께 쓰면 충돌한다고 경고하므로, 같은 상태를 둘이 다루지 않게 경계를 둔다.
+  - Windows는 프로세스를 종료해도 그 자식을 종료하지 않는다([Terminating a Process](https://learn.microsoft.com/en-us/windows/win32/procthread/terminating-a-process)). 그래서 `docker.exe`를 끝내도 `docker-compose.exe` plugin이 남을 수 있다. 감독자는 PID나 명령줄 이름으로 프로세스를 끝내지 않는다(PID 재사용·다른 소유자의 compose와 경합). compose 대기는 `--wait-timeout`으로 제한하고, 남은 compose 프로세스나 실패한 프로세스 목록 조회는 충돌로 보아 잠금을 유지한다(fail closed). 직접 띄운 프로세스만 그 handle로 끝낸다.
 
 ## 소유권 펜싱과 장애 반응
 - [ ] 길드·캐릭터처럼 ID로 부르는 엔티티를 여러 서버에 나눠 단일 작성자로 처리하는 엔티티 샤딩(위치 투명성)에서 배치 관리자가 이중 소유를 피하는 방식과 영속 쓰기의 펜싱을 따로 정한다. [Shardcake](https://devsisters.github.io/shardcake/docs/architecture.html)는 응답 없는 pod를 Kubernetes Health API로 "살아 있지 않음"이 확인될 때만 shard에서 해제하며, 엔티티 영속은 사용자에게 맡긴다. 네트워크 분리·긴 정지 뒤 옛 작성자의 늦은 쓰기를 막으려면 배정마다 단조 증가 epoch를 발급하고, 모든 쓰기를 권위 배정 행을 잠근 같은 DB 트랜잭션에서 epoch로 검사한다. 데이터 revision CAS는 버전 충돌만 잡을 뿐 쓰기 권한을 회수하지 않으므로 epoch 검사의 대체가 아니다. 내구 로그를 없애고 DB에 바로 쓰는 구조라면 현재 소유자·이전 영수증 같은 소유권 전이도 확인 응답 전에 DB에 원자적으로 기록해야 재배정 뒤 복구할 수 있다. 엔티티 ID가 없는 요청(세션 ID만 가진 재접속 등)의 라우팅도 따로 정한다.

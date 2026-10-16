@@ -8,7 +8,7 @@
 * [이벤트 루프·작업·스크립트의 실행 경계](/development/execution.md) - 순회 중 생성/파괴·재진입, 병렬 작업의 snapshot·쓰기 소유권·콜백·합류/종료, 타이머와 스크립트 예산·실패 전파.
 * [런타임 진단·메모리·성능 측정](/development/runtime-diagnostics.md) - 프로파일·계측 편향·경과/CPU 시간, 데이터 배치·메모리 예산/수명·할당/풀/고갈, 로그·수집 경로 라벨/심각도·심볼/덤프와 제품별 성능 수락.
 * [서버 프로토콜·메모리·큐 운영 기준](/development/server-checklist.md) - 동시성·비동기 수명, 메시지 등록/폭·codec 수락, 큐 상한·공정성·accept 고갈과 Asio/TLS·allocator 계측.
-* [서비스 영속성·생존 감시·프로세스와 소유권 수명](/development/service-lifecycle.md) - 비동기 재진입·복제/디스크 내구 확인·identity 결속, heartbeat·장애 격리, PID/pidfd·불변 이전 입력·컨테이너와 fencing.
+* [서비스 영속성·생존 감시·프로세스와 소유권 수명](/development/service-lifecycle.md) - 비동기 재진입·복제/디스크 내구 확인·identity 결속, heartbeat·장애 격리, PID/pidfd·불변 이전 입력·컨테이너와 Windows 상시 감독·fencing.
 
 ## 데이터·재현
 * [데이터 형식·콘텐츠 변환·저장 복원](/development/data-formats.md) - 파일/wire 인코딩·압축·호환, 저작 데이터 검증, 객체 그래프 복원·오디오 청크 수락과 부분 생성의 보호/게시.
