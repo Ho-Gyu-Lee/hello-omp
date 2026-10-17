@@ -1,0 +1,35 @@
+{
+  "id": "ui",
+  "menu": "화면",
+  "headline": "화면은 저장된 노트만 그리고 저장은 저장 영역에 요청합니다.",
+  "role": "노트 목록과 편집 화면입니다.",
+  "status": [
+    { "label": "구현", "text": "목록과 편집", "tone": "ok" },
+    { "label": "검증", "text": "미실행", "tone": "neutral" }
+  ],
+  "points": [
+    "목록은 저장된 파일 순서로 그리고 제목이 바뀌면 다시 그립니다.",
+    "편집 화면은 입력이 멈춘 뒤 저장을 요청합니다."
+  ],
+  "rows": [
+    {
+      "what": "노트 목록",
+      "where": [
+        { "path": "src/ui/NoteList.ts", "symbols": ["NoteList", "Render"] }
+      ],
+      "how": "저장된 노트를 읽어 목록을 그리고 선택한 노트를 편집 화면으로 넘깁니다.",
+      "node": []
+    },
+    {
+      "what": "편집 화면",
+      "where": [
+        { "path": "src/ui/Editor.ts", "symbols": ["Editor", "OnChange"] }
+      ],
+      "how": "입력이 멈추면 저장 영역에 저장을 요청하고 결과만 표시합니다.",
+      "node": []
+    }
+  ],
+  "notes": [],
+  "evidence": [],
+  "tasks": ["UI-SEARCH-01", "UI-DARK-01"]
+}

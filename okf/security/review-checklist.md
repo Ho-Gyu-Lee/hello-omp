@@ -3,7 +3,7 @@ type: Checklist
 title: 코드 리뷰 보안 체크리스트
 description: 공통 서버·애플리케이션 및 게임 클라이언트·서버 보안 리뷰 항목.
 tags: [security, review, checklist, server, game]
-timestamp: 2026-10-15T00:00:00Z
+timestamp: 2026-10-17T00:00:00Z
 ---
 
 # 코드 리뷰 보안 체크리스트
@@ -24,6 +24,8 @@ timestamp: 2026-10-15T00:00:00Z
 - [ ] 외부 입력을 수락하기 전에 baseline·캐시·통계·저장 상태를 갱신하지 않는가
 - [ ] 부분 갱신의 각 필드를 독립 검증한 뒤 필드 조합과 기존 상태의 교차 불변조건을 검증하는가
 - [ ] 보정·정규화·재계산된 최종 accepted 값이 저장·캐시·이벤트·응답 전체에 사용되는가
+- [ ] 저장소 안의 설정 파일이 정한 경로(형제 저장소, include 패턴)로 파일을 읽거나 git을 실행하는 도구가 그 경로를 프로젝트 상대 경로와 이름을 명시한 형제 디렉터리로 제한하고, 링크·junction을 따라 경계 밖으로 나가지 않는지 실제 경로로 대조하는가. 그런 디렉터리에서 git은 `-c core.fsmonitor=false -c safe.bareRepository=explicit`로 실행하고 `rev-parse --show-toplevel`이 의도한 디렉터리인지 확인하는가. `core.fsmonitor`에 경로가 들어 있으면 git이 그 훅 명령을 실행하고, `safe.bareRepository`는 명령줄·전역·시스템 설정에서만 적용된다([git-config](https://git-scm.com/docs/git-config), 확인 2026-10-17)
+- [ ] 저장소 안에서 실행되는 도구가 외부 명령을 이름만으로 실행하지 않는가. Windows에서 Bun 1.4.3의 `Bun.spawn`은 현재 디렉터리의 `git.exe`·`git.bat`을, Node 24.17.0의 `child_process.spawnSync`는 `git.exe`를 PATH보다 먼저 실행했다(관찰 2026-10-17). PATH에서 절대 경로로 해석한 실행 파일(Bun은 `Bun.which`)이 프로젝트 밖에 있는지 확인해 실행하고 작업 디렉터리는 중립 위치로 둔다
 
 ## 게임 클라이언트
 - [ ] 로컬 세이브·설정·패킷 등 클라 데이터를 무검증 신뢰하지 않는가

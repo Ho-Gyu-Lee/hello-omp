@@ -1,0 +1,1660 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="project-map-snapshot" content="__SNAPSHOT__">
+<meta name="project-map-template" content="project-map-template/1">
+<title>프로젝트 지도</title>
+<!--
+  project-map 스킬의 공용 템플릿입니다. 모든 프로젝트 지도가 같은 외형과 구조를 씁니다.
+  화면 내용의 정본은 아래 <script id="map-data">의 JSON입니다. 빌드 스크립트가 src/의 화면 원본을 검증해 이 JSON으로 넣습니다.
+  갱신할 때는 src/의 필드를 현재 사실로 고쳐 쓰고 다시 빌드합니다(문단을 덧붙이지 않고, 이 파일을 손으로 고치지 않습니다).
+  화면 기준: OKF project-map-design.md, 근거·게시 절차: OKF project-navigation.md.
+  외형: shadcn/ui의 floating sidebar 시안(떠 있는 사이드바 패널, 작은 모서리, 상자로 감싼 보드 열)과 dashboard-01 시안(배치·위치·크기)을 합친
+  어두운 화면 하나입니다. 데스크톱 최대화 창 전용이라 반응형 코드는 없습니다.
+  글꼴: 본문은 LINE Seed Sans KR, 코드는 JetBrains Mono입니다. 코드 속 한글은 LINE Seed Sans KR로 표시됩니다.
+  글꼴 파일과 OFL 사용 허가서는 fonts/에 있습니다. 상태색: ok 청록, decide 금색, fail·block 빨강.
+  색과 크기 토큰의 기본값은 아래 :root입니다. 사용자가 요청한 경우에만 map.config.json의 tokens로 덮어씁니다.
+-->
+<style>
+@font-face { font-family: 'LINE Seed Sans KR'; src: url('fonts/LINESeedKR-Rg.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'LINE Seed Sans KR'; src: url('fonts/LINESeedKR-Bd.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url('fonts/JetBrainsMono-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+
+:root
+{
+    color-scheme: dark;
+
+    /* shadcn dark token names. Layout, positions and sizes follow shadcn dashboard-01; the look follows the floating sidebar variant.
+       map.config.json "tokens" overrides these custom properties at load time. */
+    --background: #0a0a09;
+    --foreground: #f2f0e6;
+    --secondary-foreground: #c2bfb8;
+    --card: #141413;
+    --popover: #1b1b19;
+    --primary: #f2f0e6;
+    --primary-foreground: #0a0a09;
+    --muted: #262624;
+    --muted-foreground: #9c9992;
+    --accent: #262624;
+    --border: rgba(255, 255, 255, 0.12);
+    --input: rgba(255, 255, 255, 0.2);
+    --ring: rgba(242, 240, 230, 0.4);
+    --sidebar: #141413;
+    --sidebar-accent: #262624;
+    --hover: rgba(255, 255, 255, 0.05);
+
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --radius-xl: 12px;
+
+    /* status meanings: ok = pass, decide = waiting for the user, danger = fail or blocked */
+    --ok: #66ebf0;
+    --decide: #f5cc9e;
+    --danger: #ed3333;
+    --danger-text: #ff8a80;
+
+    --sidebar-width: 256px;
+    --header-height: 48px;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body
+{
+    margin: 0;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    overflow: hidden;
+    background: var(--background);
+    color: var(--foreground);
+    font: 400 15px/1.6 'LINE Seed Sans KR', sans-serif;
+    font-variant-numeric: tabular-nums;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: underline; text-decoration-color: rgba(242, 240, 230, 0.3); text-underline-offset: 4px; }
+a:hover { text-decoration-color: var(--foreground); }
+:focus-visible { outline: 3px solid var(--ring); outline-offset: 1px; border-radius: 6px; }
+code { font: 13px/1.5 'JetBrains Mono', 'LINE Seed Sans KR', monospace; font-variant-ligatures: none; color: var(--secondary-foreground); overflow-wrap: anywhere; word-break: normal; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+button { font: inherit; color: inherit; }
+
+.skip { position: fixed; left: 12px; top: -60px; z-index: 30; padding: 8px 12px; border-radius: var(--radius-md); background: var(--card); }
+.skip:focus { top: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Floating sidebar: a bordered, rounded panel 8px from the window edge that stays expanded */
+.sidebar { display: flex; flex-direction: column; min-height: 0; margin: 8px; padding: 8px; overflow-y: auto; scrollbar-width: none; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--sidebar); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
+.sidebar-brand { display: flex; align-items: center; gap: 10px; height: 48px; padding: 8px; border-radius: var(--radius-sm); text-decoration: none; }
+.sidebar-brand:hover { background: var(--sidebar-accent); }
+.logo { display: grid; flex: none; place-items: center; width: 32px; height: 32px; border-radius: var(--radius-md); background: var(--primary); color: var(--primary-foreground); font-size: 15px; font-weight: 700; }
+.brand-names { min-width: 0; }
+.sidebar-brand strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 700; line-height: 1.25; }
+.sidebar-brand small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted-foreground); font-size: 12px; line-height: 1.25; }
+.nav-group { padding: 8px 0 0; }
+.nav-label { display: flex; align-items: center; height: 32px; padding: 0 8px; color: var(--muted-foreground); font-size: 12px; font-weight: 400; }
+.nav-item { display: flex; align-items: center; height: 32px; padding: 0 8px; border-radius: var(--radius-sm); font-size: 14px; text-decoration: none; }
+.nav-item:hover { background: var(--hover); }
+.nav-item[aria-current='page'] { background: var(--sidebar-accent); font-weight: 700; }
+.sidebar-footer { margin-top: auto; display: block; padding: 8px; border-radius: var(--radius-sm); font-size: 13px; line-height: 1.4; text-decoration: none; }
+.sidebar-footer:hover { background: var(--sidebar-accent); }
+.sidebar-footer span { display: block; color: var(--muted-foreground); font-size: 12px; }
+.sidebar-footer strong { display: block; font-size: 13px; font-weight: 700; }
+
+/* Content sits directly on the page background as in the floating variant; the header has no bottom line */
+.inset { display: grid; grid-template-rows: var(--header-height) minmax(0, 1fr); min-width: 0; min-height: 0; margin: 8px 8px 8px 0; overflow: hidden; }
+.site-header { display: flex; align-items: center; gap: 8px; padding: 0 24px; }
+.site-title { font-size: 16px; font-weight: 700; }
+.header-links { display: flex; gap: 8px; }
+.search { position: relative; width: 360px; margin-left: auto; }
+.search input { width: 100%; height: 34px; padding: 0 56px 0 12px; border: 1px solid var(--input); border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.045); color: var(--foreground); font: inherit; font-size: 14px; }
+.search input::placeholder { color: var(--muted-foreground); }
+.search input:focus { outline: 3px solid rgba(115, 115, 115, 0.5); outline-offset: 0; border-color: var(--ring); }
+.search kbd { position: absolute; right: 7px; top: 7px; height: 20px; padding: 0 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--muted); color: var(--muted-foreground); font: 400 11px/18px 'LINE Seed Sans KR', sans-serif; pointer-events: none; }
+.search input:focus + kbd, .search input:not(:placeholder-shown) + kbd { display: none; }
+.search-results { position: absolute; top: 40px; right: 0; z-index: 20; width: 560px; max-height: 560px; overflow: auto; padding: 4px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--popover); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); }
+.search-results p { margin: 0; padding: 6px 8px; color: var(--muted-foreground); font-size: 12px; }
+.search-results a { display: block; padding: 6px 8px; border-radius: 6px; font-size: 14px; text-decoration: none; }
+.search-results a:hover, .search-results a:focus, .search input:focus ~ .search-results li:first-child a { background: var(--sidebar-accent); }
+.search-results small { display: block; color: var(--muted-foreground); font-size: 12px; }
+.button { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: var(--radius-md); font-size: 14px; text-decoration: none; white-space: nowrap; }
+.button.ghost:hover { background: var(--hover); }
+.button.outline { border: 1px solid var(--input); background: rgba(255, 255, 255, 0.045); }
+.button.outline:hover { background: rgba(255, 255, 255, 0.1); }
+.button.small { height: 28px; padding: 0 10px; font-size: 13px; }
+
+/* Page */
+main { min-height: 0; overflow-y: auto; padding: 24px 24px 64px; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #404040 transparent; }
+main:focus { outline: none; }
+
+h1 { margin: 0; max-width: 1240px; font-size: 30px; line-height: 1.3; font-weight: 700; letter-spacing: -0.02em; text-wrap: balance; }
+h2 { margin: 0 0 12px; font-size: 16px; line-height: 1.4; font-weight: 700; }
+h3 { margin: 0; font-size: 15px; line-height: 1.3; font-weight: 700; }
+.role { margin: 6px 0 0; max-width: 1100px; color: var(--secondary-foreground); font-size: 16px; }
+
+/* Badges: shadcn outline badge with 6px corners; the dot carries the status color */
+.badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 24px; }
+.badge { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 400; white-space: nowrap; }
+.badge .key { color: var(--muted-foreground); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted-foreground); flex: none; }
+.dot.ok { background: var(--ok); }
+.dot.warn { background: var(--foreground); }
+.dot.decide { background: var(--decide); }
+.dot.block, .dot.fail { background: var(--danger); }
+.dot.neutral { background: #6f6c66; }
+.count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 7px; border-radius: 999px; background: var(--muted); color: var(--secondary-foreground); font-size: 12px; font-weight: 400; }
+.pill { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--muted-foreground); font-size: 12px; text-decoration: none; white-space: nowrap; }
+a.pill:hover { background: var(--hover); color: var(--foreground); }
+
+/* Card */
+.card { overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--card); }
+.card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 16px; }
+.card-desc { margin: 4px 0 0; color: var(--muted-foreground); font-size: 13px; line-height: 1.45; }
+
+.row { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 8px 16px; border-top: 1px solid var(--border); font-size: 14px; line-height: 1.45; text-decoration: none; }
+a.row:hover { background: rgba(255, 255, 255, 0.03); }
+.row.inline { grid-template-columns: 84px minmax(0, 1fr) auto; }
+.row.inline .id { color: var(--muted-foreground); font-size: 12px; white-space: nowrap; }
+.row .badge { justify-self: start; align-self: center; height: 22px; padding: 0 7px; font-size: 12px; }
+.row.stacked { align-items: start; }
+.row.stacked .badge { align-self: start; }
+.row .title { display: block; }
+.row .sub { display: block; margin-top: 2px; color: var(--muted-foreground); font-size: 12px; }
+.card .empty { margin: 0; padding: 10px 16px; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: 13px; }
+.decision-stack .empty { margin: 0; color: var(--muted-foreground); font-size: 13px; }
+
+/* Overview decision cards and change list */
+.section-title { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 10px; font-size: 15px; font-weight: 700; }
+.section-title span { color: var(--muted-foreground); font-size: 13px; font-weight: 400; }
+.decision-stack { display: grid; gap: 8px; }
+.decision-card { display: block; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card); text-decoration: none; }
+.decision-card:hover { border-color: rgba(242, 240, 230, 0.3); }
+.decision-card .line { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; color: var(--muted-foreground); font-size: 12px; }
+.decision-card .badge { height: 22px; padding: 0 7px; font-size: 12px; }
+.decision-card .question { display: block; font-size: 15px; font-weight: 700; line-height: 1.45; }
+.changes-title { margin-top: 24px; }
+.changes { border-top: 1px solid var(--border); }
+.changes li { padding: 9px 0 10px; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.45; }
+.changes time { display: block; color: var(--muted-foreground); font-size: 12px; }
+
+/* Slide */
+.slide { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.slide.text-only { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.slide .card + .card, .aside > .card { margin-top: 24px; }
+h1 + .slide, .role + .slide { margin-top: 24px; }
+.points li { position: relative; margin: 0 0 14px; padding-left: 18px; font-size: 17px; line-height: 1.55; text-wrap: pretty; }
+.points li::before { content: ''; position: absolute; left: 2px; top: 0.66em; width: 5px; height: 5px; border-radius: 50%; background: var(--muted-foreground); }
+.aside > .points { margin-top: 2px; }
+h1 + .points, .role + .points { margin-top: 20px; }
+
+.visual img, .visual video { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: var(--radius-xl); background: #000; }
+.visual video { aspect-ratio: 16 / 9; object-fit: contain; }
+.visual figcaption { padding: 10px 0 0; font-size: 14px; line-height: 1.5; }
+.visual .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 8px; color: var(--muted-foreground); font-size: 13px; }
+.visual .meta a { color: var(--muted-foreground); }
+.visual { margin: 0; }
+.visual.card { overflow: visible; border: 0; border-radius: 0; background: transparent; }
+
+.overview { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.overview .col > .card + .card, .overview .col > .card + .section-title { margin-top: 24px; }
+.overview .points { margin-top: 20px; }
+.overview .points li { font-size: 16px; }
+
+/* Section nav (segmented, jumps within the page and hides nothing) */
+.jump { display: inline-flex; gap: 2px; margin-top: 48px; padding: 3px; border-radius: var(--radius-lg); background: var(--muted); }
+.jump button { display: inline-flex; align-items: center; gap: 8px; height: 29px; padding: 0 10px; border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent; color: var(--muted-foreground); font-size: 14px; cursor: pointer; }
+.jump button:hover { color: var(--foreground); }
+.jump button.is-active { border-color: var(--input); background: rgba(255, 255, 255, 0.06); color: var(--foreground); }
+.sec { margin-top: 24px; scroll-margin-top: 8px; }
+.jump + .sec { margin-top: 20px; }
+
+/* Tables (data table: muted header row, row dividers) */
+.table-wrap { overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-xl); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.5; }
+th { height: 40px; padding: 0 16px; border-bottom: 1px solid var(--border); background: rgba(255, 255, 255, 0.03); color: var(--muted-foreground); font-size: 13px; font-weight: 400; text-align: left; }
+td { padding: 12px 16px; border-top: 1px solid var(--border); vertical-align: top; }
+tbody tr:first-child td { border-top: 0; }
+tbody tr:hover td { background: rgba(255, 255, 255, 0.02); }
+td.where code { display: block; }
+td.where code + code { margin-top: 3px; }
+td .symbols { color: var(--muted-foreground); }
+td.nowrap { white-space: nowrap; }
+.node-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.fields th { width: 160px; height: auto; padding: 12px 16px; background: transparent; color: var(--muted-foreground); vertical-align: top; }
+.fields td { border-top: 1px solid var(--border); }
+.fields tr:first-child th, .fields tr:first-child td { border-top: 0; }
+.fields .dependencies { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+
+/* Diagram card (the dashboard-01 chart card: title and description left, action right) */
+.diagram iframe { display: block; width: 100%; height: 0; border: 0; border-top: 1px solid var(--border); }
+.diagram + .diagram { margin-top: 16px; }
+
+.notes li { padding: 10px 16px; border-top: 1px solid var(--border); font-size: 14.5px; }
+.notes li:first-child { border-top: 0; }
+.links { display: flex; flex-wrap: wrap; gap: 8px; }
+.basis-list li { padding: 6px 0; }
+
+/* Board */
+.board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-top: 24px; align-items: start; }
+.column { padding: 6px; border: 1px solid var(--border); border-radius: var(--radius-xl); background: rgba(255, 255, 255, 0.02); }
+.column-head { display: flex; align-items: center; gap: 8px; padding: 6px 8px 2px; }
+.column-head h3 { font-size: 14px; }
+.column-note { margin: 0 0 8px; padding: 0 8px; color: var(--muted-foreground); font-size: 12px; line-height: 1.45; }
+.task-card { position: relative; display: block; margin-top: 6px; padding: 12px; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--card); text-decoration: none; }
+.task-card:hover { border-color: rgba(242, 240, 230, 0.3); }
+.task-card.block::before, .task-card.decide::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.task-card.block::before { background: var(--danger); }
+.task-card.decide::before { background: var(--decide); }
+.task-card .badge { height: 22px; padding: 0 7px; font-size: 12px; }
+.task-card .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted-foreground); font-size: 12px; }
+.task-card .title { display: block; margin: 6px 0; font-size: 14.5px; font-weight: 700; line-height: 1.4; text-decoration: none; }
+.task-card .title::after { content: ''; position: absolute; inset: 0; }
+.task-card .title:focus-visible { outline: none; }
+.task-card:has(.title:focus-visible) { outline: 3px solid var(--ring); outline-offset: 1px; }
+.task-card .foot a { position: relative; z-index: 1; }
+.task-card .criteria { display: block; color: var(--muted-foreground); font-size: 13px; line-height: 1.45; }
+.task-card .reason { display: block; margin-top: 8px; font-size: 13px; line-height: 1.45; }
+.task-card .reason.decide { color: var(--decide); }
+.task-card .reason.block { color: var(--danger-text); }
+.task-card .foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.column h3.older { margin: 14px 8px 0; color: var(--muted-foreground); font-size: 12px; font-weight: 400; }
+.done-older { margin: 6px 0 4px; padding: 0 8px; font-size: 13px; line-height: 1.45; }
+.done-older li { padding: 5px 0; border-top: 1px solid var(--border); }
+.done-older .id { display: block; color: var(--muted-foreground); font-size: 11.5px; }
+
+.back { margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#content">본문으로 이동</a>
+<nav class="sidebar" id="sidebar" aria-label="지도 메뉴"></nav>
+<div class="inset">
+    <header class="site-header">
+        <div class="site-title" id="site-title"></div>
+        <form class="search" id="search-form" role="search">
+            <label class="sr-only" for="search-input">영역, 파일, 작업 검색</label>
+            <input id="search-input" type="search" autocomplete="off" placeholder="영역, 파일, 심볼, 작업 ID 검색" aria-controls="search-results">
+            <kbd>Ctrl K</kbd>
+            <div class="search-results" id="search-results" hidden><p id="search-status" role="status"></p><ul id="search-list"></ul></div>
+        </form>
+        <nav class="header-links" id="header-links" aria-label="바로가기"></nav>
+    </header>
+    <main id="content" tabindex="-1"></main>
+</div>
+<script type="application/json" id="map-data">/*MAP_DATA*/</script>
+<script>
+(() =>
+{
+    const DATA = JSON.parse(document.getElementById('map-data').textContent);
+    const SITE = DATA.site;
+    const RECENT_DONE_LIMIT = 5;
+    const SEARCH_RESULT_LIMIT = 30;
+
+    // Pinned Archify 3.0.1 embed template: 8px padding per side; the frame itself has no border here.
+    const EMBED_PADDING = 16;
+
+    // The 16:9 box reserved for an image or a video until the file reports its own size.
+    const MEDIA_WIDTH = 1280;
+    const MEDIA_HEIGHT = 720;
+
+    // Fixed vocabulary shared by every map: menu labels, nav groups, kanban columns with their policies, status tones.
+    const FIXED_PAGES =
+    {
+        overview: { kind: 'overview', menu: '전체 요약' },
+        board: { kind: 'board', menu: '작업 보드', headline: '사용자 결정을 기다리는 일, 막힌 일, 진행 중인 일을 한 화면에 둡니다.', role: '확정된 일과 검토할 제안을 나누고, 멈춘 일은 사유와 함께 둡니다.' },
+        verification: { kind: 'verification', menu: '검증 현황' },
+        decisions: { kind: 'decisions', menu: '결정 기록', headline: '지금 프로젝트의 동작을 정한 결정과 그 이유입니다.', role: '날짜가 최신인 결정부터 보입니다.' },
+        basis: { kind: 'basis', menu: '근거·신선도' }
+    };
+    const NAV_GROUPS =
+    [
+        { group: '현황', items: ['overview', 'board'] },
+        { group: '책임 영역', items: SITE.areas },
+        { group: '검증·결정', items: ['verification', 'decisions', 'basis'] }
+    ];
+    const COLUMNS =
+    [
+        { id: 'proposal', name: '검토할 제안', short: '제안', policy: '근거는 있으나 아직 채택하지 않았거나 보류한 항목' },
+        { id: 'todo', name: '할 일', short: '할 일', policy: '요청·승인된 일과 확인된 결함. 완료 기준이 정해져 있습니다.' },
+        { id: 'doing', name: '진행 중', short: '진행 중', policy: '변경을 시작했고 완료 기준은 아직 확인하지 못한 일' },
+        { id: 'blocked', name: '차단·결정 대기', short: '차단', policy: '사용자 결정이나 환경 때문에 멈춘 일. 사유를 함께 둡니다.' },
+        { id: 'done', name: '완료', short: '완료', policy: '완료 기준을 확인한 근거가 있는 일. 최근 ' + RECENT_DONE_LIMIT + '건만 카드로 둡니다.' }
+    ];
+    const COLUMN_TONES = { proposal: 'neutral', todo: 'neutral', doing: 'warn', blocked: 'block', done: 'ok' };
+    const VERIFY_TONES = { '통과': 'ok', '부분': 'warn', '미실행': 'neutral', '실패': 'fail', '재검증 필요': 'warn', '해당 없음': 'neutral' };
+
+    // map.config.json "tokens" override the custom properties declared in :root.
+    for (const [name, value] of Object.entries(SITE.tokens))
+    {
+        document.documentElement.style.setProperty(name, value);
+    }
+
+    const main = document.getElementById('content');
+    const sidebar = document.getElementById('sidebar');
+    const siteTitle = document.getElementById('site-title');
+    const headerLinks = document.getElementById('header-links');
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
+    const searchList = document.getElementById('search-list');
+    const searchStatus = document.getElementById('search-status');
+
+    const taskById = new Map(DATA.tasks.map(task => [task.id, task]));
+    const columnById = new Map(COLUMNS.map(column => [column.id, column]));
+
+    // Fixed pages come from the vocabulary above, area pages from the data; the data may add text to a fixed page but never renames it.
+    // Pages are created in menu order, which is also the order of search results.
+    const PAGES = {};
+
+    for (const group of NAV_GROUPS)
+    {
+        for (const id of group.items)
+        {
+            const fixed = Object.hasOwn(FIXED_PAGES, id) ? FIXED_PAGES[id] : null;
+            const authored = Object.hasOwn(DATA.pages, id) ? DATA.pages[id] : {};
+            PAGES[id] = fixed ? { ...fixed, ...authored, id, kind: fixed.kind, menu: fixed.menu } : { ...authored, id, kind: 'area' };
+        }
+    }
+
+    function ViewName(view)
+    {
+        return ViewOf(view)?.name ?? view;
+    }
+
+    // Views are keyed by author-chosen ids, so only own keys count ("constructor" is a legal id).
+    function ViewOf(view)
+    {
+        return Object.hasOwn(SITE.views, view) ? SITE.views[view] : undefined;
+    }
+
+    function EncodePath(path)
+    {
+        return path.split('/').map(encodeURIComponent).join('/');
+    }
+
+    function Make(tag, className, text)
+    {
+        const element = document.createElement(tag);
+
+        if (className)
+        {
+            element.className = className;
+        }
+
+        if (text !== undefined && text !== null)
+        {
+            element.textContent = text;
+        }
+
+        return element;
+    }
+
+    // Only http, https and file targets become links; a control character or a scheme such as javascript: leaves the anchor inert.
+    function MakeLink(href, text, className)
+    {
+        const link = Make('a', className, text);
+        let protocol = '';
+
+        try
+        {
+            protocol = new URL(href, location.href).protocol;
+        }
+        catch
+        {
+            return link;
+        }
+
+        if (protocol === 'http:' || protocol === 'https:' || protocol === 'file:')
+        {
+            link.href = href;
+        }
+
+        return link;
+    }
+
+    function MakeBadge(tone, text, key)
+    {
+        const badge = Make('span', 'badge');
+        badge.append(Make('span', 'dot ' + tone));
+
+        if (key)
+        {
+            badge.append(Make('span', 'key', key));
+        }
+
+        badge.append(Make('span', null, text));
+        return badge;
+    }
+
+    function PageTitle(id)
+    {
+        return (Object.hasOwn(PAGES, id) ? PAGES[id].menu : null) ?? id;
+    }
+
+    function IsUserDecision(task)
+    {
+        return task.column === 'blocked' && typeof task.reason === 'string' && task.reason.trim().endsWith('?');
+    }
+
+    function ColumnLabel(task)
+    {
+        if (IsUserDecision(task))
+        {
+            return { text: '결정 대기', tone: 'decide' };
+        }
+
+        return { text: columnById.get(task.column).short, tone: COLUMN_TONES[task.column] };
+    }
+
+    function RenderSidebar()
+    {
+        const brand = MakeLink('#overview', null, 'sidebar-brand');
+        brand.append(Make('span', 'logo', SITE.project.logo));
+        const names = Make('span', 'brand-names');
+        names.append(Make('strong', null, SITE.project.name));
+        names.append(Make('small', null, SITE.project.subtitle));
+        brand.append(names);
+        sidebar.append(brand);
+
+        for (const group of NAV_GROUPS)
+        {
+            if (group.items.length === 0)
+            {
+                continue;
+            }
+
+            const section = Make('div', 'nav-group');
+            section.append(Make('div', 'nav-label', group.group));
+
+            for (const id of group.items)
+            {
+                const link = MakeLink('#' + id, PageTitle(id), 'nav-item');
+                link.dataset.nav = id;
+                section.append(link);
+            }
+
+            sidebar.append(section);
+        }
+
+        const foot = MakeLink('#basis', null, 'sidebar-footer');
+        foot.append(Make('strong', null, PageTitle('basis')));
+        foot.append(Make('span', null, SITE.basis.label));
+        sidebar.append(foot);
+    }
+
+    function RenderHeaderLinks()
+    {
+        for (const link of SITE.links)
+        {
+            headerLinks.append(MakeLink(link.href, link.label, 'button ghost'));
+        }
+    }
+
+    function RenderHead(page, container)
+    {
+        container.append(Make('h1', null, page.headline));
+
+        if (page.role)
+        {
+            container.append(Make('p', 'role', page.role));
+        }
+
+        if (page.status?.length)
+        {
+            const list = Make('ul', 'badges');
+            list.setAttribute('aria-label', '상태');
+
+            for (const item of page.status)
+            {
+                const text = item.count === 'userDecision' ? '사용자 결정 ' + DATA.tasks.filter(task => task.kind === 'task' && IsUserDecision(task)).length + '건' : item.text;
+                const entry = Make('li');
+                entry.append(MakeBadge(item.tone, text, item.label));
+                list.append(entry);
+            }
+
+            container.append(list);
+        }
+    }
+
+    function RenderFigure(visual, media)
+    {
+        const figure = Make('figure', 'card visual');
+        figure.append(media);
+
+        const caption = Make('figcaption', null, visual.caption);
+        const meta = Make('span', 'meta');
+        meta.append(Make('span', 'pill', visual.source));
+        meta.append(Make('span', 'pill', visual.basis));
+
+        if (visual.stale)
+        {
+            meta.append(MakeBadge('warn', '재촬영 필요'));
+
+            if (visual.staleReason)
+            {
+                meta.append(Make('span', null, visual.staleReason));
+            }
+        }
+
+        if (visual.evidence)
+        {
+            meta.append(MakeLink(visual.evidence, '촬영 근거'));
+        }
+
+        caption.append(meta);
+        figure.append(caption);
+        return figure;
+    }
+
+    function RenderImage(visual)
+    {
+        const image = Make('img');
+        image.src = visual.src;
+        image.alt = visual.alt;
+        image.width = MEDIA_WIDTH;
+        image.height = MEDIA_HEIGHT;
+        return RenderFigure(visual, image);
+    }
+
+    // A looping clip plays by itself, muted; any other video waits behind its poster until the reader presses play. No video starts with sound.
+    function RenderVideo(visual)
+    {
+        const video = Make('video');
+        video.width = MEDIA_WIDTH;
+        video.height = MEDIA_HEIGHT;
+        video.controls = true;
+        video.playsInline = true;
+        video.preload = 'metadata';
+        video.title = visual.alt;
+        video.setAttribute('aria-label', visual.alt);
+
+        if (visual.poster)
+        {
+            video.poster = visual.poster;
+        }
+
+        if (visual.loop)
+        {
+            video.defaultMuted = true;
+            video.muted = true;
+            video.loop = true;
+            video.autoplay = true;
+        }
+
+        video.src = visual.src;
+        return RenderFigure(visual, video);
+    }
+
+    function RenderMedia(visual)
+    {
+        return visual.kind === 'video' ? RenderVideo(visual) : RenderImage(visual);
+    }
+
+    function FitDiagram(frame, view)
+    {
+        const geometry = ViewOf(view);
+        const width = frame.clientWidth;
+
+        if (!geometry || width === 0)
+        {
+            return;
+        }
+
+        frame.style.height = Math.ceil((width - EMBED_PADDING) * geometry.height / geometry.width + EMBED_PADDING) + 'px';
+    }
+
+    function RenderDiagram(view, caption, focusNode)
+    {
+        const geometry = ViewOf(view);
+        const block = Make('figure', 'card diagram');
+        block.dataset.view = view;
+        block.style.margin = '0';
+        block.style.maxWidth = (geometry.width + EMBED_PADDING + 2) + 'px';
+
+        const head = Make('figcaption', 'card-head');
+        const titles = Make('div');
+        titles.append(Make('h3', null, ViewName(view)));
+
+        if (caption)
+        {
+            titles.append(Make('p', 'card-desc', caption));
+        }
+
+        head.append(titles);
+        head.append(MakeLink(view + '.html?theme=dark' + (focusNode ? '#focus=' + encodeURIComponent(focusNode) : ''), '크게 보기', 'button outline small'));
+        block.append(head);
+
+        const frame = Make('iframe');
+        frame.title = ViewName(view);
+        frame.loading = 'eager';
+        frame.src = view + '.html?embed=1&theme=dark' + (focusNode ? '#focus=' + encodeURIComponent(focusNode) : '');
+        block.append(frame);
+        requestAnimationFrame(() => FitDiagram(frame, view));
+        return block;
+    }
+
+    function RenderPoints(points)
+    {
+        const list = Make('ul', 'points');
+
+        for (const point of points)
+        {
+            list.append(Make('li', null, point));
+        }
+
+        return list;
+    }
+
+    function RenderCardBox(title, count, note)
+    {
+        const box = Make('section', 'card');
+        const header = Make('div', 'card-head');
+        const titles = Make('div');
+        titles.append(Make('h3', null, title));
+
+        if (note)
+        {
+            titles.append(Make('p', 'card-desc', note));
+        }
+
+        header.append(titles);
+
+        if (count !== null && count !== undefined)
+        {
+            header.append(Make('span', 'count', count + '건'));
+        }
+
+        box.append(header);
+        return box;
+    }
+
+    function RenderSectionTitle(title, note, className)
+    {
+        const heading = Make('h3', className ? 'section-title ' + className : 'section-title', title);
+
+        if (note)
+        {
+            heading.append(Make('span', null, note));
+        }
+
+        return heading;
+    }
+
+    function RenderTaskRow(task, stacked)
+    {
+        const label = ColumnLabel(task);
+        const badge = MakeBadge(label.tone, label.text);
+
+        if (stacked)
+        {
+            const row = MakeLink('#task/' + task.id, null, 'row stacked');
+            row.append(badge);
+            const body = Make('span');
+            body.append(Make('span', 'title', task.title));
+            body.append(Make('span', 'sub', task.id + ' · ' + PageTitle(task.area)));
+            row.append(body);
+            return row;
+        }
+
+        const row = MakeLink('#task/' + task.id, null, 'row inline');
+        row.append(badge);
+        row.append(Make('span', 'title', task.title));
+        row.append(Make('span', 'id', task.id));
+        return row;
+    }
+
+    function AreaTasks(page)
+    {
+        // A page shows its own cards plus cards that other areas own but this page links in its tasks list.
+        const linked = new Set(page.tasks ?? []);
+        const related = DATA.tasks.filter(task => task.kind === 'task' && (task.area === page.id || linked.has(task.id)));
+        const open = related.filter(task => task.column !== 'done' && task.column !== 'proposal');
+        const order = { blocked: 0, doing: 1, todo: 2 };
+        open.sort((left, right) => order[left.column] - order[right.column]);
+        return { open, proposals: related.filter(task => task.column === 'proposal').length };
+    }
+
+    function RenderAreaTasks(page)
+    {
+        const { open, proposals } = AreaTasks(page);
+        const box = RenderCardBox('이 영역의 작업', open.length, proposals > 0 ? '검토할 제안 ' + proposals + '건은 작업 보드에' : null);
+
+        if (open.length === 0)
+        {
+            box.append(Make('p', 'empty', '열린 작업이 없습니다.'));
+        }
+
+        for (const task of open)
+        {
+            box.append(RenderTaskRow(task, false));
+        }
+
+        return box;
+    }
+
+    function WrapTable(table)
+    {
+        const wrap = Make('div', 'table-wrap');
+        wrap.append(table);
+        return wrap;
+    }
+
+    function RenderRows(page)
+    {
+        const table = Make('table');
+        const hasNodes = page.rows.some(row => row.node.length > 0);
+        table.innerHTML = '<thead><tr><th style="width:20%">책임</th><th style="width:34%">파일 · 심볼</th><th>하는 일</th>' + (hasNodes ? '<th style="width:15%">관계도</th>' : '') + '</tr></thead>';
+        const body = Make('tbody');
+
+        for (const row of page.rows)
+        {
+            const tr = Make('tr');
+            tr.append(Make('td', null, row.what));
+
+            const where = Make('td', 'where');
+
+            for (const entry of row.where)
+            {
+                const code = Make('code');
+                code.append(MakeLink(SITE.root + EncodePath(entry.path), entry.path));
+
+                if (entry.symbols.length)
+                {
+                    code.append(Make('span', 'symbols', ' · ' + entry.symbols.join(', ')));
+                }
+
+                where.append(code);
+            }
+
+            tr.append(where);
+            tr.append(Make('td', null, row.how));
+
+            if (hasNodes)
+            {
+                const nodes = Make('td');
+                const nodeLinks = Make('span', 'node-links');
+
+                for (const node of [...new Set(row.node.map(entry => entry.split(':')[0]))])
+                {
+                    const first = row.node.find(entry => entry.startsWith(node + ':'));
+                    nodeLinks.append(MakeLink('#' + page.id + '?node=' + encodeURIComponent(first), ViewName(node), 'pill'));
+                }
+
+                nodes.append(nodeLinks);
+                tr.append(nodes);
+            }
+            body.append(tr);
+        }
+
+        table.append(body);
+        return WrapTable(table);
+    }
+
+    function RenderDecisionTable(decisions, withArea)
+    {
+        const table = Make('table');
+        table.innerHTML = '<thead><tr><th style="width:120px">날짜</th><th>결정</th><th style="width:30%">이유</th>' + (withArea ? '<th style="width:140px">영역</th>' : '') + '<th style="width:240px">작업</th></tr></thead>';
+        const body = Make('tbody');
+
+        for (const decision of decisions)
+        {
+            const tr = Make('tr');
+            tr.append(Make('td', 'nowrap', decision.date));
+            tr.append(Make('td', null, decision.text));
+            tr.append(Make('td', null, decision.why ?? ''));
+
+            if (withArea)
+            {
+                const area = Make('td');
+                area.append(MakeLink('#' + decision.area, PageTitle(decision.area)));
+                tr.append(area);
+            }
+
+            const taskCell = Make('td', 'nowrap');
+
+            if (decision.task && taskById.has(decision.task))
+            {
+                taskCell.append(MakeLink('#task/' + decision.task, decision.task));
+            }
+            else if (decision.task)
+            {
+                taskCell.textContent = decision.task;
+            }
+
+            tr.append(taskCell);
+            body.append(tr);
+        }
+
+        table.append(body);
+        return WrapTable(table);
+    }
+
+    function RenderEvidence(items)
+    {
+        const list = Make('ul', 'links');
+
+        for (const item of items)
+        {
+            const entry = Make('li');
+            entry.append(MakeLink(item.href, item.label, 'button outline'));
+            list.append(entry);
+        }
+
+        return list;
+    }
+
+    function RenderNotes(notes)
+    {
+        const wrap = Make('div', 'table-wrap');
+        const list = Make('ul', 'notes');
+
+        for (const note of notes)
+        {
+            list.append(Make('li', null, note));
+        }
+
+        wrap.append(list);
+        return wrap;
+    }
+
+    // A section is a titled block that the segmented section nav can jump to.
+    function MakeSection(id, title, content)
+    {
+        const section = Make('section', 'sec');
+        section.id = id;
+        section.append(Make('h2', null, title));
+        section.append(content);
+        return section;
+    }
+
+    function RenderJumpNav(sections)
+    {
+        const nav = Make('nav', 'jump');
+        nav.setAttribute('aria-label', '이 화면의 구역');
+
+        for (const section of sections)
+        {
+            const button = Make('button', null, section.title);
+            button.type = 'button';
+            button.dataset.jump = section.id;
+
+            if (section.count !== undefined && section.count !== null)
+            {
+                button.append(Make('span', 'count', String(section.count)));
+            }
+
+            nav.append(button);
+        }
+
+        return nav;
+    }
+
+    function AppendSections(container, sections)
+    {
+        if (sections.length > 1)
+        {
+            container.append(RenderJumpNav(sections));
+        }
+
+        for (const section of sections)
+        {
+            container.append(section.element);
+        }
+    }
+
+    function RenderArea(page, focusNode)
+    {
+        const container = Make('article', 'page');
+        RenderHead(page, container);
+
+        const slide = Make('div', 'slide');
+        const visual = page.visual;
+        const hasVisual = visual?.kind === 'image' || visual?.kind === 'video' || visual?.kind === 'diagram';
+        const aside = Make('div', 'aside');
+
+        if (visual?.kind === 'image' || visual?.kind === 'video')
+        {
+            slide.append(RenderMedia(visual));
+        }
+        else if (visual?.kind === 'diagram')
+        {
+            const focus = focusNode && focusNode.startsWith(visual.view + ':') ? focusNode.split(':')[1] : visual.focus;
+            slide.append(RenderDiagram(visual.view, visual.caption, focus));
+        }
+        else
+        {
+            slide.classList.add('text-only');
+        }
+
+        if (hasVisual)
+        {
+            aside.append(RenderPoints(page.points));
+            aside.append(RenderAreaTasks(page));
+            slide.append(aside);
+        }
+        else
+        {
+            slide.append(RenderPoints(page.points));
+            slide.append(RenderAreaTasks(page));
+        }
+
+        container.append(slide);
+
+        const sections = [];
+
+        if (page.rows?.length)
+        {
+            sections.push({ id: 'section-rows', title: '파일과 심볼', count: page.rows.length, element: MakeSection('section-rows', '파일과 심볼', RenderRows(page)) });
+        }
+
+        const shownViews = new Set(visual?.kind === 'diagram' ? [visual.view] : []);
+        const extraViews = [];
+
+        if (page.diagram && !shownViews.has(page.diagram.view))
+        {
+            extraViews.push({ view: page.diagram.view, caption: page.diagram.caption });
+        }
+
+        const focusView = focusNode ? focusNode.split(':')[0] : null;
+
+        if (focusView && !shownViews.has(focusView) && !extraViews.some(entry => entry.view === focusView))
+        {
+            extraViews.push({ view: focusView, caption: null });
+        }
+
+        if (extraViews.length)
+        {
+            const stack = Make('div');
+
+            for (const entry of extraViews)
+            {
+                const focus = focusView === entry.view ? focusNode.split(':')[1] : null;
+                stack.append(RenderDiagram(entry.view, entry.caption, focus));
+            }
+
+            sections.push({ id: 'section-diagram', title: '관계도', count: null, element: MakeSection('section-diagram', '관계도', stack) });
+        }
+
+        if (page.notes?.length)
+        {
+            sections.push({ id: 'section-notes', title: '확인하지 못한 것', count: page.notes.length, element: MakeSection('section-notes', '확인하지 못한 것', RenderNotes(page.notes)) });
+        }
+
+        const decisions = DATA.decisions.filter(decision => decision.area === page.id);
+
+        if (decisions.length)
+        {
+            sections.push({ id: 'section-decisions', title: '관련 결정', count: decisions.length, element: MakeSection('section-decisions', '관련 결정', RenderDecisionTable(decisions, false)) });
+        }
+
+        if (page.evidence?.length)
+        {
+            sections.push({ id: 'section-evidence', title: '근거 자료', count: page.evidence.length, element: MakeSection('section-evidence', '근거 자료', RenderEvidence(page.evidence)) });
+        }
+
+        AppendSections(container, sections);
+        return container;
+    }
+
+    function RenderOverview(page)
+    {
+        const container = Make('article', 'page');
+        RenderHead(page, container);
+
+        // The overview first screen holds the representative screen, decisions, active work and recent changes together.
+        const grid = Make('div', 'overview');
+        const first = Make('div', 'col');
+
+        if (page.visual)
+        {
+            first.append(RenderMedia(page.visual));
+        }
+
+        first.append(RenderPoints(page.points));
+        grid.append(first);
+
+        const second = Make('div', 'col');
+        const waiting = DATA.tasks.filter(task => task.kind === 'task' && IsUserDecision(task));
+        second.append(RenderSectionTitle('정해 주셔야 할 것', waiting.length + '건'));
+        const stack = Make('div', 'decision-stack');
+
+        for (const task of waiting)
+        {
+            const card = MakeLink('#task/' + task.id, null, 'decision-card');
+            const line = Make('span', 'line');
+            line.append(MakeBadge('decide', '결정 대기'));
+            line.append(Make('span', null, task.id + ' · ' + PageTitle(task.area)));
+            card.append(line);
+            card.append(Make('span', 'question', task.reason));
+            stack.append(card);
+        }
+
+        if (waiting.length === 0)
+        {
+            stack.append(Make('p', 'empty', '지금 결정을 기다리는 작업이 없습니다.'));
+        }
+
+        second.append(stack);
+        second.append(RenderSectionTitle('최근 변경', null, 'changes-title'));
+        const changes = Make('ul', 'changes');
+
+        for (const change of page.changes)
+        {
+            const item = Make('li');
+            item.append(Make('time', null, change.date));
+            item.append(Make('span', null, change.text));
+            changes.append(item);
+        }
+
+        second.append(changes);
+        grid.append(second);
+
+        const third = Make('div', 'col');
+        const open = DATA.tasks.filter(task => task.kind === 'task' && (task.column === 'doing' || (task.column === 'blocked' && !IsUserDecision(task))));
+        const openBox = RenderCardBox('진행 중이거나 막힌 작업', open.length, null);
+
+        for (const task of open)
+        {
+            openBox.append(RenderTaskRow(task, true));
+        }
+
+        third.append(openBox);
+        grid.append(third);
+        container.append(grid);
+
+        if (page.repos?.length)
+        {
+            const table = Make('table');
+            table.innerHTML = '<thead><tr><th style="width:18%">저장소</th><th style="width:22%">위치</th><th>맡는 일</th></tr></thead>';
+            const body = Make('tbody');
+
+            for (const repo of page.repos)
+            {
+                const tr = Make('tr');
+                tr.append(Make('td', null, repo.name));
+                const where = Make('td');
+                where.append(Make('code', null, repo.path));
+                tr.append(where);
+                tr.append(Make('td', null, repo.role));
+                body.append(tr);
+            }
+
+            table.append(body);
+            const section = MakeSection('section-repos', '저장소', WrapTable(table));
+            section.style.marginTop = '48px';
+            container.append(section);
+        }
+
+        return container;
+    }
+
+    function RenderCard(task)
+    {
+        // The title link covers the whole card, so the evidence link sits beside it instead of nesting inside another link.
+        const card = Make('article', 'task-card');
+        const top = Make('span', 'top');
+        top.append(Make('span', null, task.id));
+        top.append(Make('span', null, PageTitle(task.area)));
+        card.append(top);
+        card.append(MakeLink('#task/' + task.id, task.title, 'title'));
+        card.append(Make('span', 'criteria', task.criteria));
+
+        if (task.column === 'blocked')
+        {
+            card.classList.add(IsUserDecision(task) ? 'decide' : 'block');
+        }
+
+        if (task.reason)
+        {
+            const reasonTone = task.reason.trim().endsWith('?') ? 'decide' : (task.column === 'blocked' ? 'block' : '');
+            card.append(Make('span', 'reason ' + reasonTone, task.reason));
+        }
+
+        const foot = Make('span', 'foot');
+
+        if (task.column === 'blocked')
+        {
+            const label = ColumnLabel(task);
+            foot.append(MakeBadge(label.tone, label.text));
+        }
+
+        foot.append(MakeBadge(VERIFY_TONES[task.verify] ?? 'neutral', task.verify, '검증'));
+
+        if (task.column === 'done' && task.done)
+        {
+            foot.append(MakeBadge('neutral', task.done));
+        }
+
+        if (task.deadline)
+        {
+            foot.append(MakeBadge('warn', task.deadline, '기한'));
+        }
+
+        if (task.evidence)
+        {
+            foot.append(MakeLink(task.evidence, '근거', 'pill'));
+        }
+
+        card.append(foot);
+        return card;
+    }
+
+    function RenderBoard(page)
+    {
+        const container = Make('article', 'page');
+        const work = DATA.tasks.filter(task => task.kind === 'task');
+        const userWaiting = work.filter(IsUserDecision).length;
+        const blocked = work.filter(task => task.column === 'blocked').length - userWaiting;
+        const doing = work.filter(task => task.column === 'doing').length;
+        container.append(Make('h1', null, '사용자 결정을 기다리는 일 ' + userWaiting + '건, 막힌 일 ' + blocked + '건, 진행 중인 일 ' + doing + '건입니다.'));
+        container.append(Make('p', 'role', page.role));
+
+        const board = Make('div', 'board');
+
+        for (const column of COLUMNS)
+        {
+            const cards = work.filter(task => task.column === column.id);
+            const section = Make('section', 'column');
+            const head = Make('div', 'column-head');
+            head.append(Make('h3', null, column.name));
+            head.append(Make('span', 'count', String(cards.length)));
+            section.append(head);
+            section.append(Make('p', 'column-note', column.policy));
+
+            if (column.id === 'done')
+            {
+                cards.sort((left, right) => (right.done ?? '').localeCompare(left.done ?? ''));
+            }
+
+            const shown = column.id === 'done' ? cards.slice(0, RECENT_DONE_LIMIT) : cards;
+
+            for (const task of shown)
+            {
+                section.append(RenderCard(task));
+            }
+
+            if (column.id === 'done' && cards.length > shown.length)
+            {
+                section.append(Make('h3', 'older', '이전 완료 ' + (cards.length - shown.length) + '건'));
+                const older = Make('ul', 'done-older');
+
+                for (const task of cards.slice(RECENT_DONE_LIMIT))
+                {
+                    const item = Make('li');
+                    item.append(Make('span', 'id', task.id));
+                    item.append(MakeLink('#task/' + task.id, task.title));
+                    older.append(item);
+                }
+
+                section.append(older);
+            }
+
+            board.append(section);
+        }
+
+        container.append(board);
+        return container;
+    }
+
+    function RenderTask(id)
+    {
+        const task = taskById.get(id);
+        const container = Make('article', 'page');
+        container.append(MakeLink('#board', '작업 보드로', 'button outline back'));
+
+        if (!task)
+        {
+            container.append(Make('h1', null, id + ' 작업을 찾지 못했습니다.'));
+            return container;
+        }
+
+        container.append(Make('h1', null, task.title));
+        const label = ColumnLabel(task);
+        const badges = Make('ul', 'badges');
+
+        for (const badge of [MakeBadge('neutral', task.id, '작업'), MakeBadge(label.tone, label.text, '상태'), MakeBadge(VERIFY_TONES[task.verify] ?? 'neutral', task.verify, '검증')])
+        {
+            const item = Make('li');
+            item.append(badge);
+            badges.append(item);
+        }
+
+        container.append(badges);
+
+        const table = Make('table', 'fields');
+        const body = Make('tbody');
+        const rows = [['완료 기준', task.criteria], ['영역', null], ['사유', task.reason], ['선행 작업', null], ['완료일', task.done], ['기한', task.deadline], ['근거', null]];
+
+        for (const [name, value] of rows)
+        {
+            const tr = Make('tr');
+            tr.append(Make('th', null, name));
+            const cell = Make('td');
+
+            if (name === '영역')
+            {
+                cell.append(MakeLink('#' + task.area, PageTitle(task.area)));
+            }
+            else if (name === '선행 작업')
+            {
+                const list = Make('span', 'dependencies');
+
+                for (const dependency of task.depends)
+                {
+                    list.append(taskById.has(dependency) ? MakeLink('#task/' + dependency, dependency) : Make('span', null, dependency));
+                }
+
+                cell.append(list);
+            }
+            else if (name === '근거')
+            {
+                if (task.evidence)
+                {
+                    cell.append(MakeLink(task.evidence, '근거'));
+                }
+            }
+            else
+            {
+                cell.textContent = value ?? '';
+            }
+
+            if (cell.textContent.trim() === '')
+            {
+                continue;
+            }
+
+            tr.append(cell);
+            body.append(tr);
+        }
+
+        table.append(body);
+        container.append(WrapTable(table));
+        return container;
+    }
+
+    function RenderVerification(page)
+    {
+        const container = Make('article', 'page');
+        RenderHead(page, container);
+        container.append(RenderPoints(page.points));
+
+        const verified = Make('table');
+        verified.innerHTML = '<thead><tr><th style="width:23%">확인한 동작</th><th style="width:27%">방법</th><th style="width:11%">결과</th><th style="width:9%">날짜</th><th>시험 파일</th><th style="width:6%">근거</th></tr></thead>';
+        const verifiedBody = Make('tbody');
+
+        for (const row of page.verified)
+        {
+            const tr = Make('tr');
+            const what = Make('td');
+            what.append(Make('span', null, row.what + ' '));
+            what.append(MakeLink('#' + row.area, PageTitle(row.area), 'symbols'));
+            tr.append(what);
+            tr.append(Make('td', null, row.how));
+            const result = Make('td', 'nowrap');
+            result.append(MakeBadge(VERIFY_TONES[row.result] ?? 'neutral', row.result));
+            tr.append(result);
+            tr.append(Make('td', 'nowrap', row.date ?? ''));
+            const suite = Make('td', 'where');
+
+            for (const path of row.suite)
+            {
+                suite.append(Make('code', null, path));
+            }
+
+            tr.append(suite);
+            const evidence = Make('td');
+
+            if (row.evidence)
+            {
+                evidence.append(MakeLink(row.evidence, '근거'));
+            }
+
+            tr.append(evidence);
+            verifiedBody.append(tr);
+        }
+
+        verified.append(verifiedBody);
+
+        const missing = Make('table');
+        missing.innerHTML = '<thead><tr><th style="width:30%">대상</th><th>이유</th><th style="width:16%">영역</th><th style="width:18%">작업</th></tr></thead>';
+        const missingBody = Make('tbody');
+
+        for (const row of page.notVerified)
+        {
+            const tr = Make('tr');
+            tr.append(Make('td', null, row.what));
+            tr.append(Make('td', null, row.why));
+            const area = Make('td');
+            area.append(MakeLink('#' + row.area, PageTitle(row.area)));
+            tr.append(area);
+            const taskCell = Make('td');
+
+            if (row.task)
+            {
+                taskCell.append(taskById.has(row.task) ? MakeLink('#task/' + row.task, row.task) : Make('span', null, row.task));
+            }
+
+            tr.append(taskCell);
+            missingBody.append(tr);
+        }
+
+        missing.append(missingBody);
+
+        AppendSections(container,
+        [
+            { id: 'section-verified', title: '확인한 것', count: page.verified.length, element: MakeSection('section-verified', '확인한 것', WrapTable(verified)) },
+            { id: 'section-missing', title: '아직 확인하지 않은 것', count: page.notVerified.length, element: MakeSection('section-missing', '아직 확인하지 않은 것', WrapTable(missing)) }
+        ]);
+
+        return container;
+    }
+
+    function RenderDecisions(page)
+    {
+        const container = Make('article', 'page');
+        RenderHead(page, container);
+        const wrap = Make('div');
+        wrap.style.marginTop = '24px';
+        wrap.append(RenderDecisionTable(DATA.decisions, true));
+        container.append(wrap);
+        return container;
+    }
+
+    function RenderBasis(page)
+    {
+        const container = Make('article', 'page');
+        RenderHead(page, container);
+        container.append(RenderPoints(page.points));
+
+        // The one reader-screen place for the snapshot ID: the map is a snapshot of the working tree, not a live view.
+        const facts = Make('ul', 'badges');
+        facts.setAttribute('aria-label', '지도 기준');
+
+        for (const [key, text] of [['기준 스냅샷', SITE.basis.snapshot], ['작성일', SITE.basis.written]])
+        {
+            const entry = Make('li');
+            entry.append(MakeBadge('neutral', text, key));
+            facts.append(entry);
+        }
+
+        container.append(facts);
+
+        for (const [index, section] of page.sections.entries())
+        {
+            const body = Make('div');
+
+            if (section.lines)
+            {
+                const list = Make('ul', 'basis-list');
+
+                for (const line of section.lines)
+                {
+                    const item = Make('li');
+
+                    if (typeof line === 'string')
+                    {
+                        item.textContent = line;
+                    }
+                    else
+                    {
+                        item.append(Make('span', null, line.text + ' '));
+                        item.append(MakeLink(line.href, line.label));
+                    }
+
+                    list.append(item);
+                }
+
+                body.append(list);
+            }
+
+            const block = MakeSection('section-' + index, section.title, body);
+            block.style.marginTop = '32px';
+            container.append(block);
+        }
+
+        return container;
+    }
+
+    function ParseHash()
+    {
+        let hash = '';
+
+        try
+        {
+            hash = decodeURIComponent(location.hash.slice(1));
+        }
+        catch
+        {
+            return { route: 'overview', id: null, focusNode: null };
+        }
+
+        if (hash.startsWith('task/'))
+        {
+            return { route: 'task', id: hash.slice(5), focusNode: null };
+        }
+
+        const [route, query = ''] = hash.split('?', 2);
+        const node = new URLSearchParams(query).get('node');
+
+        // A focus node is "<view>:<componentId>" of a view this map embeds; anything else is ignored rather than turned into a frame URL.
+        const focusNode = node !== null && node.includes(':') && ViewOf(node.split(':')[0]) !== undefined ? node : null;
+        return { route: Object.hasOwn(PAGES, route) ? route : 'overview', id: null, focusNode };
+    }
+
+    function Render(moveFocus)
+    {
+        const { route, id, focusNode } = ParseHash();
+        const page = PAGES[route];
+        const renderers = { overview: RenderOverview, board: RenderBoard, verification: RenderVerification, decisions: RenderDecisions, basis: RenderBasis, area: RenderArea };
+        const content = route === 'task' ? RenderTask(id) : renderers[page.kind](page, focusNode);
+        main.replaceChildren(content);
+        const navId = route === 'task' ? 'board' : route;
+
+        for (const link of sidebar.querySelectorAll('[data-nav]'))
+        {
+            if (link.dataset.nav === navId)
+            {
+                link.setAttribute('aria-current', 'page');
+            }
+            else
+            {
+                link.removeAttribute('aria-current');
+            }
+        }
+
+        const title = route === 'task' ? id : PageTitle(route);
+        siteTitle.textContent = title;
+        document.title = title + ' · ' + SITE.project.name + ' ' + SITE.project.subtitle;
+        searchResults.hidden = true;
+
+        if (focusNode)
+        {
+            const view = focusNode.split(':')[0];
+            const target = main.querySelector('.diagram[data-view="' + view + '"]');
+            requestAnimationFrame(() => target?.scrollIntoView({ block: 'start', behavior: 'instant' }));
+        }
+        else
+        {
+            main.scrollTo({ top: 0, behavior: 'instant' });
+        }
+
+        if (moveFocus)
+        {
+            main.focus({ preventScroll: true });
+        }
+    }
+
+    function BuildSearchIndex()
+    {
+        const entries = [];
+
+        for (const [id, page] of Object.entries(PAGES))
+        {
+            const parts = [page.menu, page.headline, page.role, ...(page.points ?? []), ...(page.notes ?? [])];
+
+            for (const row of page.rows ?? [])
+            {
+                parts.push(row.what, row.how, ...row.where.flatMap(entry => [entry.path, ...entry.symbols]));
+            }
+
+            for (const row of page.verified ?? [])
+            {
+                parts.push(row.what, row.how, ...row.suite);
+            }
+
+            for (const row of page.notVerified ?? [])
+            {
+                parts.push(row.what, row.why);
+            }
+
+            entries.push({ href: '#' + id, title: page.menu, context: page.headline, text: parts.filter(Boolean).join(' ').toLocaleLowerCase() });
+        }
+
+        for (const task of DATA.tasks)
+        {
+            entries.push({ href: '#task/' + task.id, title: task.id + ' ' + task.title, context: '작업 ' + PageTitle(task.area), text: [task.id, task.title, task.criteria, task.reason].filter(Boolean).join(' ').toLocaleLowerCase() });
+        }
+
+        for (const decision of DATA.decisions)
+        {
+            entries.push({ href: '#decisions', title: decision.text, context: '결정 ' + decision.date, text: [decision.text, decision.why, decision.task].filter(Boolean).join(' ').toLocaleLowerCase() });
+        }
+
+        return entries;
+    }
+
+    const searchIndex = BuildSearchIndex();
+
+    function Search()
+    {
+        const words = searchInput.value.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+        searchList.replaceChildren();
+
+        if (words.length === 0)
+        {
+            searchResults.hidden = true;
+            return;
+        }
+
+        const matches = searchIndex.filter(entry => words.every(word => entry.text.includes(word)));
+        searchStatus.textContent = matches.length ? matches.length + '건' + (matches.length > SEARCH_RESULT_LIMIT ? ', 앞의 ' + SEARCH_RESULT_LIMIT + '건만 보입니다.' : '') : '일치하는 항목이 없습니다.';
+
+        for (const entry of matches.slice(0, SEARCH_RESULT_LIMIT))
+        {
+            const item = Make('li');
+            const link = MakeLink(entry.href, entry.title);
+            link.append(Make('small', null, entry.context));
+            item.append(link);
+            searchList.append(item);
+        }
+
+        searchResults.hidden = false;
+    }
+
+    function MoveResult(delta)
+    {
+        const links = [...searchList.querySelectorAll('a')];
+        const next = links.indexOf(document.activeElement) + delta;
+
+        if (next < 0)
+        {
+            searchInput.focus();
+        }
+        else if (next < links.length)
+        {
+            links[next].focus();
+        }
+    }
+
+    searchInput.addEventListener('input', Search);
+
+    document.getElementById('search-form').addEventListener('submit', event =>
+    {
+        event.preventDefault();
+        searchList.querySelector('a')?.click();
+    });
+
+    document.getElementById('search-form').addEventListener('keydown', event =>
+    {
+        if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && !searchResults.hidden)
+        {
+            event.preventDefault();
+            MoveResult(event.key === 'ArrowDown' ? 1 : -1);
+        }
+    });
+
+    document.addEventListener('keydown', event =>
+    {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k')
+        {
+            event.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+        }
+
+        if (event.key === 'Escape' && !searchResults.hidden)
+        {
+            searchResults.hidden = true;
+            searchInput.focus();
+        }
+    });
+
+    document.addEventListener('click', event =>
+    {
+        const jump = event.target.closest('[data-jump]');
+
+        if (jump)
+        {
+            for (const button of jump.parentElement.children)
+            {
+                button.classList.toggle('is-active', button === jump);
+            }
+
+            document.getElementById(jump.dataset.jump)?.scrollIntoView({ block: 'start', behavior: 'instant' });
+            return;
+        }
+
+        const link = event.target.closest('a[href^="#"]');
+
+        if (link?.classList.contains('skip'))
+        {
+            event.preventDefault();
+            main.focus();
+            return;
+        }
+
+        // In-page routes are hash links; set the hash on this document so the browser never reloads the page.
+        if (link)
+        {
+            event.preventDefault();
+            const target = link.getAttribute('href');
+
+            if (target === location.hash)
+            {
+                Render(true);
+            }
+            else
+            {
+                location.hash = target;
+            }
+        }
+
+        if (!event.target.closest('.search'))
+        {
+            searchResults.hidden = true;
+        }
+    });
+
+    window.addEventListener('hashchange', () => Render(true));
+    RenderSidebar();
+    RenderHeaderLinks();
+    Render(false);
+})();
+</script>
+</body>
+</html>

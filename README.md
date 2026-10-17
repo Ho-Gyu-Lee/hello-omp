@@ -19,6 +19,7 @@ hello-omp/
   commands/                파일형 슬래시 명령(`/cleanup`, `/project-map`)
   skills/archify/           고정 Archify 배포본 + 요청 기반 OMP 사용 지침
   skills/knowledge-sync/   원격 지식 받기 스킬(`/skill:knowledge-sync`) — 백업·병합·setup·검증, push 없음
+  skills/project-map/      프로젝트 지도 공용 템플릿·글꼴·빌드/게시/상태 확인 스크립트(`/project-map`이 사용)
   AGENTS.md                이 레포에만 적용하는 프로젝트 지침(프로젝트 지도 사용 안 함·setup 뒤 지침 읽기 기준)
   agents/                  (선택) 에이전트 정의 — 빌트인 유지, 모델만 설정 키로 배정
 ```
@@ -57,7 +58,7 @@ sh setup.sh
 4. 확장 — `extensions/*.{js,ts}` → `<configdir>/extensions/` (OMP native extension auto-discovery 대상).
 5. 에이전트 override/custom(있을 때만) — `agents/*.md` → `<configdir>/agents/`(`AGENTS.md`와 같은 경로 주입). 없으면 빌트인을 쓰고, 이전에 이 레포가 관리하던 `reviewer`/`plan` override는 레포에 해당 파일이 없고 배포본에 관리 마커 줄이 정확히 있을 때만 제거한다.
 6. 사용자 명령 — `commands/*.md` → `<configdir>/commands/`. 같은 이름의 관리 명령은 갱신하고 그 외 사용자 명령은 보존한다. 명령과 스킬(7단계)은 `__OKF_DIR__` 같은 자리표시자를 치환하지 않고 그대로 복사하므로, 본문에서 OKF 파일이 필요하면 전역 지침에 주입된 OKF 절대경로를 가리키도록 쓴다.
-7. 스킬 — `skills/<name>/` 전체(`archify`, `knowledge-sync`) → `<configdir>/skills/<name>/`. Archify 3.0.1 배포본을 레포에 포함하므로 설치 중 다운로드·의존성 설치·Archify 실행은 없다. 동일본은 생략하고, 다른 기존본은 `<configdir>/.skill-backup-<고유값>/<name>/`에 보존한 뒤 교체한다. 다른 사용자 스킬은 건드리지 않으며 스킬 루트의 심볼릭 링크는 따라가지 않고 중단한다.
+7. 스킬 — `skills/<name>/` 전체(`archify`, `knowledge-sync`, `project-map`) → `<configdir>/skills/<name>/`. Archify 3.0.1 배포본을 레포에 포함하므로 설치 중 다운로드·의존성 설치·Archify 실행은 없다. 동일본은 생략하고, 다른 기존본은 `<configdir>/.skill-backup-<고유값>/<name>/`에 보존한 뒤 교체한다. 다른 사용자 스킬은 건드리지 않으며 스킬 루트의 심볼릭 링크는 따라가지 않고 중단한다.
 8. 관리 항목 동기화 — 마지막에 `bun scripts/sync-managed.ts <configdir>`를 실행한다. setup이 배포한 것의 기록 `<configdir>/.hello-omp-managed.json`(`config/settings.conf`의 설정 키와 배포한 `extensions/*.js|ts`·`agents/*.md`·`commands/*.md`·`skills/<name>/`의 해시)을 두고, 다음 setup에서 기록에 있었지만 레포에서 사라진 항목을 정리한다.
    - 설정 키: `config/settings.conf`에서 삭제된 키는 현재 값이 setup이 적용한 값 그대로일 때만 `omp config reset <key>`로 OMP 기본값으로 되돌린다. 로컬에서 바꾼 값은 그대로 두고 경고로 보고하며, 이 OMP 버전이 모르는 키는 되돌릴 대상이 없다는 경고만 낸다.
    - 확장·에이전트·명령·스킬: 삭제된 항목은 setup이 배포한 뒤 바뀌지 않았을 때만 지우지 않고 `<configdir>/.managed-retired-<stamp>/<kind>/<name>`으로 옮긴다. 로컬에서 수정했으면 제자리에 두고 경고로 보고한다.
@@ -125,14 +126,14 @@ setup은 `<configdir>` 아래에 자동 삭제하지 않는 보존 폴더와 기
 
 ## 프로젝트 목차·상태를 유지하며 작업하기
 
-개발 프로젝트나 큰 프로젝트에서 코드를 분석하지 않고 책임과 연결을 한눈에 보려면, 그 프로젝트에서 새 세션을 열고 아래 명령을 한 번 요청한다. 그 프로젝트의 실제 코드/설정에 맞춰 지도를 만들고 자동 로딩되는 프로젝트 지침에 유지 범위·진입점·근거 경로를 기록한다. 기존 문서가 있으면 재사용하며 사용자 파일을 덮어쓰지 않는다. 지도는 발표 자료처럼 영역마다 요점과 다이어그램·스크린샷·GIF·영상(게임은 실제 플레이 화면)으로 보여 주고, 외형은 그 프로젝트의 디자인 규칙을 따르며, 데스크톱 브라우저 최대화 화면을 기준으로 한다.
+개발 프로젝트나 큰 프로젝트에서 코드를 분석하지 않고 책임과 연결을 한눈에 보려면, 그 프로젝트에서 새 세션을 열고 아래 명령을 한 번 요청한다. 그 프로젝트의 실제 코드/설정에 맞춰 지도를 만들고 자동 로딩되는 프로젝트 지침에 유지 범위·진입점·근거 경로를 기록한다. 기존 문서가 있으면 재사용하며 사용자 파일을 덮어쓰지 않는다. 지도는 발표 자료처럼 영역마다 문장형 제목·요점과 다이어그램·스크린샷·GIF·영상(게임은 실제 플레이 화면)으로 보여 주고, 진행 상황과 할 일은 칸반 보드로 보여 준다. 커밋·명령·시험 수치 같은 근거 세부는 화면이 아니라 manifest와 작업 디렉터리에 둔다. 화면은 `skills/project-map/`의 공용 템플릿(같은 배치·외형·글꼴)으로 만들어 어느 프로젝트·사용자의 지도든 같은 방식으로 읽히며, 데스크톱 브라우저 최대화 화면을 기준으로 한다. 지도를 만들거나 고치려면 Bun, 관계도 검증에 Node.js 18 이상과 Chrome/Chromium이 필요하고, 보기만 할 때는 브라우저만 있으면 된다.
 
 ```text
 /project-map
 /project-map status
 ```
 
-빈 입력은 생성/갱신과 지속 관리 요청이고, `status`는 소스와 지도의 차이·구현/검증 상태·확정 계획·차단 조건·제안을 읽기 전용으로 확인한다. 일회성만 원하거나 유지를 중지하려면 그 범위를 명시한다. 설치만으로 모든 프로젝트에 지도를 만들지는 않는다. 알리고 진행하는 작업 흐름, 지도 구성, 확정된 할 일과 제안의 구분, 작업 트리 근거와 커밋 근거의 구분, 검증 후 게시 절차는 [프로젝트 지도와 작업 동기화](okf/project-navigation.md)가 정본이고 호출 지침은 [project-map 명령](commands/project-map.md)이다.
+빈 입력은 생성/갱신과 지속 관리 요청이고, `status`는 소스와 지도의 차이·구현/검증 상태·확정 계획·차단 조건·제안을 읽기 전용으로 확인한다. 일회성만 원하거나 유지를 중지하려면 그 범위를 명시한다. 설치만으로 모든 프로젝트에 지도를 만들지는 않는다. 알리고 진행하는 작업 흐름, 지도 구성, 확정된 할 일과 제안의 구분, 작업 트리 근거와 커밋 근거의 구분, 검증 후 게시 절차는 [프로젝트 지도와 작업 동기화](okf/project-navigation.md)가, 화면 구성·글쓰기·디자인·칸반 보드는 [프로젝트 지도 화면 설계](okf/project-map-design.md)가 정본이고 호출 지침은 [project-map 명령](commands/project-map.md)이다.
 
 이 레포는 문서를 직접 읽으면 되는 지침·설정 저장소라 루트 [AGENTS.md](AGENTS.md)의 선언으로 프로젝트 지도를 만들지 않는다. 다른 프로젝트의 상태를 이 레포의 OKF에 복제하지 않는다.
 

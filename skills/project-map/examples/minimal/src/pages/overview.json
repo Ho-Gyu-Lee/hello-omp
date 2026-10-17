@@ -1,0 +1,32 @@
+{
+  "headline": "노트는 기기에 먼저 저장하고 동기화는 뒤에서 따라옵니다.",
+  "role": "작은 노트 앱입니다. 저장, 동기화, 화면 세 영역으로 나뉩니다.",
+  "status": [
+    { "label": "구현", "text": "저장과 목록 화면", "tone": "ok" },
+    { "label": "검증", "text": "저장 시험 통과", "tone": "ok" },
+    { "label": "대기", "tone": "decide", "count": "userDecision" }
+  ],
+  "visual": {
+    "kind": "image",
+    "src": "media/overview.png",
+    "alt": "노트 목록과 검색 상자가 있는 예제 앱 화면을 단색으로 그린 그림",
+    "caption": "예제 그림입니다. 실제 프로젝트의 대표 화면으로 바꿉니다.",
+    "source": "생성 이미지",
+    "basis": "__TODAY__ 빌드",
+    "stale": false,
+    "staleReason": null,
+    "evidence": null
+  },
+  "points": [
+    "노트 한 건은 파일 하나이고 저장이 끝나야 목록에 나타납니다.",
+    "동기화는 바뀐 노트만 순서대로 보내고 실패하면 다시 보냅니다.",
+    "화면은 저장된 노트만 그리고 직접 저장하지 않습니다."
+  ],
+  "repos": [
+    { "name": "app", "path": "./", "role": "앱 코드, 시험, 문서" }
+  ],
+  "changes": [
+    { "date": "__TODAY__", "text": "예제 지도입니다. 실제 프로젝트 내용으로 모두 고쳐 씁니다." },
+    { "date": "2026-10-12", "text": "동기화가 실패한 노트를 순서를 지켜 다시 보냅니다." }
+  ]
+}

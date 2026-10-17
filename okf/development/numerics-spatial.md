@@ -3,7 +3,7 @@ type: Concept
 title: 수치와 공간 판정의 정확성
 description: 허용오차·퇴화 입력·음수 격자·FP 모드, 좌표·회전·곡선·적분과 근사, 보수적 공간 인덱스·질의·충돌·높이맵의 적용 조건을 다룹니다.
 tags: [development, math, floating-point, geometry, collision, coordinates, terrain]
-timestamp: 2026-10-15T00:00:00Z
+timestamp: 2026-10-16T00:00:00Z
 ---
 
 # 수치와 공간 판정의 정확성
@@ -22,6 +22,7 @@ timestamp: 2026-10-15T00:00:00Z
 
 - NaN/Inf 거부나 FP 예외·상태 플래그 관측이 필요한 코드를 그런 값·예외가 없다고 가정하는 최적화 모드로 빌드하지 않습니다. GCC `-ffast-math`에는 `-ffinite-math-only` 등이 포함되고 MSVC `/fp:fast`도 특수값·FP 환경에 대한 가정을 합니다. debug에서 잡힌 오류를 다른 옵션의 release 보장으로 확대하지 않습니다([GCC 옵션](https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html), [MSVC /fp](https://learn.microsoft.com/en-us/cpp/build/reference/fp-specify-floating-point-behavior)).
 - FP 환경 변경이 필요하면 툴체인의 지원과 스레드별 적용·외부 라이브러리 호출 전후 복원을 확인합니다. FTZ/DAZ는 작은 값을 0으로 바꾸는 정확도 정책입니다. 감쇠 등 거의 0인 값이 남는 계산은 정상 크기 입력과 함께 측정하고 결과 변화도 확인합니다. 특정 CPU의 denormal 비용을 모든 플랫폼에 일반화하지 않습니다([Intel denormals](https://www.intel.com/content/www/us/en/docs/onemkl/developer-guide-linux/2025-0/operating-on-denormals.html)).
+- 서버와 클라이언트(또는 여러 플랫폼)가 같은 실수 계산을 각자 수행하고 결과의 비트 일치를 요구하면(권위 경로 재계산·lockstep·rollback·리플레이), 그 공용 코드는 IEEE-754 사칙연산과 `sqrt`로만 계산하고 `hypot`·`sin`·`atan2` 같은 libm 함수는 직접 구현하거나 정수·표로 대체합니다. C/C++ 표준은 이 함수들의 정확도를 정하지 않아 같은 입력에서도 런타임마다 마지막 비트가 다를 수 있습니다. 2026-10의 한 MMO 프로젝트에서 glibc와 MSVC UCRT의 `std::hypot`이 표본 195개 중 55개에서 달랐고, 그 차이로 A* 동률 처리가 갈려 클라가 서버 경로를 재현하지 못하고 연결을 끊었습니다. 곱셈-덧셈 합치기(FMA contraction)도 끕니다: Clang은 14부터 기본 `-ffp-contract=on`이라 ARM 등에서 FMA로 합치고, GCC는 `#pragma STDC FP_CONTRACT`를 구현하지 않으며 GNU 방언 기본이 `-ffp-contract=fast`이므로 빌드 플래그 `-ffp-contract=off`가 필요합니다. MSVC는 VS2022부터 `/fp:precise`에서 합치지 않고 `/fp:contract`·`/fp:fast`에서만 합칩니다. 검증은 툴체인마다 같은 입력의 결과 digest를 정본 툴체인 값과 비교하는 golden test를 각 플랫폼의 release 최적화 빌드로 실행하는 것입니다. 이 방식은 지금도 쓰입니다: Box2D v3.1은 같은 조건으로 x64/ARM·MSVC/GCC/Clang 결정성을 CI로 확인하고 Rapier는 `enhanced-determinism` 기능으로 제공합니다([GCC FP_CONTRACT](https://gcc.gnu.org/onlinedocs/gcc/Floating-point-implementation.html), [LLVM fp-contract 기본값](https://discourse.llvm.org/t/fp-contraction-fma-on-by-default/64975), [MSVC VS2022 fp_contract](https://devblogs.microsoft.com/cppblog/the-fpcontract-flag-and-changes-to-fp-modes-in-vs2022), [Box2D determinism](https://box2d.org/posts/2024/08/determinism/), [Rapier determinism](https://rapier.rs/docs/user_guides/rust/determinism)).
 
 ## 좌표·회전·시간 진행
 

@@ -1,0 +1,12 @@
+{
+  "schema": "project-map/config-1",
+  "project": { "name": "__PROJECT_NAME__", "logo": "__PROJECT_LOGO__", "subtitle": "프로젝트 지도" },
+  "links": [
+    { "label": "README", "href": "../../README.md" }
+  ],
+  "basis": { "label": "__TODAY__ 작업 트리 기준.", "written": "__TODAY__" },
+  "areas": ["storage", "sync", "ui"],
+  "views": {},
+  "scope": { "include": ["src/**", "tests/**", "README.md"], "exclude": [] },
+  "tokens": {}
+}

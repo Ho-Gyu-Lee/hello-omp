@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 런타임 진단·메모리·성능 측정
-description: 계층 프로파일·단조 경과/CPU 시간, 캐시·풀·데이터 배치·메모리 예산과 할당 검증, 비활성 로그 비용·로그 수집 경로의 라벨/심각도 변형·무인 실패·출하 심볼·크래시 덤프와 제품별 성능 수락의 기준입니다.
+description: 계층 프로파일·단조 경과/CPU 시간, 캐시·풀·데이터 배치·메모리 예산과 할당 검증, 비활성 로그 비용·로그 수집 경로의 라벨/심각도 변형·연결 종료 진단 이벤트·외부 경로 합성 점검·무인 실패·출하 심볼·크래시 덤프와 제품별 성능 수락의 기준입니다.
 tags: [development, profiling, memory, diagnostics, crash, symbols, performance]
-timestamp: 2026-10-15T00:00:00Z
+timestamp: 2026-10-16T00:00:00Z
 ---
 
 # 런타임 진단·메모리·성능 측정
@@ -30,6 +30,8 @@ timestamp: 2026-10-15T00:00:00Z
 
 - [ ] 비용이 중요한 호출 경로에서 비활성 로그가 비싼 인수 계산·문자열 조립·할당을 유발하지 않는지 확인합니다. allocator/할당 훅 내부의 로그는 같은 allocator나 락으로 재진입하지 않아야 합니다. 모든 로그를 무할당으로 강제한다는 뜻은 아닙니다. 원인 이벤트의 최근 이력이 필요하면 유한 ring을 사용하고 민감정보를 제외합니다.
 - [ ] 로그 수집기·출력 플러그인은 설정 기본값과 입력 태그 형식에 따라 리소스 라벨을 잘못 추출하거나 심각도를 비울 수 있습니다. 조회 필터·알림·보존 판단을 만들기 전에 원본 출력(컨테이너 stdout/stderr 등)과 항목 수·라벨·심각도를 대조합니다. 예를 들어 Fluent Bit v4.0.8 `stackdriver` 출력에서 `resource=k8s_container`이고 `tag_prefix`를 생략하면 기본 접두사는 `k8s_container.`입니다. 라벨을 `resource_labels`·`monitored_resource`로 주지 않고 태그 정규식 매칭도 실패하면, 레코드의 `local_resource_id`(없으면 태그)를 접두사 비교 없이 기본 접두사 길이만큼 건너뛴 뒤 정규식에 대입합니다. 실제 접두사가 기본 접두사와 다른데 남은 문자열이 정규식에 맞으면 `pod_name` 등이 잘못(예: 앞부분이 잘린 값으로) 추출될 수 있습니다. 정규식에 맞지 않으면 접두사 검사와 점 구분 형식 파싱으로 넘어가며, 이때 실제 접두사가 다르면 접두사 불일치 오류가 됩니다. 라벨 왜곡과 형식 오류를 같은 현상으로 진단하지 않습니다. `severity_key`가 가리키는 필드가 레코드에 없으면 심각도가 생략되어 DEFAULT(심각도 없음)로 적재됩니다([Fluent Bit Stackdriver 출력](https://docs.fluentbit.io/manual/pipeline/outputs/stackdriver), [v4.0.8 `stackdriver.c`](https://github.com/fluent/fluent-bit/blob/v4.0.8/plugins/out_stackdriver/stackdriver.c), [`stackdriver_conf.c`의 기본 접두사](https://github.com/fluent/fluent-bit/blob/v4.0.8/plugins/out_stackdriver/stackdriver_conf.c#L548-L552), [Cloud Logging LogEntry](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry)).
+- [ ] 연결·세션 종료 진단은 종료를 **처음 결정한 지점**에서 정리·송신 전에 원인을 고정하고 뒤의 송신 실패·transport 통지가 덮어쓰지 않게 합니다. 인증 전·공개 엔드포인트의 종료는 개별 줄 없이 집계만 남기고, 줄 예산을 넘은 이벤트는 종류·사유별 억제 카운터로 남겨 "수명당 정확히 1회"를 줄과 카운터를 합친 회계로 정의합니다. 상관 키는 계정·캐릭터 같은 영속 식별자 대신 프로세스 incarnation과 재사용하지 않는 연결 번호로 두고 값은 숫자·고정 토큰만 씁니다. 재개로 인한 대체·정상 이전 뒤 퇴역·미전송 요청 취소처럼 "끊김"으로 보이지 않는 재설정 경로까지 세고, 누락 검출용 사유가 시험에서 0인지 확인합니다. "peer 종료" 같은 transport 통지는 로컬 socket 실패도 같은 통지로 올릴 수 있으므로 그 사유만으로 외부 원인을 확정하지 않습니다.
+- [ ] 외부 경로 합성 점검(canary)은 감독 루프와 분리된 실행 단위에서 한 번에 하나·시간 제한·인증서 검증을 켠 채 돌리고 상태 전이만 기록하며, 증명 범위(예: 같은 호스트의 게시 포트 → 프록시 → 서비스 TLS)와 증명하지 않는 범위(공용 DNS·WAN·인증·업무 라우팅)를 문서에 적습니다. 감독 대상 서비스보다 먼저 시작하면 첫 결과가 실패이므로 기동 순서와 정상 첫 줄을 함께 적습니다. Docker Desktop 29.8.2에서 pause한 컨테이너의 게시 포트는 TCP 연결을 받고 TLS handshake가 timeout으로 끝났습니다(2026-10-16 관측). 정지한 백엔드를 연결 거절로 판별한다고 가정하지 않습니다.
 - [ ] 무인 서버/시험의 실패가 assert 대화상자 뒤에서 무한 대기하지 않게 합니다. 비대화식 실패 정책은 assert 무시가 아니라 실패 상태·종료 코드·증거를 보존하는 것입니다. 계측·로그·스레드 중지로 증상이 사라진 것만으로 레이스나 메모리 결함을 고쳤다고 판단하지 않습니다.
 - [ ] 배포한 정확한 binary·빌드 식별자·심볼과 대응 소스/콘텐츠·빌드 설정을 보존합니다. 같은 소스의 재빌드가 원래 binary와 같은 심볼 identity를 갖는다고 가정하지 않습니다. Apple dSYM은 build UUID가 맞아야 하고 Windows 심볼도 해당 모듈과 일치해야 합니다([Apple debug information](https://developer.apple.com/documentation/xcode/building-your-app-to-include-debugging-information), [Windows symbols](https://learn.microsoft.com/en-us/windows/win32/debug/symbol-stores-and-symbol-servers)).
 - [ ] 크래시 프로세스 내부는 allocator·loader lock도 손상/교착 상태일 수 있습니다. Windows `MiniDumpWriteDump`는 가능하면 별도 프로세스에서 호출하고 DbgHelp 동시 호출을 직렬화합니다. 정상 실행 중 준비한 collector와 빌드 identity를 실제 고장 경로에서 확인합니다([MiniDumpWriteDump](https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/nf-minidumpapiset-minidumpwritedump)). 덤프에 세션 비밀·PII가 포함될 수 있으므로 수집 범위·접근·보관·전송을 제한하며 공개 로그/레포에 넣지 않습니다.
@@ -40,6 +42,7 @@ timestamp: 2026-10-15T00:00:00Z
 - *Game Coding Complete* 1판 한국어 제공본 PDF p.69, 348–361, 517–525, 606–624, 638, 675: 콘텐츠 예산·캐시 실패·크래시/심볼·고갈 시험·아카이브. *Multi-Threaded Game Engine Design* (2011) PDF p.43–45, 108–113, 570–572: 타이머·벤치 결과·측정 구성. *Game Programming Tricks of the Trade* 한국어판 PDF p.501–503: 파일 캐시를 통제한 측정과 제품 로더의 구분.
 - 현대 문서 확인: 2026-10-15. 수치 임계·성능 배수·전역 allocator 교체·특정 crash SDK는 채택하지 않습니다. 책의 결함과 현대 도구 계약에서 도출한 체크리스트이며 실제 게임의 성능·덤프 수집을 이 작업에서 검증했다는 뜻은 아닙니다.
 - 로그 수집 경로 항목은 Fluent Bit 공식 문서와 v4.0.8 소스(2026-10-15 확인) 및 실제 운영 로그 대조 사례에서 일반화했습니다. 다른 버전·출력 플러그인의 동작을 같은 것으로 가정하지 않습니다.
+- 연결 종료 진단·합성 점검 항목은 한 서버 프로젝트의 구현과 독립 검토(누락 재설정 경로 지적), 실제 프로세스 kill·압박 probe·컨테이너 pause 실행 관측(2026-10-16)에서 일반화했습니다. Docker 관측은 해당 버전의 기록입니다.
 
 ## 데이터 배치와 메모리 예산
 

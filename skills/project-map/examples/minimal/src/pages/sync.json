@@ -1,0 +1,39 @@
+{
+  "id": "sync",
+  "menu": "동기화",
+  "headline": "동기화는 바뀐 노트를 순서대로 서버에 보내고 실패하면 다시 보냅니다.",
+  "role": "저장된 변경을 모아 서버로 보내는 뒤쪽 작업입니다.",
+  "status": [
+    { "label": "구현", "text": "재시도 작업 중", "tone": "warn" },
+    { "label": "검증", "text": "미실행", "tone": "neutral" },
+    { "label": "대기", "tone": "decide", "count": "userDecision" }
+  ],
+  "points": [
+    "저장이 끝난 노트 ID가 순서대로 대기열에 들어갑니다.",
+    "서버가 받지 못하면 같은 노트를 간격을 늘려 다시 보냅니다.",
+    "서버와 기기의 내용이 다르면 충돌로 표시하고 멈춥니다."
+  ],
+  "rows": [
+    {
+      "what": "보낼 노트 대기열",
+      "where": [
+        { "path": "src/sync/SyncQueue.ts", "symbols": ["SyncQueue", "Enqueue", "Flush"] }
+      ],
+      "how": "저장된 노트 ID를 순서대로 쌓고 한 건씩 서버로 보냅니다.",
+      "node": []
+    },
+    {
+      "what": "충돌 처리",
+      "where": [
+        { "path": "src/sync/Conflict.ts", "symbols": ["Resolve"] }
+      ],
+      "how": "내용이 갈리면 충돌로 표시하고 사용자가 정할 때까지 멈춥니다.",
+      "node": []
+    }
+  ],
+  "notes": [
+    "서버 연결을 끊고 다시 보내는 시험은 아직 없습니다."
+  ],
+  "evidence": [],
+  "tasks": ["SYNC-RETRY-01", "SYNC-CONFLICT-01"]
+}
