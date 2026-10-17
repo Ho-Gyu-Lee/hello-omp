@@ -43,10 +43,10 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 * [UI 재사용·입력과 표시 검증](/development/ui-input.md) - UI/도메인 책임, 입력 의미·포인터 수명·좌표/선택, 텍스트·폰트·레이아웃과 실제 OS 입력/픽셀·출처 검증.
 * [지역화·문자열·텍스트 입력](/development/localization.md) - 문장·복수형·문맥, 표시 로캘/프로토콜 분리, 사용자 생성 텍스트 번역의 원문 언어, Unicode 길이·키 배열·IME·줄바꿈과 실제 지원 언어 검증.
 * [수치와 공간 판정의 정확성](/development/numerics-spatial.md) - 오차·퇴화 입력·FP 모드·음수 격자, 좌표/회전·곡선/적분·저장 정밀도, 공간 인덱스·질의/충돌·높이맵과 직교/아이소메트릭 표시.
-* [렌더링·애니메이션의 좌표와 표현 계약](/development/rendering-animation.md) - 픽셀·알파·색공간, 메시·스킨·법선/접선, 투영·컬링·LOD·광학 근사, GPU 표시/소실 복구와 clip 정합.
+* [렌더링·애니메이션의 좌표와 표현 계약](/development/rendering-animation.md) - 픽셀·2D 필터/화면 배율·알파·색공간, 메시·스킨·법선/접선, 투영·컬링·LOD·광학 근사, GPU 표시/소실 복구와 clip 정합.
 * [오디오의 로드·디코딩·스트리밍 계약](/development/audio-runtime.md) - 상주/압축/스트리밍·voice 가상화·소비 완료, 공간/시계·효과/평활화·실시간 callback 기한과 그래프 의존성.
 * [상태 기계·탐색과 이동 모델](/development/ai-navigation.md) - 상태 전이·지연 이벤트 수명, A* 정확성/작업 예산·clearance·회피/복구, 전술/퍼지/학습 모델과 제약 배치·주기적 재계획.
-* [에셋 검수·사용 권리와 조립 계약](/development/assets-editor.md) - 구매/생성 자산의 실제 내용·출처·라이선스/AI 사용 권리, 타일·투명 재질·제약 생성과 조립 수락.
+* [에셋 검수·사용 권리와 조립 계약](/development/assets-editor.md) - 구매/생성 자산의 실제 내용·출처·라이선스/AI 사용 권리, 타일·투명 재질·생성 에셋 화풍 대조·제약 생성과 조립 수락.
 * [Android 라이브러리 의존성과 최종 패키지 검증](/development/android-dependencies.md) - 로컬 AAR/Maven 메타데이터·외부 의존성, 최종 APK/DEX의 클래스 정의·기기 오류 경로와 양성 대조.
 
 ## 게임 클라이언트/서버

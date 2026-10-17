@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: 렌더링·애니메이션의 좌표와 표현 계약
-description: 픽셀 배치·색공간·합성, 메시·스키닝·법선/접선, 투영·컬링·LOD·광학 근사, GPU 표시·장치 소실 복구와 고정 표시 프로필·이동 클립 정합의 기준입니다.
-tags: [development, client, rendering, animation, shader, alpha, gpu, performance]
-timestamp: 2026-10-15T00:00:00Z
+description: 픽셀 배치·2D 텍스처 필터와 화면 배율·색공간·합성, 메시·스키닝·법선/접선, 투영·컬링·LOD·광학 근사, GPU 표시·장치 소실 복구와 고정 표시 프로필·이동 클립 정합의 기준입니다.
+tags: [development, client, rendering, animation, shader, alpha, gpu, performance, pixel-art, filtering]
+timestamp: 2026-10-17T00:00:00Z
 ---
 
 # 렌더링·애니메이션의 좌표와 표현 계약
@@ -25,6 +25,8 @@ timestamp: 2026-10-15T00:00:00Z
 - 반복 장식 배경은 반복 간격·원점·표시 배율·복제 수가 가시 영역을 덮는지 최대 줌아웃과 화면 비율 변화에서 확인합니다. 무한 반복 장식과 경계 있는 권위 맵을 구분합니다([Godot 2D Parallax](https://docs.godotengine.org/en/stable/tutorials/2d/2d_parallax.html)).
 - 이미지 복사·변환·캡처에서 논리 크기·픽셀 형식·원본/대상 stride·행 방향을 분리합니다. 다음 행을 항상 `너비 × 픽셀 바이트`로 계산하지 않고 홀수 너비·행 여백·상하 반전·다른 pitch를 확인합니다. 자체 정수 합성은 채널별 중간항 부호/범위·반올림과 알파 끝값을 검증합니다([Image Stride](https://learn.microsoft.com/en-us/windows/win32/medfound/image-stride)).
 - sRGB 바이트의 직접 가중합과 선형 공간 혼합을 구분합니다. sRGB attachment의 RGB 변환과 alpha 처리를 API대로 적용하고, 축소용 밉 체인 생성·실제 샘플러 사용·밉 간 필터를 따로 확인합니다([Vulkan Blending](https://docs.vulkan.org/spec/latest/chapters/framebuffer.html#framebuffer-blending), [Godot mipmaps](https://docs.godotengine.org/en/stable/tutorials/assets_pipeline/importing_images.html#mipmaps-generate)). 정확한 수치를 담는 데이터 텍스처의 색공간/필터 계약은 유지합니다. 배경까지 합성한 매트/텍스트 캐시는 배경 변경 시 무효화해야 하지만 coverage만 캐시한 텍스트까지 같은 것으로 취급하지 않습니다.
+- **2D 텍스처 필터와 화면 배율:** 픽셀 아트 지침의 "Nearest 필터와 제한 팔레트"를 옮기기 전에 실제 에셋의 색 구성(고유 색 수·반투명 경계)을 그림·frame 단위로 셉니다. 아틀라스·시트 전체의 합계는 전체가 한 팔레트가 아니라는 것만 보여 주며, 그림 하나가 제한 팔레트인지는 알려 주지 않습니다. 색 수는 팔레트 제한을 적용할지에 대한 관측이고 필터 선택의 근거가 아닙니다. 필터는 원본 픽셀 격자·최종 배율·실제 화면 비교로 정합니다. Nearest는 정수 배율에서만 텍셀 크기를 고르게 지킵니다. 배율 s가 정수가 아니면 텍셀이 floor(s)와 ceil(s) 화면 픽셀을 번갈아 차지하므로(3.5배면 3과 4) 같은 텍셀의 크기가 달라지고, 카메라가 부분 픽셀만큼 움직일 때마다 그 배치가 바뀝니다. Linear는 경계를 부드럽게 만들고 이웃 텍셀을 섞으므로, 아틀라스의 그림마다 가장자리 텍셀을 바깥으로 복제(extrusion)하고 그림 사이를 띄웁니다. 판단할 배율은 원본 픽셀 하나가 화면 픽셀 몇 개가 되는지, 곧 창 스트레치 배율 × 카메라 줌 × 노드 배율의 곱입니다. 카메라 줌을 창 크기·화면비로 보정하는 프로젝트는 그 보정 계수도 이 곱에 들어갑니다. Godot 4.7의 CanvasItem 기본 필터는 Linear이고(`rendering/textures/canvas_textures/default_texture_filter`), `display/window/stretch/scale_mode="integer"`는 기준 viewport→창의 스트레치 배율만 정수로 맞추며 `Camera2D.zoom`이나 노드 배율은 바꾸지 않습니다. 정수배가 아닌 큰 창은 배율을 내리고 남는 테두리를 검게 두며, 기준 viewport보다 작은 창은 1배로 두고 내용을 자릅니다([ProjectSettings 4.7](https://github.com/godotengine/godot/blob/4.7-stable/doc/classes/ProjectSettings.xml), [window.cpp 4.7](https://github.com/godotengine/godot/blob/4.7-stable/scene/main/window.cpp), 확인 2026-10-17). 그래서 이 설정만으로 줌 3.5의 최종 배율이 정수가 되지 않습니다. 최종 배율이 정수가 아니면 선명도와 시야 배율 중 무엇을 우선할지 실제 화면 비교로 정하고, 필터를 표면(월드·배우·HUD·미니맵)마다 명시합니다.
+  - 사례(2026-10-17 측정): 한 아이소메트릭 게임의 구매 타일 아틀라스 두 장은 합계 고유 색이 약 4.8만·6.7만이었습니다. 그림 단위로 다시 세면 아틀라스 그림 290개가 그림당 79~29,797색(중앙값 1,669)이었고, 배우 시트 한 장의 frame 120개는 frame당 89~119색이었습니다. 16~32색 제한 팔레트 그림은 없었으므로, 입문 지침의 팔레트 제한을 적용하면 구매 그림의 색이 바뀝니다. 필터는 이 수치가 아니라 사용자가 정한 카메라 배율 3.2~3.7(비정수)과 실제 화면 비교로 판단할 문제입니다.
 
 ## 메시·가시성·광학 근사
 
