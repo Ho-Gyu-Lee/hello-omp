@@ -29,6 +29,7 @@
 * [오디오의 로드·디코딩·스트리밍 계약](/development/audio-runtime.md) - 상주/압축/스트리밍·voice 가상화·소비 완료, 공간/시계·효과/평활화·실시간 callback 기한과 그래프 의존성.
 * [상태 기계·탐색과 이동 모델](/development/ai-navigation.md) - 상태 전이·지연 이벤트 수명, A* 정확성/작업 예산·clearance·회피/복구, 전술/퍼지/학습 모델과 제약 배치·주기적 재계획.
 * [에셋 검수·사용 권리와 조립 계약](/development/assets-editor.md) - 구매/생성 자산의 실제 내용·출처·라이선스/AI 사용 권리, 타일·투명 재질·생성 에셋 화풍 대조·제약 생성과 조립 수락.
+* [AI 에셋 생성의 모델 라이선스·로컬 메모리·재현성·VLM 런타임·8방향 스프라이트](/development/ai-asset-generation.md) - 로컬 이미지 생성·VLM 모델의 가중치 라이선스 게이트, Apple Silicon 통합 메모리 예산 측정, seed 재현성 고정, Ollama 유효 설정(MLX 러너의 컨텍스트 길이 미강제 포함)·구조화 출력 검증, 8방향 스프라이트의 방향·포즈 고정.
 
 ## 플랫폼 배포
 * [Android 라이브러리 의존성과 최종 패키지 검증](/development/android-dependencies.md) - 로컬 AAR/Maven 메타데이터·외부 의존성, 최종 APK/DEX의 클래스 정의·기기 오류 경로와 양성 대조.

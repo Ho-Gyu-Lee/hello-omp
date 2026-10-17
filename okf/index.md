@@ -47,6 +47,7 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 * [오디오의 로드·디코딩·스트리밍 계약](/development/audio-runtime.md) - 상주/압축/스트리밍·voice 가상화·소비 완료, 공간/시계·효과/평활화·실시간 callback 기한과 그래프 의존성.
 * [상태 기계·탐색과 이동 모델](/development/ai-navigation.md) - 상태 전이·지연 이벤트 수명, A* 정확성/작업 예산·clearance·회피/복구, 전술/퍼지/학습 모델과 제약 배치·주기적 재계획.
 * [에셋 검수·사용 권리와 조립 계약](/development/assets-editor.md) - 구매/생성 자산의 실제 내용·출처·라이선스/AI 사용 권리, 타일·투명 재질·생성 에셋 화풍 대조·제약 생성과 조립 수락.
+* [AI 에셋 생성의 모델 라이선스·로컬 메모리·재현성·VLM 런타임·8방향 스프라이트](/development/ai-asset-generation.md) - 로컬 이미지 생성·VLM 모델의 가중치 라이선스 게이트, Apple Silicon 통합 메모리 예산 측정, seed 재현성 고정, Ollama 유효 설정(MLX 러너의 컨텍스트 길이 미강제 포함)·구조화 출력 검증, 8방향 스프라이트의 방향·포즈 고정.
 * [Android 라이브러리 의존성과 최종 패키지 검증](/development/android-dependencies.md) - 로컬 AAR/Maven 메타데이터·외부 의존성, 최종 APK/DEX의 클래스 정의·기기 오류 경로와 양성 대조.
 
 ## 게임 클라이언트/서버
@@ -69,7 +70,7 @@ omp 에이전트가 참조하는 룰·도메인 지식이다. 작업 유형에 �
 * [Godot 에셋 팩·타일 조립·렌더 정밀도와 에디터 미리보기](/game/godot-assets-editor.md) - Godot 타일 조립·충돌/예측/권위 판정·앞뒤 정렬, TileMapLayer·GPU 데이터 텍스처와 비저장 에디터/F5 미리보기.
 
 ## 도구
-* [omp 기본 도구](/tools/builtin.md) - 세션별 가용성·lsp·AST·browser facade·백그라운드 작업·상태 유지 eval의 모듈 identity·Bun 프로세스 종료 판정·동기 호출 중 관측 루프 정지·IDE/원격 빌드 환경·UTF-8이 아닌 파일 편집·생성 이미지 국소 합성·TypeScript+Bun·MCP 경계 참조
+* [omp 기본 도구](/tools/builtin.md) - 세션별 가용성·lsp·AST·browser facade(챌린지 페이지 읽기 포함)·백그라운드 작업·상태 유지 eval의 모듈 identity·Bun 프로세스 종료 판정·동기 호출 중 관측 루프 정지·IDE/원격 빌드 환경·UTF-8이 아닌 파일 편집·생성 이미지 국소 합성·TypeScript+Bun·MCP 경계 참조
 * [MCP 정책](/tools/mcp.md) - 기본 도구 우선·외부 연동·겹치는 MCP 기능의 대체와 선별 사용(검색 MCP의 수직 검색)·스킬과 접근 계약 구분·공급망·인증·MCP 사양 revision과 OMP 클라이언트 호환·경로별 backend 버전 고정과 runtime 교체
 * [스킬](/tools/skills.md) - 가용 스킬·점진적 로딩·OMP 배포/발견/검증·유지 지도 요청 범위·host 호환성·레지스트리 설치를 포함한 외부 실행 검토
 * [서브에이전트](/tools/subagents.md) - 위임 기준·여러 안의 후보별 독립 생성과 메인 비교·번들 에이전트 도구 경계·병렬 계약·파일 소유권·task 격리·작업자별 독립 clone 빌드·반환 결과 검증
