@@ -2,8 +2,9 @@
 // Usage: bun status.ts --project <root> --map <map-rel> [--out <file>]
 // Compares the scope inputs recorded in sources.json with the working tree and every recorded published file with the disk.
 // Prints JSON; --out additionally writes it to a new file (exclusive create). Nothing else is written.
-// Only bad arguments or an unreadable map directory exit 1. A missing, legacy, foreign or invalid sources.json, an invalid
-// scope or a missing sibling repository are reported in problems[] with fresh: false and exit 0.
+// Only bad arguments (including a --project that cannot be confirmed as the git top level, also when git itself fails) or an
+// unreadable map directory exit 1. A missing, legacy, foreign or invalid sources.json, an invalid scope or a missing sibling
+// repository are reported in problems[] with fresh: false and exit 0.
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { AssertNoLinks, GetEntry, ParseArguments, RunCli, Sha256File, WriteJson } from "./lib/files.ts";

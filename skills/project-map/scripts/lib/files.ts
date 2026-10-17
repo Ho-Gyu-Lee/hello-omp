@@ -190,6 +190,15 @@ export function SamePath(left: string, right: string): boolean
     return isCaseInsensitive ? left.toLowerCase() === right.toLowerCase() : left === right;
 }
 
+// A key meant to be at least as coarse as the name equality of the file systems the scripts run on: Windows compares upper-cased
+// names, macOS case-folds and treats NFC and NFD as one name. Lower-, upper- then lower-casing approaches full case folding (ẞ, ß
+// and ss meet), and NFC on both ends keeps canonically equivalent results equal. Names that differ only this way on a
+// case-sensitive file system share the key too, which is the safe side.
+export function FoldName(name: string): string
+{
+    return name.normalize("NFC").toLowerCase().toUpperCase().toLowerCase().normalize("NFC");
+}
+
 // Refuses links (symbolic links and Windows junctions): lstat every existing segment from base (exclusive) down to target.
 // A segment that does not exist ends the walk: nothing below it can be a link. target must be inside base.
 export async function AssertNoLinks(base: string, target: string, label: string): Promise<void>

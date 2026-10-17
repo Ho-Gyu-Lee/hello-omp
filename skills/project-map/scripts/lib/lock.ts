@@ -1,11 +1,13 @@
 // One publish per map at a time: an exclusive lock file in <project>/.omp-artifacts/ (created with wx).
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { GetEntry, Sha256Hex } from "./files.ts";
+import { FoldName, GetEntry, Sha256Hex } from "./files.ts";
 
+// ResolveMap holds existing segments to their on-disk spelling; segments that do not exist yet can still differ in case, so the
+// key folds the path and every spelling that may name one directory gets the same lock.
 export function LockPath(projectRoot: string, mapRelative: string): string
 {
-    return join(projectRoot, ".omp-artifacts", `project-map-publish-${Sha256Hex(mapRelative).slice(0, 12)}.lock`);
+    return join(projectRoot, ".omp-artifacts", `project-map-publish-${Sha256Hex(FoldName(mapRelative)).slice(0, 12)}.lock`);
 }
 
 // Returns the function that removes the lock; call it in a finally block. It removes the file only while the file still is this

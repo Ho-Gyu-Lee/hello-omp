@@ -890,6 +890,8 @@ async function Main(): Promise<void>
 
     try
     {
+        // another publish may have created the map directory since the first check, possibly under another spelling of a segment
+        await ResolveMap(args.project, args.map);
         await PublishLocked(location, work, args.receipt, args.adopt === "true");
     }
     finally

@@ -145,6 +145,9 @@ let sAllowedSnapshot = "";
 // Raw-byte sha256 of every src file exactly as it was read and validated, keyed by path below src/.
 const sSourceHashes = new Map<string, string>();
 
+// Results Obj made up for a value that was not an object (see Obj). Their fields hold fallbacks, so cross-field checks skip them.
+const sStandIns = new WeakSet<object>();
+
 async function ResolvePaths(argv: string[]): Promise<Paths>
 {
     const values = ParseArguments(argv, ["project", "map", "work"], []);
@@ -358,7 +361,12 @@ function Refine<T>(reader: Reader<T>, check: (value: T, path: string) => void): 
     return (value, path) =>
     {
         const result = reader(value, path);
-        check(result, path);
+
+        if (!(typeof result === "object" && result !== null && sStandIns.has(result)))
+        {
+            check(result, path);
+        }
+
         return result;
     };
 }
@@ -391,6 +399,18 @@ function Obj<TShape extends Shape>(shape: TShape): Reader<Infer<TShape>>
         if (!IsRecord(value))
         {
             Fail(path, `expected an object, got ${Describe(value)}`);
+
+            // Callers read the fields of every result, so a stand-in gets each field's fallback; the field errors would only
+            // repeat the one above.
+            const errorCount = sErrors.length;
+
+            for (const [key, reader] of Object.entries(shape))
+            {
+                result[key] = reader(undefined, Child(path, key));
+            }
+
+            sErrors.length = errorCount;
+            sStandIns.add(result);
             return result as Infer<TShape>;
         }
 
@@ -639,7 +659,7 @@ function Where(): Reader<{ path: string; symbols: string[] }>
     {
         const entry = read(value, path);
 
-        if (CheckProjectPath(Child(path, "path"), entry.path))
+        if (!sStandIns.has(entry) && CheckProjectPath(Child(path, "path"), entry.path))
         {
             sPending.push({ context: path, path: entry.path, symbols: entry.symbols });
         }
@@ -1266,8 +1286,14 @@ async function Main(): Promise<void>
 
     const tasks = (await ReadSource("tasks.json", List(TASK, 0, 200))) ?? [];
 
+    // An empty id or date is the fallback of a field already reported as invalid: comparing it would only add follow-on errors.
     for (const [index, task] of tasks.entries())
     {
+        if (task.id === "")
+        {
+            continue;
+        }
+
         if (sTaskIds.has(task.id))
         {
             Fail(`src/tasks.json[${index}]:id`, `duplicate task id ${task.id}`);
@@ -1280,9 +1306,11 @@ async function Main(): Promise<void>
 
     for (const [index, decision] of decisions.entries())
     {
-        if (index > 0 && decision.date > decisions[index - 1].date)
+        const previous = index > 0 ? decisions[index - 1].date : "";
+
+        if (decision.date !== "" && previous !== "" && decision.date > previous)
         {
-            Fail(`src/decisions.json[${index}]:date`, `decisions are listed newest first (${decision.date} follows ${decisions[index - 1].date})`);
+            Fail(`src/decisions.json[${index}]:date`, `decisions are listed newest first (${decision.date} follows ${previous})`);
         }
     }
 

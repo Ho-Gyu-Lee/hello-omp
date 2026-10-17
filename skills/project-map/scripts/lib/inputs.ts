@@ -3,7 +3,7 @@
 import { isUtf8 } from "node:buffer";
 import { readFile, realpath } from "node:fs/promises";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { AssertNoLinks, CompareText, GetEntry, IsInside, IsWithin, MapLimit, RelativePosix, SamePath, Sha256Hex } from "./files.ts";
+import { AssertNoLinks, CompareText, FoldName, GetEntry, IsInside, IsWithin, MapLimit, RelativePosix, SamePath, Sha256Hex } from "./files.ts";
 
 export interface Input
 {
@@ -16,6 +16,8 @@ export interface Scope
 {
     include: string[];
     exclude: string[];
+    // project-relative map directory whose files are never inputs (set by ScopeForMap)
+    mapDirectory?: string;
 }
 
 export interface InputDifference
@@ -37,10 +39,12 @@ const HASH_CONCURRENCY = 32;
 // command, and a bare repository embedded in the tree could be picked up implicitly.
 const GIT_HARDENING = ["-c", "core.fsmonitor=false", "-c", "safe.bareRepository=explicit"];
 
-// The map directory holds the built entry, which embeds the snapshot; it can never be an input of that snapshot.
+// The map directory holds the built entry, which embeds the snapshot; it can never be an input of that snapshot. It is not an
+// exclude glob: git lists tracked files in the index spelling, which on Windows and macOS can differ in case or Unicode form
+// from the on-disk spelling --map has to use, so ComputeInputs decides membership on real paths (see there).
 export function ScopeForMap(scope: Scope, mapRelative: string): Scope
 {
-    return { include: scope.include, exclude: [...scope.exclude, `${mapRelative.replace(/\/+$/, "")}/**`] };
+    return { include: scope.include, exclude: scope.exclude, mapDirectory: mapRelative.replace(/\/+$/, "") };
 }
 
 // First 12 hex characters of the sha256 over the sorted "path<TAB>mode<TAB>sha256<LF>" lines.
@@ -209,12 +213,36 @@ async function RunGit(directory: string, args: string[], forbidden: string[]): P
 
 async function GitToplevel(directory: string, forbidden: string[]): Promise<string>
 {
-    return resolve((await RunGit(directory, ["rev-parse", "--show-toplevel"], forbidden)).trim());
+    // only the line end: a top-level path may itself end in whitespace on POSIX
+    return resolve((await RunGit(directory, ["rev-parse", "--show-toplevel"], forbidden)).replace(/\r?\n$/, ""));
 }
 
 async function GitFiles(directory: string, forbidden: string[]): Promise<string[]>
 {
     return (await RunGit(directory, ["ls-files", "-co", "--exclude-standard", "-z"], forbidden)).split("\0").filter(path => path.length > 0);
+}
+
+// The project root must be the top level of its git work tree (R in SKILL.md). The publish lock lives in <project>/.omp-artifacts
+// and sources.json records the map relative to the project, so the same map reached from a subdirectory of the repository would
+// get a second lock folder and a second name.
+export async function AssertGitToplevel(projectRoot: string): Promise<void>
+{
+    const realRoot = await realpath(projectRoot);
+    let toplevel: string;
+
+    try
+    {
+        toplevel = await GitToplevel(projectRoot, [realRoot]);
+    }
+    catch (error)
+    {
+        throw new Error(`--project must be the top level of a git work tree: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    if (!SamePath(await realpath(toplevel), realRoot))
+    {
+        throw new Error(`--project must be the top level of its git work tree (git reports ${toplevel}): ${projectRoot}`);
+    }
 }
 
 // A sibling must be a real directory next to the project (not a link), outside the project root and not containing it. Only the
@@ -484,7 +512,17 @@ export async function ComputeInputs(projectRoot: string, scope: Scope): Promise<
     }
 
     const scoped = [...candidates.keys()].filter(path => include.some(glob => glob.match(path)) && !exclude.some(glob => glob.match(path)));
-    const inputs = await MapLimit(scoped.sort(CompareText), HASH_CONCURRENCY, path => HashFile(path, candidates.get(path) as string));
+
+    // Files of the map directory: the folded prefix preselects (git may spell the directory as in its index), the real path
+    // decides, because FoldName is coarser than file-system equality (ß and ss are two different NTFS names).
+    const isCaseInsensitive = process.platform === "win32" || process.platform === "darwin";
+    const comparable = (path: string) => isCaseInsensitive ? FoldName(path) : path;
+    const mapAbsolute = scope.mapDirectory === undefined ? null : join(root, scope.mapDirectory);
+    const realMap = mapAbsolute === null || await GetEntry(mapAbsolute) === null ? null : await realpath(mapAbsolute);
+    const mapPrefix = scope.mapDirectory === undefined ? "" : `${comparable(scope.mapDirectory)}/`;
+    const isMapFile = await Promise.all(scoped.map(async path => realMap !== null && comparable(path).startsWith(mapPrefix) && IsInside(await realpath(candidates.get(path) as string), realMap)));
+    const kept = scoped.filter((_, index) => !isMapFile[index]);
+    const inputs = await MapLimit(kept.sort(CompareText), HASH_CONCURRENCY, path => HashFile(path, candidates.get(path) as string));
 
     return { inputs, snapshot: SnapshotId(inputs) };
 }
