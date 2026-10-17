@@ -3,7 +3,7 @@ type: Rule
 title: 메시지 전달·송신 공정성과 연결 복구
 description: 메시지별 전달/만료·묶음·소유권, TCP/I/O/RPC 경계와 HOL·공정한 송신, 모바일 경로 전환·애플리케이션 세션 복구의 공통 계약입니다.
 tags: [development, networking, transport, rpc, backpressure, fairness, mobile, session]
-timestamp: 2026-10-15T00:00:00Z
+timestamp: 2026-10-16T00:00:00Z
 ---
 
 # 메시지 전달·송신 공정성과 연결 복구
@@ -30,6 +30,7 @@ timestamp: 2026-10-15T00:00:00Z
 - TCP 재접속, [QUIC의 살아 있는 연결 migration](https://www.rfc-editor.org/rfc/rfc9000.html#section-9), 여러 경로의 동시 사용, 게임 세션 resume을 구분합니다. QUIC Connection ID(CID)는 transport 상태의 라우팅 식별자이지 계정·캐릭터 권위나 만료된 연결을 복원하는 증명이 아닙니다. 주소가 바뀌어도 같은 transport owner로 도달해야 하며, CID 라우팅만으로 Gateway 장애 시 상태가 복제되지는 않습니다.
 - [Android NetworkCallback](https://developer.android.com/develop/connectivity/network-ops/reading-network-state)·[Apple NWPathMonitor](https://developer.apple.com/documentation/network/nwpathmonitor)는 경로 관찰 신호입니다. Wi-Fi/셀룰러 표기나 사용 가능 알림을 인증된 서비스 도달성으로 대체하지 않습니다. 정상 연결을 모든 알림마다 끊거나 reachability 사전 검사만으로 접속을 막지 않으며, 경로 신호와 실제 I/O·애플리케이션 timeout을 함께 사용합니다. 주소 캐시·진행 중 DNS와 주소군별 접속 후보도 회선 세대에 맞춰 처리해 이전 경로의 주소 하나만 무한 재사용하지 않습니다. TLS 검증용 서비스 identity는 dial IP와 분리합니다.
 - 연결·DNS·TLS·재시도는 한 소유자의 상태 전이와 attempt generation으로 묶고, 낡은 callback·취소된 재시도를 무효화합니다. 재시도 간격·횟수·대기 자원에는 예산을 둡니다. 네이티브 작업 스레드도 [iOS 앱 suspension](https://developer.apple.com/documentation/uikit/extending-your-app-s-background-execution-time)과 [Android Doze의 네트워크 제한](https://developer.android.com/training/monitoring-device-state/doze-standby)을 우회하지 못합니다.
+- 자체 재연결을 하는 RPC 채널 위에 앱 수준 재접속 루프를 얹으면 재시도 소유자가 둘이 됩니다. gRPC는 기본값으로 채널이 `TRANSIENT_FAILURE`일 때 RPC를 연결을 기다리지 않고 즉시 실패시킵니다([wait-for-ready](https://github.com/grpc/grpc/blob/master/doc/wait-for-ready.md)). 앱 복귀처럼 바로 재시도해야 하는 시점에 채널 재연결이 진행 중이면 그 시도는 연결을 열지 않고 실패하고, 앱이 다음 백오프 간격을 기다리는 동안 채널은 이미 READY가 될 수 있습니다. 즉시 재시도 경로에서는 채널 준비를 유한 기한으로 기다린 뒤(gRPC C++ `Channel::WaitForConnected` 등) 호출합니다. 호출 기한(deadline)은 호출 전체가 넘지 말아야 할 시각이므로([gRPC deadlines](https://grpc.io/docs/guides/deadlines/)) 장기 양방향 스트림의 연결 대기용으로 쓰지 않습니다. 시험에서 릴레이가 본 TCP 연결 수는 앱의 시도 수와 1:1이 아닙니다(라이브러리도 스스로 재연결하고, 즉시 실패한 RPC는 연결을 열지 않음). 앱 쪽 시도·대기 기록으로 판정합니다(gRPC C++ 1.57 클라이언트 실측, 2026-10-16).
 - 소켓 연결/TLS handshake 성공과 권위 full-state 설치 완료는 별개입니다. 프로세스 내부의 token·명령 이력 보존으로 앱 프로세스 종료 후 복구까지 보장하지 않습니다. 재실행·grace 만료·거절은 재인증·권위 상태 복구·미확정 결과 처리 계약을 따릅니다.
 - 전송 선택은 같은 입력/명령·복제 부하에서 인증된 READY 복구, 상태 나이, 입력→권위 결과의 꼬리 지연, 중복 실행·미확정 결과, CPU wakeup·메모리·단말 에너지로 비교합니다. HTTP 처리량이나 영상 FPS를 게임 지연으로 치환하지 않습니다. [STORM, USENIX ATC 2025](https://www.usenix.org/system/files/atc25-hu-liekun.pdf)은 이동 중 서로 다른 품질의 경로를 함께 사용하면 단일 경로보다 영상 지연/프레임률이 나빠질 수 있음을 보인 사례이며, 해당 수치를 모든 게임·단말의 성능 예측으로 사용하지 않습니다.
 - 크로스플랫폼 전송 구현을 공유해도 앱 수명·소켓별 네트워크 문맥 같은 OS 통합이 사라지지는 않습니다. 엔진의 공통 알림을 재사용하고 부족한 연결 문맥만 작은 경계에 둡니다. 그 경계에 송수신·TLS·재시도·게임 세션 상태 머신을 복제하지 않으며, 라이브러리가 이름을 받는다는 사실만으로 플랫폼의 connect-by-name 의미를 제공한다고 판단하지 않습니다.
