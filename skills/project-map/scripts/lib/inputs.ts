@@ -1,9 +1,9 @@
 // Freshness inputs of a project map: which files the map was built from and their fingerprints.
 // Shared by build.ts (records them), publish.ts (writes them to the manifest) and status.ts (compares them).
 import { isUtf8 } from "node:buffer";
-import { readFile, realpath } from "node:fs/promises";
+import { lstat, readFile, realpath } from "node:fs/promises";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { AssertNoLinks, CompareText, FoldName, GetEntry, IsInside, IsWithin, MapLimit, RelativePosix, SamePath, Sha256Hex } from "./files.ts";
+import { AssertNoLinks, CompareText, GetEntry, IsInside, IsWithin, MapLimit, RelativePosix, SamePath, Sha256Hex } from "./files.ts";
 
 export interface Input
 {
@@ -41,7 +41,7 @@ const GIT_HARDENING = ["-c", "core.fsmonitor=false", "-c", "safe.bareRepository=
 
 // The map directory holds the built entry, which embeds the snapshot; it can never be an input of that snapshot. It is not an
 // exclude glob: git lists tracked files in the index spelling, which on Windows and macOS can differ in case or Unicode form
-// from the on-disk spelling --map has to use, so ComputeInputs decides membership on real paths (see there).
+// from the on-disk spelling --map has to use, so ComputeInputs decides membership by directory identity (see there).
 export function ScopeForMap(scope: Scope, mapRelative: string): Scope
 {
     return { include: scope.include, exclude: scope.exclude, mapDirectory: mapRelative.replace(/\/+$/, "") };
@@ -474,6 +474,36 @@ async function HashFile(path: string, absolute: string): Promise<Input>
     return { path, mode: "sha256-bytes", sha256: Sha256Hex(bytes) };
 }
 
+// Physical identity of a directory entry (links are not followed): device and file id, read as bigint because NTFS file ids can
+// exceed 2^53. 0 and all ones mean the file system has no unique 64-bit id, and on ReFS the 64-bit id is not guaranteed unique
+// (BY_HANDLE_FILE_INFORMATION), so the exact real path decides there, and on Windows it must match as well (Bun 1.4.3 returns it
+// in the on-disk spelling for case, 8.3 and stream spellings). null when the path does not exist.
+async function DirectoryIdentity(path: string): Promise<string | null>
+{
+    try
+    {
+        const stats = await lstat(path, { bigint: true });
+        const id = BigInt.asUintN(64, stats.ino);
+        const real = await realpath(path);
+
+        if (id === 0n || id === 0xFFFFFFFFFFFFFFFFn)
+        {
+            return `path:${real}`;
+        }
+
+        return process.platform === "win32" ? `id:${stats.dev}:${id}:${real}` : `id:${stats.dev}:${id}`;
+    }
+    catch (error)
+    {
+        if (error instanceof Error && "code" in error && (error.code === "ENOENT" || error.code === "ENOTDIR"))
+        {
+            return null;
+        }
+
+        throw error;
+    }
+}
+
 // Scope patterns are project-root-relative POSIX globs and may start with "../<sibling>/" (see ValidateScope). Candidates are
 // the files `git ls-files -co --exclude-standard` lists in the project and in every sibling repository the scope names, plus
 // include entries that name an existing file literally (so a git-ignored file the map depends on can still be declared).
@@ -513,14 +543,32 @@ export async function ComputeInputs(projectRoot: string, scope: Scope): Promise<
 
     const scoped = [...candidates.keys()].filter(path => include.some(glob => glob.match(path)) && !exclude.some(glob => glob.match(path)));
 
-    // Files of the map directory: the folded prefix preselects (git may spell the directory as in its index), the real path
-    // decides, because FoldName is coarser than file-system equality (ß and ss are two different NTFS names).
-    const isCaseInsensitive = process.platform === "win32" || process.platform === "darwin";
-    const comparable = (path: string) => isCaseInsensitive ? FoldName(path) : path;
-    const mapAbsolute = scope.mapDirectory === undefined ? null : join(root, scope.mapDirectory);
-    const realMap = mapAbsolute === null || await GetEntry(mapAbsolute) === null ? null : await realpath(mapAbsolute);
-    const mapPrefix = scope.mapDirectory === undefined ? "" : `${comparable(scope.mapDirectory)}/`;
-    const isMapFile = await Promise.all(scoped.map(async path => realMap !== null && comparable(path).startsWith(mapPrefix) && IsInside(await realpath(candidates.get(path) as string), realMap)));
+    // Files of the map directory: the directory at the map's depth on a file's path must be the map directory itself. Names are
+    // not compared: git may spell the directory as in its index, and a folded or lower-cased name can also join two directories
+    // the file system keeps apart (xß and xẞ are two NTFS names; JavaScript lower-cases ẞ to ß).
+    const mapIdentity = scope.mapDirectory === undefined ? null : await DirectoryIdentity(join(root, scope.mapDirectory));
+    const depth = scope.mapDirectory === undefined ? 0 : scope.mapDirectory.split("/").length;
+    const identities = new Map<string, Promise<string | null>>();
+    const isMapFile = await Promise.all(scoped.map(async path =>
+    {
+        const segments = path.split("/");
+
+        if (mapIdentity === null || segments.length <= depth)
+        {
+            return false;
+        }
+
+        const prefix = segments.slice(0, depth).join("/");
+        let identity = identities.get(prefix);
+
+        if (identity === undefined)
+        {
+            identity = DirectoryIdentity(join(root, prefix));
+            identities.set(prefix, identity);
+        }
+
+        return await identity === mapIdentity;
+    }));
     const kept = scoped.filter((_, index) => !isMapFile[index]);
     const inputs = await MapLimit(kept.sort(CompareText), HASH_CONCURRENCY, path => HashFile(path, candidates.get(path) as string));
 
