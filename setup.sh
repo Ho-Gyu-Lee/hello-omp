@@ -79,12 +79,18 @@ echo "[1/8] applying model settings..."
 apply_settings_file "${SCRIPT_DIR}/config/settings.conf"
 
 # --- 2) global/advisor rules ---
-echo "[2/8] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
+echo "[2/8] deploying global/advisor rules (AGENTS.md, RULES.md, WATCHDOG.md)..."
 if [ -f "${CONFIG_DIR}/AGENTS.md" ] && [ ! -f "${CONFIG_DIR}/AGENTS.md.bak" ]; then
   cp "${CONFIG_DIR}/AGENTS.md" "${CONFIG_DIR}/AGENTS.md.bak"
 fi
 cp "${SCRIPT_DIR}/rules/AGENTS.md" "${CONFIG_DIR}/AGENTS.md"
 sed -e "s|__OKF_DIR__|${OKF_ABS}|g" -e "s|__OKF_SOURCE_DIR__|${OKF_SOURCE_ABS}|g" "${CONFIG_DIR}/AGENTS.md" > "${CONFIG_DIR}/AGENTS.md.tmp" && mv "${CONFIG_DIR}/AGENTS.md.tmp" "${CONFIG_DIR}/AGENTS.md"
+# RULES.md is a sticky always-apply rule: unlike AGENTS.md, task subagents receive it too.
+if [ -f "${CONFIG_DIR}/RULES.md" ] && [ ! -f "${CONFIG_DIR}/RULES.md.bak" ]; then
+  cp "${CONFIG_DIR}/RULES.md" "${CONFIG_DIR}/RULES.md.bak"
+fi
+cp "${SCRIPT_DIR}/rules/RULES.md" "${CONFIG_DIR}/RULES.md"
+sed -e "s|__OKF_DIR__|${OKF_ABS}|g" -e "s|__OKF_SOURCE_DIR__|${OKF_SOURCE_ABS}|g" "${CONFIG_DIR}/RULES.md" > "${CONFIG_DIR}/RULES.md.tmp" && mv "${CONFIG_DIR}/RULES.md.tmp" "${CONFIG_DIR}/RULES.md"
 if [ -f "${CONFIG_DIR}/WATCHDOG.md" ] && [ ! -f "${CONFIG_DIR}/WATCHDOG.md.bak" ]; then
   cp "${CONFIG_DIR}/WATCHDOG.md" "${CONFIG_DIR}/WATCHDOG.md.bak"
 fi

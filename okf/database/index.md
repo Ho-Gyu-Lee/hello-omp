@@ -1,7 +1,3 @@
 # 데이터베이스
 
-앱·웹·서비스·게임의 관계형 저장에 공통인 기준을 분류한다. 성공 응답 시점·내구 등급·저작/배포 흐름은 각 도메인의 계약으로 따로 정하며, 본문의 MySQL·SQL Server·SQLite 조건을 다른 DB/엔진/격리 설정에 자동 일반화하지 않는다.
-
-관계형 저장 밖의 데이터 게시·메모리 로딩·서비스 수명은 [공통 개발 목차](/development/index.md), 게임 권위·결과 공개 정책은 [게임 목차](/game/index.md)를 함께 확인한다.
-
-* [관계형 DB 설계·인덱스·동시성과 캐시](/database/design.md) - 접근 패턴 기반 모델링·PK/인덱스·실행계획, FK 생략의 참조 무결성 책임·앱/SP 트랜잭션, DDL/격리·재시도·동적 캐시와 SQLite statement/WAL·조건부 갱신·멱등 영수증/실패 검증.
+* [DB 제품별 비자명 계약(MySQL·SQLite·DynamoDB)](/database/design.md) - MySQL FK 재활성화·matched/changed rows, SQLite statement/WAL, DynamoDB GSI·PutItem·페이지네이터와 CloudWatch 지표.

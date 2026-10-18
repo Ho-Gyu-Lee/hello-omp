@@ -77,11 +77,16 @@ Write-Host "[1/8] applying model settings..."
 Set-OmpSettings (Join-Path $ScriptDir 'config\settings.conf')
 
 # --- 2) global/advisor rules ---
-Write-Host "[2/8] deploying global/advisor rules (AGENTS.md, WATCHDOG.md)..."
+Write-Host "[2/8] deploying global/advisor rules (AGENTS.md, RULES.md, WATCHDOG.md)..."
 $agentsMd = Join-Path $ConfigDir 'AGENTS.md'
 if ((Test-Path $agentsMd) -and -not (Test-Path "$agentsMd.bak")) { Copy-Item $agentsMd "$agentsMd.bak" -Force }
 Copy-Item (Join-Path $ScriptDir 'rules\AGENTS.md') $agentsMd -Force
 Set-OkfPath $agentsMd
+# RULES.md is a sticky always-apply rule: unlike AGENTS.md, task subagents receive it too.
+$rulesMd = Join-Path $ConfigDir 'RULES.md'
+if ((Test-Path $rulesMd) -and -not (Test-Path "$rulesMd.bak")) { Copy-Item $rulesMd "$rulesMd.bak" -Force }
+Copy-Item (Join-Path $ScriptDir 'rules\RULES.md') $rulesMd -Force
+Set-OkfPath $rulesMd
 $watchdogMd = Join-Path $ConfigDir 'WATCHDOG.md'
 if ((Test-Path $watchdogMd) -and -not (Test-Path "$watchdogMd.bak")) { Copy-Item $watchdogMd "$watchdogMd.bak" -Force }
 Copy-Item (Join-Path $ScriptDir 'rules\WATCHDOG.md') $watchdogMd -Force

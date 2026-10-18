@@ -1,39 +1,15 @@
 ---
 type: Concept
-title: 이벤트 루프·작업·스크립트의 실행 경계
-description: 순회 중 생성·파괴와 재진입, 병렬 작업의 소유권·콜백·합류·종료, 이벤트 스케줄과 스크립트 예산·실패 전파를 다룹니다.
-tags: [development, runtime, lifecycle, concurrency, jobs, events, scripting]
-timestamp: 2026-10-15T00:00:00Z
+title: 병렬 작업과 스크립트 실행 경계
+description: 멀티스레드·병렬 처리 방향의 링크와 내장 Lua 스크립트의 count hook·선점 한계를 다룹니다.
+tags: [development, runtime, concurrency, scripting, lua]
+timestamp: 2026-10-18T00:00:00Z
 ---
 
-# 이벤트 루프·작업·스크립트의 실행 경계
+# 병렬 작업과 스크립트 실행 경계
 
-앱·웹·서비스·게임의 해당 실행 구조를 사용하는 코드의 검토 기준입니다. 특정 매니저·ECS·잡 시스템을 도입하라는 지시가 아닙니다. 본문의 엔티티/프레임·충돌쌍·AI·길찾기 체인은 수명·순서·의존 작업의 적용 사례입니다. 게임에 적용할 때는 [단일 작성자](/game/server-checklist.md#gateway와-단일-로직-스레드의-분리)와 [Godot 스레드 경계](/game/godot-runtime.md#물리프레임스레드-경계)를 별도로 유지합니다.
-
-## 초기화·갱신·종료
-
-- 하위 시스템 초기화 의존을 명시하고 부분 실패에서는 성공한 자원을 의존 역순으로 정리합니다. 오류 보고가 초기화에 실패한 렌더러·글꼴·오디오를 다시 요구하지 않게 합니다. 전역 자기 등록의 초기화/링크 문제는 [C++ 공개 경계](/language-style-c-cpp.md#6-cc-헤더소스공개-경계)를 따릅니다.
-- 갱신 순회 중 콜백이 자기 자신·다른 객체를 생성/파괴할 수 있는지 확인합니다. 현재 호출과 반복자 수명을 깨뜨리는 직접 삭제·`push_back`을 피하고 지연 명령·안정 저장소 등 선택한 모델의 반영 경계를 정합니다. 새 객체의 첫 갱신 시점, 삭제 표시 뒤의 호출 허용 여부도 명시합니다. '프레임 끝 삭제'라는 이름만으로 그 전에 오는 콜백이 안전해지지 않습니다([vector push_back](https://en.cppreference.com/w/cpp/container/vector/push_back), [Unity Destroy](https://docs.unity3d.com/ScriptReference/Object.Destroy.html)).
-- 입력/진행 콜백 안에서 중첩 이벤트 루프를 돌리면 로딩·종료·모달 처리에 재진입할 수 있습니다. 파괴·모드 전환처럼 현재 실행을 무효화하는 작업은 안전한 적용 경계로 넘기거나 재진입 계약을 명시합니다. 반복 종료 요청은 한 종료 상태기로 수렴시키고, 이미 정리 중인 서비스를 다시 사용하지 않습니다. 로그아웃·송신 배출의 계약은 [클라이언트 체크리스트](/game/client-checklist.md)와 [네트워크 I/O](/development/network-io.md)를 따릅니다.
-- 데이터 수치·스킨·일시 buff 조합을 각각 하위 클래스로 만들면 조합 수와 런타임 타입 교체 문제가 커집니다. 읽기 전용 정의와 인스턴스 상태/독립 능력으로 충분한지 먼저 판단하고, 실제 대체 가능한 동작 계층에만 상속을 씁니다. 기존 구조를 무조건 ECS로 바꾸지 않습니다([Core Guidelines C.120](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rh-domain)).
-
-## 병렬 작업과 대기
-
-- 독립 계산의 입력 snapshot·쓰기 소유권·합류 지점을 먼저 정합니다. 병렬 루프를 붙였다는 사실이 공유 데이터를 자동 복사·동기화하지 않습니다. 요소별 갱신과 컨테이너 구조 변경·전역 ID 증가를 구분하고, 상대 객체도 쓰는 충돌쌍 계산은 쌍 단위 소유권/결과 병합을 검토합니다. '한 번 충돌함' 플래그로 다음 접촉을 생략하는 것이 다중 접촉 계약에 맞는지도 확인합니다([C++ data races](https://en.cppreference.com/w/cpp/language/multithread)).
-- callback의 원래 실행 스레드 계약을 보존합니다. 사용자 핸들러를 워커에서 직접 부르는 변경은 핸들러가 접근하는 객체·엔진 API까지 검토하며, 안전하지 않으면 결과를 소유 스레드로 전달합니다. 포인터 인자를 복사해도 pointee 수명이 늘지 않습니다. 작업별 난수와 결과 적용 순서는 [난수·재현](/development/randomness.md)을 따릅니다.
-- 매 엔티티/프레임마다 OS 스레드를 만들기보다 기존 풀·잡 시스템의 재사용을 검토하되 작업 입도·생성/스케줄·합류 비용까지 비교합니다. 다형 경계도 요소당 호출 수와 배치 가능성을 계산합니다. 스레드를 늘려 느려지면 경합·false sharing·부하 불균형을 분리합니다. 결과가 결합 가능한 작업은 로컬 누적 후 병합을 검토하지만, 순서 의존 상태 변경이나 부동소수 합산의 의미를 바꾸지 않습니다. 어떤 구조도 측정 없이 항상 빠르다고 단정하지 않습니다.
-- 유휴 워커의 블로킹 대기는 종료 요청으로 깨울 수 있어야 합니다. 남은 작업을 완료하는 drain과 취소를 구분하고, 대기 중·실행 중·생산 종료가 겹치는 종료 경로를 확인합니다. `jthread`의 stop request도 협력적이며 모든 임의 I/O를 자동 중단하지 않습니다. C++20을 쓰는 경우 stop-aware `condition_variable_any::wait`는 한 구현 선택입니다([wait](https://en.cppreference.com/w/cpp/thread/condition_variable_any/wait)).
+멀티스레드·병렬 처리와 상태 소유 구조의 선택은 [개발 방향](/direction.md)을 따릅니다. 서버의 비동기 완료를 상태 소유자에게 적용하는 기준은 [서버 체크리스트](/development/server-checklist.md#프로토콜과-비동기-수명)에 둡니다.
 
 ## 타이머·이벤트·스크립트
 
-- 이산 이벤트 스케줄러에서는 예정 시각과 실제 디스패치 시각을 구분합니다. 큐에 든 작업의 정렬 키·주기를 변경하면 순서를 복구하고 동시 만료 순서를 정합니다. 지연된 주기 작업의 catch-up/누락 정책과 처리 예산을 명시하며 프레임 구간 처리라는 이유만으로 지연 상한을 보장하지 않습니다([Boost.Heap 변경·안정성](https://www.boost.org/doc/libs/latest/doc/html/heap/concepts.html)).
-- 이벤트 수신마다 AI 판단을 재실행하는 구조와 큐에서 묶어 처리하는 구조는 호출량·반응 지연·재진입의 교환입니다. 구독자 수×발생률×처리 비용을 보고 즉시 처리 종류와 지연 처리 종류를 정합니다. 내부 게임 이벤트도 무제한 큐나 의미 없는 병합으로 숨기지 않습니다.
-- 내장 스크립트가 로직 스레드에서 도는 경우 실행·메모리 예산과 초과 시 양보/중단을 정합니다. 결정적 진행이 필요하면 시간 예산만으로 같은 tick의 진행량을 보장하지 말고 명령 수 등 재현 가능한 기준을 검토합니다. VM 명령 수는 네이티브 host call의 긴 실행을 선점하지 못하므로 그 호출도 별도로 제한·분할해야 합니다.
-- Lua 5.4의 count hook은 Lua 함수의 명령 실행에서만 호출됩니다. hook yield는 count/line에서 결과 0개 등 제약이 있고, 재개 가능한 coroutine·C-call 경계 조건을 만족해야 합니다. hook 하나를 붙인 것을 완전한 sandbox·시간 상한으로 보고하지 않습니다([Lua 5.4 §4.7](https://www.lua.org/manual/5.4/manual.html#4.7), [lua_yieldk](https://www.lua.org/manual/5.4/manual.html#lua_yieldk)).
-- 길찾기→이동→연출 같은 의존 체인은 선행의 성공·실패·취소를 구분합니다. 선행 실패를 완료 성공으로 바꿔 후속 효과를 실행하거나 오지 않을 완료를 영원히 기다리지 않습니다. 소유자/대상이 사라지거나 바뀌는 경우의 취소·재검증·대체 분기를 정합니다. 모든 실패에 자동 재시도를 넣는 규칙은 아닙니다.
-
-## 근거와 적용 범위
-
-- *Game Coding Complete* 1판 한국어 제공본 PDF p.100–101, 124–125, 274–282, 308–324, 337: 호출 중 수명·의존 체인·초기화·종료·중첩 callback. 『게임 프로그래머를 위한 C++』 PDF p.29–40, 30–36, 294: 데이터 조합과 다형 호출 입도.
-- *Multi-Threaded Game Engine Design* (2011) PDF p.46–49, 97–113, 516–519, 543–547, 575–581: 병렬 엔티티·컨테이너·콜백·쌍 처리의 실패 경계를 추출했습니다. OpenMP 자동 동기화, 렌더링은 병렬화 불가라는 일반화, raw-pointer vector의 erase가 pointee를 delete한다는 주장은 제외했습니다.
-- *Game Programming Tricks of the Trade* 한국어판 PDF p.451–455, 479–500: VM 시분할·종료 이벤트. *Game Programming Gems 3* 한국어판 PDF p.63–69, 606–617: 스케줄러·행위자 이벤트 처리. 위 문서 대조 2026-10-15. 책의 코드와 현대 API를 결합해 도출한 설계 기준이며 특정 엔진의 실행 검증 결과는 아닙니다.
+- Lua 5.4의 count hook은 Lua 함수를 실행하는 동안에만 호출되므로 네이티브 host call의 긴 실행을 선점하지 못합니다. 그 호출은 별도로 제한·분할합니다. hook에서 yield하려면 count/line 이벤트여야 하고 결과는 0개여야 하며 재개 가능한 coroutine·C-call 경계 조건도 만족해야 합니다. hook 하나를 완전한 sandbox·시간 상한으로 보지 않습니다([Lua 5.4 §4.7](https://www.lua.org/manual/5.4/manual.html#4.7), [lua_yieldk](https://www.lua.org/manual/5.4/manual.html#lua_yieldk), 확인 2026-10-15).
