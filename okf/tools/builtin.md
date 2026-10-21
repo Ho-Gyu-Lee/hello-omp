@@ -21,6 +21,7 @@ omp는 배터리 포함이다. 기본으로 되는 일에 MCP를 두지 않으�
   - 같은 `eval` 커널의 동기 호출(`Bun.spawnSync`)은 그 커널의 비동기 관측 루프(로그 tail·주기 표본)도 멈춘다. 시각을 재는 하위 프로세스는 `Bun.spawn`이나 별도 프로세스로 실행하고 관측 시각 차이를 지연 근거로 쓰지 않는다.
   - 별도 셸의 `export`는 IDE에서 시작한 빌드에 전달되지 않는다. Visual Studio의 [CMake preset](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs)은 변수 확장 뒤 CMake를 호출하므로 target 의존 경로는 target 환경이나 toolchain 진입 파일에서 정한다.
 - 신호로 종료된 `Bun.Subprocess`는 `exited`를 기다린 뒤에도 `exitCode`가 `null`이고 `signalCode`가 채워질 수 있다. `exitCode === null`만으로 실행 중이라 판정하지 않고 강제 종료를 정상 exit 0으로 바꾸지 않는다([Bun](https://bun.com/docs/runtime/child-process#exit-handling), 확인: 2026-10-18).
+- Bun Shell(`$` 템플릿)은 `cmd > ${log} 2>&1`을 "expected a command or assignment but got: Redirect"로 거부하므로 표준 출력·오류를 한 파일로 모을 때는 `cmd &> ${log}`를 쓴다. 인수 배열은 `` $`${tool} ${args}` ``처럼 넘기면 원소마다 따로 인용된다. `.nothrow()`를 쓰면 이런 실패가 종료 코드로만 드러나므로 로그 파일이 실제로 채워지는지 함께 본다(Bun 1.4.3 확인: 2026-10-18).
 - `eval`의 `browser` facade는 활성화된 경우에만 있으며 API는 `xd://eval/browser`를 읽는다. 정적 URL은 `read`가 우선이고, 로그인 벽·JS 챌린지에 막히면 막혔다고 결론 내기 전에 관리 Chromium(relay 아님)으로 연다. 위임 조사에도 이 경로를 지정한다. relay/CDP는 사용자의 실제 로그인 세션이므로 사용자가 연 페이지만 `browser.targets()`로 확인해 `app.target`을 지정하고 요청 없이 보이는 탭을 탐색하지 않는다. `allow_file_access`는 launch flag라 실행 중인 공유 브라우저에 적용되지 않으므로 `file://` 문서가 다른 로컬 파일을 읽어야 할 때만 `app.path` 전용 브라우저에서 켜고 그 결과를 기본 조건의 증거로 쓰지 않는다(`xd://eval/browser`, 확인: 2026-10-18).
 
 ## 긴 작업과 대기

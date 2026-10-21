@@ -19,7 +19,7 @@
 * [렌더링·애니메이션 표현 계약](/development/rendering-animation.md) - D3D12 장치 제거 시 fence 신호, 필터·고정 표시 프로필·이동 클립 갱신·전환 측정에서 실제 데이터와 최종 표시로 판단하는 원리를 다룹니다.
 * [상태 기계·탐색의 수명과 작업 예산](/development/ai-navigation.md) - 상태 실행 세대, 반복 재계획이 진행을 되감지 않는 조건, 탐색 실패와 불가능성·충돌 요구의 구분, 부분 경로·예산 고갈과 목표 완료의 구분을 다룹니다.
 * [에셋의 AI 사용 권리와 검수·조립 원리](/development/assets-editor.md) - Unity Asset Store 에셋의 AI/ML 사용 제한과 취득 채널별 권리 확인, 구매·생성 에셋 검수·조립·화풍 대조에서 최종 결과와 측정 타당성으로 판단하는 원리를 다룹니다.
-* [AI 에셋 생성의 모델 라이선스·로컬 메모리·VLM 런타임](/development/ai-asset-generation.md) - 로컬 이미지 생성·VLM 모델의 가중치 라이선스 예외, Apple Silicon 통합 메모리 조회와 mflux 캐시, seed 재현성, 8방향 스프라이트 구조 고정, Ollama(MLX) 유효 설정과 구조화 출력 결함을 정리합니다.
+* [AI 에셋 생성의 모델 라이선스·로컬 메모리·LoRA 학습·VLM 런타임](/development/ai-asset-generation.md) - 로컬 이미지 생성·VLM 모델의 가중치 라이선스 예외, Apple Silicon 통합 메모리 조회와 mflux 캐시, seed 재현성, 8방향 스프라이트 구조 고정, mflux LoRA 학습 설정과 투명 스프라이트의 키 배경 학습·복원, Ollama(MLX) 유효 설정과 구조화 출력 결함, VLM 채점의 양성 대조를 정리합니다.
 
 ## 플랫폼 배포
 * [Android 라이브러리 의존성과 최종 패키지 검증](/development/android-dependencies.md) - 로컬 AAR이 외부 의존성 메타데이터를 대신하지 않는다는 계약과, 클래스 포함 여부를 최종 APK의 DEX 정의로 확인하는 기준입니다.
