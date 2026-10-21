@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 게임 서버 기능/성능 체크리스트
-description: 게임 서버의 Gateway/로직 소유 단위 분리(선택한 구조의 설계 기준), 용량·AOI 측정 기준. 공통 서버 운영·영속화·보안은 별도 정본에 연결한다.
+description: 게임 서버의 Gateway/로직 소유 단위 분리(선택한 구조의 설계 기준), 용량·AOI·복제 측정 기준. 공통 서버 운영·영속화·보안은 별도 정본에 연결한다.
 tags: [game, server, performance, networking, checklist, gateway, single-writer]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-10-21T00:00:00Z
 ---
 
 # 게임 서버 기능/성능 체크리스트

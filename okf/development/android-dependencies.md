@@ -3,7 +3,8 @@ type: Checklist
 title: Android 라이브러리 의존성과 최종 패키지 검증
 description: 로컬 AAR이 외부 의존성 메타데이터를 대신하지 않는다는 계약과, 클래스 포함 여부를 최종 APK의 DEX 정의로 확인하는 기준입니다.
 tags: [development, android, aar, gradle, maven, dependencies, verification]
-timestamp: 2026-10-18T00:00:00Z
+apply_on_edit: ["*.gradle", "*.gradle.kts"]
+timestamp: 2026-10-21T00:00:00Z
 ---
 
 # Android 라이브러리 의존성과 최종 패키지 검증

@@ -1,9 +1,9 @@
 ---
 type: Rule
 title: 프로젝트 지도와 작업 동기화
-description: 비차단 변경 위치 공유, 지속 프로젝트 지도의 적용·중지·삭제, 문서 배치·목차·상태·계획, Archify 기술 계약, 작업 트리 근거·신선도, 검증 후 게시 절차와 완료 보고. 화면 기준은 프로젝트 지도 화면 설계가 정본이다.
+description: "`프로젝트 지도: 유지` 선언 프로젝트에서 코드·설정·문서를 바꿀 때 읽는 계약 — 비차단 변경 위치 공유, 지속 프로젝트 지도의 적용·중지·삭제, 문서 배치·목차·상태·계획, Archify 기술 계약, 작업 트리 근거·신선도, 검증 후 게시 절차와 완료 보고. 화면 기준은 프로젝트 지도 화면 설계가 정본이다."
 tags: [workflow, project-map, communication, documentation, architecture, archify, evidence, planning, template]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-10-21T00:00:00Z
 ---
 
 # 목적

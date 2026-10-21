@@ -3,7 +3,8 @@ type: Concept
 title: DB 제품별 비자명 계약(MySQL·SQLite·DynamoDB)
 description: MySQL FK 재활성화·matched/changed rows, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·PutItem·Go 페이지네이터와 CloudWatch 지표 계약을 정리합니다.
 tags: [database, mysql, sqlite, dynamodb, cloudwatch, wal, verification]
-timestamp: 2026-10-18T00:00:00Z
+apply_on_edit: ["*.sql"]
+timestamp: 2026-10-21T00:00:00Z
 ---
 
 # DB 제품별 비자명 계약

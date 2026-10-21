@@ -4,7 +4,9 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // Deploys the public OKF bundle into <configdir>/okf while preserving local knowledge in <configdir>/okf/learned/.
-// Nothing under learned/ is moved, overwritten or deleted, except learned/index.md, which always comes from the repository.
+// Nothing under learned/ is moved, overwritten or deleted, except learned/index.md, which is regenerated from the repository
+// template and the local concepts' frontmatter on every deploy and --record. Every deployed concept is also published as an
+// omp rule in <configdir>/rules/okf-*.md (see WriteKnowledgeRules); other files in that directory are never touched.
 
 const OS_METADATA_PATTERN = /^(?:\.DS_Store|desktop\.ini|Thumbs\.db|\._.*)$/i;
 const FORMAT_VERSION = 1;
@@ -12,6 +14,15 @@ const LEARNED_DIR = "learned";
 const LEARNED_INDEX = "index.md";
 const MARKER_NAME = ".deploy-okf.json";
 const STATE_DIR_NAME = ".okf-local";
+const RULES_DIR_NAME = "rules";
+const RULE_PREFIX = "okf-";
+const ON_EDIT_SUFFIX = "-on-edit";
+const RULE_SOURCE_KEY = "okf_source";
+const RULE_SOURCE_LINE_PATTERN = new RegExp(`^${RULE_SOURCE_KEY}:`, "m");
+const RULE_TEMPORARY_PATTERN = /\.md\.tmp-\d+$/;
+
+// Same frontmatter rule as validate-okf.ts.
+const FRONTMATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
 
 type LocalFile = { rel: string; path: string; hash: string };
 
@@ -25,6 +36,7 @@ type Paths = {
     repoRoot: string;
     okfDestination: string;
     learnedDestination: string;
+    rulesDestination: string;
     stateDir: string;
 };
 
@@ -141,7 +153,7 @@ async function ListLearnedFiles(root: string, label: string): Promise<LocalFile[
     return files;
 }
 
-// Public bundle files: everything in the repository okf/ except learned/*, plus learned/index.md.
+// Public bundle files: everything in the repository okf/ except learned/*, plus learned/index.md (the template of the local index).
 async function ListPublicFiles(okfSource: string): Promise<Map<string, string>>
 {
     const files = new Map<string, string>();
@@ -267,11 +279,307 @@ async function WriteJsonAtomic(path: string, value: unknown): Promise<void>
     await rename(temporary, path);
 }
 
-function RunValidator(directory: string): boolean
+function RunValidator(directory: string, flags: string[]): boolean
 {
     const validator = fileURLToPath(new URL("./validate-okf.ts", import.meta.url));
-    const result = Bun.spawnSync({ cmd: [process.execPath, validator, directory], stdout: "inherit", stderr: "inherit" });
+    const result = Bun.spawnSync({ cmd: [process.execPath, validator, ...flags, directory], stdout: "inherit", stderr: "inherit" });
     return result.exitCode === 0;
+}
+
+function Collapse(text: string): string
+{
+    return text.replace(/\s+/g, " ").trim();
+}
+
+// learned/index.md = the repository template followed by one entry per local concept, built from that concept's frontmatter
+// title and description, so the index lists exactly the files present and never disagrees with them. Links are relative, so
+// learned/ also validates as a bundle of its own. Returns the number of listed concepts.
+async function WriteLearnedIndex(paths: Paths): Promise<number>
+{
+    const templatePath = join(paths.okfSource, LEARNED_DIR, LEARNED_INDEX);
+
+    if (!(await GetEntry(templatePath))?.isFile())
+    {
+        throw new DeployStop(`missing ${templatePath}; the local knowledge index is generated from it`);
+    }
+
+    const entries: string[] = [];
+
+    for (const file of await ListLearnedFiles(paths.learnedDestination, "local knowledge directory"))
+    {
+        const name = file.rel.split("/").at(-1) ?? file.rel;
+
+        if (!name.endsWith(".md") || name === "index.md" || name === "log.md")
+        {
+            continue;
+        }
+
+        if (/[<>]/.test(file.rel))
+        {
+            throw new DeployStop(`rename learned/${file.rel}: "<" and ">" cannot appear in an index link`);
+        }
+
+        const frontmatter = (await Bun.file(file.path).text()).match(FRONTMATTER_PATTERN);
+        const metadata = frontmatter ? Bun.YAML.parse(frontmatter[1]) : null;
+
+        if (metadata === null || typeof metadata !== "object" || Array.isArray(metadata) || typeof (metadata as Record<string, unknown>).description !== "string")
+        {
+            throw new DeployStop(`learned/${file.rel} has no frontmatter description to list in learned/${LEARNED_INDEX}`);
+        }
+
+        const { title, description } = metadata as Record<string, unknown>;
+        const displayTitle = typeof title === "string" ? title : name.slice(0, -".md".length);
+        // "%" and "#" are escaped so a file name such as C#.md stays one path; spaces and parentheses need the <...> form.
+        const encoded = file.rel.replaceAll("%", "%25").replaceAll("#", "%23");
+        const link = /[\s()]/.test(encoded) ? `<${encoded}>` : encoded;
+        entries.push(`* [${Collapse(displayTitle)}](${link}) - ${Collapse(description as string)}`);
+    }
+
+    const template = (await Bun.file(templatePath).text()).trimEnd();
+    const content = entries.length > 0 ? `${template}\n\n${entries.join("\n")}\n` : `${template}\n`;
+    await mkdir(paths.learnedDestination, { recursive: true });
+    await Bun.write(join(paths.learnedDestination, LEARNED_INDEX), content);
+    return entries.length;
+}
+
+function ToRuleName(conceptRel: string): string
+{
+    const slug = conceptRel.slice(0, -".md".length).normalize("NFC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "");
+    return `${RULE_PREFIX}${slug}`;
+}
+
+type KnowledgeConcept = { rel: string; path: string };
+
+type PlannedRule = { source: string; content: string; onEdit: boolean };
+
+type ExistingRules = { generated: Map<string, string>; foreign: Map<string, string[]>; temporary: string[] };
+
+function IsConcept(rel: string): boolean
+{
+    const name = rel.split("/").at(-1) ?? rel;
+    return name.endsWith(".md") && name !== "index.md" && name !== "log.md";
+}
+
+// Builds the omp rules that publish OKF concepts (rel = path inside the deployed bundle, path = file to read):
+//   okf-<concept>          rulebook rule: name, description (and apply_on_edit globs) are listed in every session's system
+//                          prompt, including subagents; the body is read through rule://
+//   okf-<concept>-on-edit  TTSR rule for concepts with apply_on_edit: the body is injected the first time a session edits or
+//                          writes a matching file
+async function PlanKnowledgeRules(concepts: KnowledgeConcept[], okfDisplay: string): Promise<Map<string, PlannedRule>>
+{
+    const planned = new Map<string, PlannedRule>();
+
+    function AddRule(name: string, source: string, fields: string[], body: string, onEdit: boolean): void
+    {
+        const key = ToKey(name);
+        const previous = planned.get(key);
+
+        if (previous)
+        {
+            throw new DeployStop(`concepts ${previous.source} and /${source} both map to rule name ${name}; rename one of them. Nothing was changed by this check.`);
+        }
+
+        planned.set(key, { source: `/${source}`, content: `---\n${fields.join("\n")}\n---\n\n${body}\n`, onEdit });
+    }
+
+    for (const { rel, path } of [...concepts].sort((left, right) => left.rel.localeCompare(right.rel)))
+    {
+        const text = await Bun.file(path).text();
+        const frontmatter = text.match(FRONTMATTER_PATTERN);
+        const metadata = frontmatter ? Bun.YAML.parse(frontmatter[1]) : null;
+
+        if (!frontmatter || metadata === null || typeof metadata !== "object" || Array.isArray(metadata) || typeof (metadata as Record<string, unknown>).description !== "string")
+        {
+            throw new DeployStop(`${path} has no frontmatter description to publish as a rule`);
+        }
+
+        const { title, description, apply_on_edit: applyOnEdit } = metadata as Record<string, unknown>;
+        const displayTitle = typeof title === "string" ? Collapse(title) : rel.slice(0, -".md".length);
+        const globs = Array.isArray(applyOnEdit) ? applyOnEdit.filter((glob): glob is string => typeof glob === "string") : [];
+        const sourceField = `${RULE_SOURCE_KEY}: ${JSON.stringify(`/${rel}`)}`;
+        const header = `OKF 개념 \`${okfDisplay}/${rel}\`에서 생성한 규칙이다. 본문의 번들 링크 \`/x.md\`는 \`${okfDisplay}/x.md\`다.`;
+        const body = `${header}\n\n${text.slice(frontmatter[0].length).trim()}`;
+        const name = ToRuleName(rel);
+        const rulebookFields = [`description: ${JSON.stringify(`${displayTitle} — ${Collapse(description as string)}`)}`];
+
+        if (globs.length > 0)
+        {
+            rulebookFields.push(`globs: ${JSON.stringify(globs)}`);
+        }
+
+        AddRule(name, rel, [...rulebookFields, sourceField], body, false);
+
+        if (globs.length > 0)
+        {
+            const scope = globs.flatMap(glob => [`tool:edit(${glob})`, `tool:write(${glob})`]);
+            const onEditFields = [`description: ${JSON.stringify(`${displayTitle} — 일치하는 파일을 편집·작성할 때 자동 주입`)}`, `condition: ".*"`, `scope: ${JSON.stringify(scope)}`, sourceField];
+            AddRule(`${name}${ON_EDIT_SUFFIX}`, rel, onEditFields, body, true);
+        }
+    }
+
+    return planned;
+}
+
+// okf-* files already in the rules directory, keyed like ToKey so a differently cased user file on a case-insensitive volume
+// counts as the same name. omp loads rules/*.{md,mdc} by file stem, so a .mdc file, or an .md file without okf_source, is the
+// user's. Leftover temporary files of an interrupted write are collected for removal.
+async function ReadExistingRules(rulesDestination: string): Promise<ExistingRules>
+{
+    const existing: ExistingRules = { generated: new Map(), foreign: new Map(), temporary: [] };
+
+    if (!(await RequireDirectoryOrMissing(rulesDestination, "rules directory")))
+    {
+        return existing;
+    }
+
+    for (const file of await readdir(rulesDestination))
+    {
+        const key = ToKey(file);
+
+        if (!key.startsWith(RULE_PREFIX))
+        {
+            continue;
+        }
+
+        if (RULE_TEMPORARY_PATTERN.test(key))
+        {
+            existing.temporary.push(file);
+            continue;
+        }
+
+        const extension = key.endsWith(".md") ? ".md" : key.endsWith(".mdc") ? ".mdc" : null;
+
+        if (extension === null)
+        {
+            continue;
+        }
+
+        const path = join(rulesDestination, file);
+
+        if (!(await lstat(path)).isFile())
+        {
+            throw new DeployStop(`refusing linked or non-file rule ${path}; the ${RULE_PREFIX} prefix is reserved for generated OKF rules`);
+        }
+
+        const stem = key.slice(0, -extension.length);
+        const frontmatter = extension === ".md" ? (await Bun.file(path).text()).match(FRONTMATTER_PATTERN) : null;
+
+        if (frontmatter !== null && RULE_SOURCE_LINE_PATTERN.test(frontmatter[1]))
+        {
+            existing.generated.set(stem, file);
+        }
+        else
+        {
+            existing.foreign.set(stem, [...(existing.foreign.get(stem) ?? []), file]);
+        }
+    }
+
+    return existing;
+}
+
+function AssertNoRuleConflicts(planned: Map<string, PlannedRule>, existing: ExistingRules, rulesDestination: string): void
+{
+    const conflicts = [...planned.keys()].flatMap(key => existing.foreign.get(key) ?? []).map(file => join(rulesDestination, file));
+
+    if (conflicts.length > 0)
+    {
+        throw new DeployStop(`rule file(s) not written by setup use names reserved for generated OKF rules (prefix ${RULE_PREFIX}): ${conflicts.join(", ")}. Rename them, then rerun. Nothing was changed by this check.`);
+    }
+}
+
+// Concepts of the deployed bundle at <configdir>/okf, including local ones under learned/.
+async function ListDeployedConcepts(paths: Paths): Promise<KnowledgeConcept[]>
+{
+    const concepts: KnowledgeConcept[] = [];
+
+    if (!(await RequireDirectoryOrMissing(paths.okfDestination, "deployed OKF root")))
+    {
+        return concepts;
+    }
+
+    for await (const path of new Bun.Glob("**/*.md").scan({ cwd: paths.okfDestination, onlyFiles: true }))
+    {
+        const rel = path.replaceAll("\\", "/");
+
+        if (IsConcept(rel))
+        {
+            concepts.push({ rel, path: ToNativePath(paths.okfDestination, rel) });
+        }
+    }
+
+    return concepts;
+}
+
+// Preflight for Inspect: the rules this run will publish must not collide with each other or with the user's rule files, so a
+// conflict stops before anything is changed. A deploy publishes the repository's public concepts; --record republishes the
+// deployed ones, so its check reads the same files it will write from. Local concepts and legacy copies to migrate come last.
+async function CheckKnowledgeRules(paths: Paths, publicConcepts: "source" | "deployed", localFiles: LocalFile[], legacyToCopy: LocalFile[]): Promise<void>
+{
+    const concepts: KnowledgeConcept[] = [];
+
+    if (publicConcepts === "source")
+    {
+        for (const [rel, path] of await ListPublicFiles(paths.okfSource))
+        {
+            if (IsConcept(rel) && !rel.startsWith(`${LEARNED_DIR}/`))
+            {
+                concepts.push({ rel, path });
+            }
+        }
+    }
+    else
+    {
+        concepts.push(...(await ListDeployedConcepts(paths)).filter(concept => !concept.rel.startsWith(`${LEARNED_DIR}/`)));
+    }
+
+    for (const file of [...localFiles, ...legacyToCopy])
+    {
+        if (IsConcept(file.rel))
+        {
+            concepts.push({ rel: `${LEARNED_DIR}/${file.rel}`, path: file.path });
+        }
+    }
+
+    const planned = await PlanKnowledgeRules(concepts, paths.okfDestination.replaceAll("\\", "/"));
+    AssertNoRuleConflicts(planned, await ReadExistingRules(paths.rulesDestination), paths.rulesDestination);
+}
+
+// Publishes every deployed concept as rules. Only okf-*.md files carrying okf_source (written here) are replaced or removed,
+// each through a temporary file and a rename so an interrupted run never leaves a truncated rule that looks like the user's.
+async function WriteKnowledgeRules(paths: Paths): Promise<{ rulebook: number; onEdit: number; removed: number }>
+{
+    const planned = await PlanKnowledgeRules(await ListDeployedConcepts(paths), paths.okfDestination.replaceAll("\\", "/"));
+    const existing = await ReadExistingRules(paths.rulesDestination);
+    AssertNoRuleConflicts(planned, existing, paths.rulesDestination);
+    await mkdir(paths.rulesDestination, { recursive: true });
+
+    // Leftovers of an interrupted run go first: one may carry this process id and would otherwise be renamed away below.
+    for (const file of existing.temporary)
+    {
+        await unlink(join(paths.rulesDestination, file));
+    }
+
+    for (const [key, rule] of planned)
+    {
+        const file = existing.generated.get(key) ?? `${key}.md`;
+        const temporary = join(paths.rulesDestination, `${file}.tmp-${process.pid}`);
+        await Bun.write(temporary, rule.content);
+        await rename(temporary, join(paths.rulesDestination, file));
+    }
+
+    let removed = 0;
+
+    for (const [key, file] of existing.generated)
+    {
+        if (!planned.has(key))
+        {
+            await unlink(join(paths.rulesDestination, file));
+            removed++;
+        }
+    }
+
+    const onEdit = [...planned.values()].filter(rule => rule.onEdit).length;
+    return { rulebook: planned.size - onEdit, onEdit, removed };
 }
 
 // Returns tracked paths under okf/learned/ other than index.md, or null when the repository is not a git checkout of its own.
@@ -338,12 +646,13 @@ async function ResolvePaths(configArgument: string): Promise<Paths>
         repoRoot: dirname(okfSource),
         okfDestination,
         learnedDestination: join(okfDestination, LEARNED_DIR),
+        rulesDestination: join(configDir, RULES_DIR_NAME),
         stateDir: join(configDir, STATE_DIR_NAME),
     };
 }
 
-// Read-only inspection shared by --check and deploy. Throws DeployStop before anything is changed.
-async function Inspect(paths: Paths): Promise<DeployPlan>
+// Read-only inspection shared by --check, deploy and --record. Throws DeployStop before anything is changed.
+async function Inspect(paths: Paths, publicConcepts: "source" | "deployed"): Promise<DeployPlan>
 {
     const warnings: string[] = [];
     const okfTarget = await GetEntry(paths.okfDestination) ? await realpath(paths.okfDestination) : paths.okfDestination;
@@ -477,10 +786,14 @@ async function Inspect(paths: Paths): Promise<DeployPlan>
         }
     }
 
-    if (localFiles.length > 0 && !RunValidator(paths.learnedDestination))
+    // learned/index.md is regenerated from these concepts before the full check, so only the concept files are checked here.
+    if (localFiles.length > 0 && !RunValidator(paths.learnedDestination, ["--concepts-only"]))
     {
         throw new DeployStop(`local knowledge in ${paths.learnedDestination} failed OKF validation (paths above are relative to that folder). Fix the files there, then rerun setup. Nothing was changed.`);
     }
+
+    // --record never migrates legacy copies, so only a deploy publishes them.
+    await CheckKnowledgeRules(paths, publicConcepts, localFiles, publicConcepts === "source" ? legacyToCopy : []);
 
     return { paths, localFiles, legacyFiles, legacyToCopy, legacyRecordOnly, migration, warnings };
 }
@@ -580,6 +893,12 @@ async function Deploy(plan: DeployPlan): Promise<void>
 
     for (const [rel, source] of publicFiles)
     {
+        // The local index is generated below, once the local concepts (including migrated ones) are in place.
+        if (rel === `${LEARNED_DIR}/${LEARNED_INDEX}`)
+        {
+            continue;
+        }
+
         const destination = ToNativePath(paths.okfDestination, rel);
         await mkdir(dirname(destination), { recursive: true });
         await copyFile(source, destination);
@@ -611,10 +930,14 @@ async function Deploy(plan: DeployPlan): Promise<void>
         migrated.push({ ...file, hash: await HashFile(destination) });
     }
 
-    if (!RunValidator(paths.okfDestination))
+    const listedLocal = await WriteLearnedIndex(paths);
+
+    if (!RunValidator(paths.okfDestination, ["--deployed"]))
     {
         throw new DeployStop(`deployed OKF bundle ${paths.okfDestination} failed validation; local files were not changed. Fix the reported files and rerun setup.`);
     }
+
+    const rules = await WriteKnowledgeRules(paths);
 
     const currentLocal = await ListLearnedFiles(paths.learnedDestination, "local knowledge directory");
     await StoreHistory(paths.stateDir, currentLocal, warnings);
@@ -636,7 +959,8 @@ async function Deploy(plan: DeployPlan): Promise<void>
     await WriteJsonAtomic(join(paths.okfDestination, MARKER_NAME), { version: FORMAT_VERSION, deployedAt: new Date().toISOString(), localFiles: currentLocal.length });
 
     console.log(`  deployed ${publicFiles.size} public file(s), removed ${removed} stale file(s)`);
-    console.log(`  local knowledge preserved: ${currentLocal.length} file(s) in ${paths.learnedDestination}`);
+    console.log(`  local knowledge preserved: ${currentLocal.length} file(s) in ${paths.learnedDestination}; ${listedLocal} concept(s) listed in learned/${LEARNED_INDEX}`);
+    console.log(`  rules: ${rules.rulebook} rulebook + ${rules.onEdit} on-edit OKF rule(s) in ${paths.rulesDestination}, removed ${rules.removed} stale`);
 
     if (plan.legacyToCopy.length > 0 || plan.legacyRecordOnly.length > 0)
     {
@@ -738,7 +1062,7 @@ try
     }
     else
     {
-        const plan = await Inspect(paths);
+        const plan = await Inspect(paths, mode === "record" ? "deployed" : "source");
 
         for (const warning of plan.warnings)
         {
@@ -752,6 +1076,21 @@ try
         else
         {
             const reported = plan.warnings.length;
+
+            if (mode === "record" && await RequireDirectoryOrMissing(paths.learnedDestination, "local knowledge directory"))
+            {
+                // Keep learned/index.md in step with the concepts just written. It is built only from concepts Inspect has
+                // validated; the whole deployed bundle, local sub-indexes included, is checked against the bundle root by setup.
+                const listed = await WriteLearnedIndex(paths);
+                console.log(`  learned/${LEARNED_INDEX}: ${listed} local concept(s) listed`);
+            }
+
+            if (mode === "record" && await RequireDirectoryOrMissing(paths.okfDestination, "deployed OKF root"))
+            {
+                // Local concepts are published as rules too, so a recorded change reaches the next session without a setup.
+                const rules = await WriteKnowledgeRules(paths);
+                console.log(`  rules: ${rules.rulebook} rulebook + ${rules.onEdit} on-edit OKF rule(s), removed ${rules.removed} stale`);
+            }
 
             if (mode === "record" && !(await GetEntry(join(paths.okfDestination, MARKER_NAME)))?.isFile())
             {

@@ -3,7 +3,8 @@ type: Concept
 title: Godot와 C++ 게임 개발
 description: Godot·godot-cpp 버전 핀과 출처 간 차이, 임의 업그레이드 금지, 하위 개념(시뮬레이션 코어·빌드·수명·UI·에셋) 안내입니다.
 tags: [game, godot, cpp, gdextension, version-pin]
-timestamp: 2026-10-18T00:00:00Z
+apply_on_edit: ["project.godot", "*.gd", "*.tscn", "*.tres", "*.gdextension", "*.gdshader"]
+timestamp: 2026-10-21T00:00:00Z
 ---
 
 # Godot와 C++ 게임 개발

@@ -27,7 +27,11 @@ flowchart LR
   R[RULES.md<br/>공통 방향] -->|매 요청| M[메인 세션]
   R -->|매 요청| S[서브에이전트]
   A[AGENTS.md<br/>메인 전용] -->|세션 시작| M
-  O[OKF 개념<br/>direction·style·workflow…] -->|필요할 때 읽음| M
+  B[rules/okf-*<br/>개념별 rulebook] -->|목록·설명 매 요청| M
+  B -->|목록·설명 매 요청| S
+  T[rules/okf-*-on-edit<br/>apply_on_edit 개념] -->|일치 파일 편집 시 본문 주입| M
+  T -->|일치 파일 편집 시 본문 주입| S
+  O[OKF 개념 본문<br/>direction·style·workflow…] -->|필요할 때 읽음| M
   O -->|필요할 때 읽음| S
   P[프로젝트 레포<br/>AGENTS.md·결정 기록·용어집] -->|그 프로젝트에서| M
 ```
@@ -36,12 +40,13 @@ flowchart LR
 |---|---|---|
 | `RULES.md` | 코드 표기(PascalCase·줄·빈 줄), 구현 선택 순서, 멀티스레드 관점, 작업 기본값(TS+Bun·작업 파일 위치·증거·실행 경계), OKF 진입점 | 짧게. 매 요청 비용 |
 | `AGENTS.md` | 한국어 존댓말·보고 형식, 질문과 요구 정렬, 정확성·보안 경고, 독립 검토, 프로젝트 지도 트리거, 지식 기록 기준 | 메인 세션에만 로드 |
-| `okf/` | [사용자 개발 방향](okf/direction.md), 코딩 스타일, 워크플로, 도메인별 비자명 사실 | 작업에 맞는 개념만 읽음 |
+| `okf/` | [사용자 개발 방향](okf/direction.md), 코딩 스타일, 워크플로, 도메인별 비자명 사실 | 작업에 맞는 개념의 본문을 읽음 |
+| `<configdir>/rules/okf-*` | setup·`--record`가 개념마다 생성하는 rulebook 규칙(이름·설명이 매 요청 시스템 프롬프트에 나열, 본문은 `rule://`)과, `apply_on_edit`가 있는 개념의 편집 시 자동 주입 규칙 | 품질 우선: 개념 목록을 매 요청 보인다 |
 | 프로젝트 레포 | 그 프로젝트의 현행 지침(`AGENTS.md`)·결정 기록·용어집 | 작업 이력·검증 기록은 쓰지 않음 |
 
-OMP 18.12.1에서 task 서브에이전트는 `AGENTS.md`를 상속하지 않고 rule(`RULES.md` 포함)은 받는다(`omp://system-prompt-customization.md`, `omp://rulebook-matching-pipeline.md`). 그래서 서브에이전트에도 필요한 방향은 `RULES.md`에 둔다.
+OMP 18.12.1에서 task 서브에이전트는 `AGENTS.md`를 상속하지 않고 rule(`RULES.md`·`rules/*` 포함)은 받는다(`omp://system-prompt-customization.md`, `omp://rulebook-matching-pipeline.md`). 그래서 서브에이전트에도 필요한 방향은 `RULES.md`에 두고, OKF 개념은 `okf-*` 규칙으로 서브에이전트에도 보인다.
 
-기록 기준은 [OKF 학습 축적](okf/learning/accumulation.md)이 정본이다. 후보마다 "이 문장이 없으면 모델이 다르게 행동하는가 / 다시 쓰이는가 / 기존 원리로 설명되지 않는가"를 묻고 셋 다 통과한 사용자 방향과 비자명 사실만 기록한다. 실수는 사건이 아니라 위반한 원리로 기록한다.
+기록 기준은 [OKF 학습 축적](okf/learning/accumulation.md)이 정본이다. 후보마다 "이 문장이 없으면 모델이 다르게 행동하는가 / 다시 쓰이는가 / 기존 원리로 설명되지 않는가"를 묻고 셋 다 통과한 사용자 방향과 비자명 사실만 기록한다. 실수는 사건이 아니라 위반한 원리로 기록한다. 개념의 frontmatter `description`이 `index.md` 항목 설명의 정본이며, 고친 뒤 `bun scripts/validate-okf.ts --fix okf`가 항목 문구를 맞춘다.
 
 ## 사용
 
@@ -78,11 +83,11 @@ sh setup.sh
 
 ## 배포 순서 (setup이 수행)
 
-사전 점검(하나라도 걸리면 설정을 바꾸기 전에 중단): `omp`·`bun` PATH, `title.generator` 지원, `<configdir>`가 레포 루트와 다른지, `deploy-skills.ts --check`(OKF·스킬 경로 겹침), `deploy-okf.ts --check`(로컬 지식 검증·이전 setup의 삭제 감지·레거시 이관 충돌).
+사전 점검(하나라도 걸리면 설정을 바꾸기 전에 중단): `omp`·`bun` PATH, `title.generator` 지원, `<configdir>`가 레포 루트와 다른지, `deploy-skills.ts --check`(OKF·스킬 경로 겹침), `deploy-okf.ts --check`(로컬 지식 검증·이전 setup의 삭제 감지·레거시 이관 충돌·생성할 `okf-*` 규칙 이름이 개념끼리 겹치거나 `okf_source` 없는 사용자 규칙(`.md`·`.mdc`)과 겹치는지·`rules` 디렉터리나 `okf-*` 규칙이 링크인지).
 
 1. **설정:** `config/settings.conf`의 키를 `omp config set`으로 적용한다.
 2. **글로벌 룰:** `rules/AGENTS.md`·`rules/RULES.md`·`rules/WATCHDOG.md` → `<configdir>/`(각 기존 파일은 최초 1회 `.bak`). `AGENTS.md`·`RULES.md`의 자리표시자 `__OKF_DIR__`(배포본)·`__OKF_SOURCE_DIR__`(소스)를 절대경로로 바꾼다. 다른 자리표시자는 없으므로 레포 루트가 필요하면 `__OKF_SOURCE_DIR__/..`로 쓴다.
-3. **OKF:** `validate-okf.ts`로 소스 frontmatter를 검사한 뒤 `deploy-okf.ts`가 공개 번들을 `<configdir>/okf/`에 제자리 갱신한다. 레포에서 사라진 공개 파일은 지우고 `<configdir>/okf/learned/`의 로컬 concept은 건드리지 않는다(`learned/index.md`만 교체).
+3. **OKF:** `validate-okf.ts`로 소스를 검사한 뒤(concept frontmatter, `index.md`의 섹션 제목과 항목 title·description 일치, 루트 index에서의 도달성, `log.md` 날짜 제목 형식·최신순) `deploy-okf.ts`가 공개 번들을 `<configdir>/okf/`에 제자리 갱신한다. 레포에서 사라진 공개 파일은 지우고 `<configdir>/okf/learned/`의 로컬 concept은 건드리지 않는다. `learned/index.md`만 레포 틀과 로컬 concept의 frontmatter로 다시 만든다. 이어서 배포본의 모든 개념을 `<configdir>/rules/okf-*.md` 규칙으로 생성하고 사라진 개념의 규칙은 지운다. `okf_source`가 없는 사용자 규칙은 건드리지 않으며, 같은 이름이면 중단한다.
 4. **확장:** `extensions/*.{js,ts}` → `<configdir>/extensions/`.
 5. **에이전트(있을 때만):** `agents/*.md` → `<configdir>/agents/`.
 6. **명령:** `commands/*.md` → `<configdir>/commands/`. 다른 사용자 명령은 보존한다. 명령·스킬은 자리표시자를 치환하지 않으므로 OKF가 필요하면 전역 지침의 OKF 절대경로를 가리킨다.
@@ -94,7 +99,7 @@ sh setup.sh
 ### 공개 지식과 로컬 지식
 
 - **공개 지식:** 이 레포의 `okf/`에서 고치고 setup으로 배포한다. 배포본만 고치면 다음 setup에서 되돌아간다.
-- **로컬 지식:** 공개하기 어려운 개인 선호와 검토 중인 지식만 `<configdir>/okf/learned/`에 직접 둔다(이 PC 전용, 동기화 안 됨). 레포 `okf/learned/`에 두지 않는다. `git merge`·`git pull`은 기본값 `--overwrite-ignore`로 같은 경로의 무시된 파일을 덮어쓰기 때문이다. 만들거나 고치거나 지운 뒤에는 `bun scripts/deploy-okf.ts --record <configdir>`를 실행한다.
+- **로컬 지식:** 공개하기 어려운 개인 선호와 검토 중인 지식만 `<configdir>/okf/learned/`에 직접 둔다(이 PC 전용, 동기화 안 됨). 레포 `okf/learned/`에 두지 않는다. `git merge`·`git pull`은 기본값 `--overwrite-ignore`로 같은 경로의 무시된 파일을 덮어쓰기 때문이다. 만들거나 고치거나 지운 뒤에는 `bun scripts/deploy-okf.ts --record <configdir>`로 검사하고 `learned/index.md` 목록을 다시 만든다.
 - **삭제 감지와 복원:** 커밋 `92b4987` 이전 setup은 `<configdir>/okf`를 지운 뒤 복사했다. 새 setup은 배포 마커와 `.okf-local/` 이력으로 그런 삭제를 감지하면 중단하며, `bun scripts/deploy-okf.ts --restore <configdir>`로 복원한 뒤 다시 실행한다. `--record` 뒤의 의도적 삭제는 되살리지 않는다.
 - **프로젝트 지식:** 프로젝트 한정 결정·용어는 그 프로젝트 레포의 문서에 둔다.
 

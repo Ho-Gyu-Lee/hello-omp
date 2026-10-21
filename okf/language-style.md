@@ -1,9 +1,10 @@
 ---
 type: Rule
 title: 언어 공통 코딩 스타일
-description: 모든 언어에 적용하는 적용 우선순위, 네이밍 기본값과 언어별 예외, 배치·빈 줄·제어 흐름 선택을 정하는 정본입니다. C/C++ 추가 선택은 하위 문서에 둡니다.
+description: 모든 언어의 코드 작성·리뷰 전에 읽는 정본입니다. 적용 우선순위, 네이밍 기본값과 언어별 예외, 배치·줄 접기·빈 줄·제어 흐름 선택을 정하고, C/C++ 추가 선택은 C/C++ 전용 규칙에 둡니다.
 tags: [rule, cross-language, c, cpp, csharp, go, python, javascript, typescript, coding-style, naming, readability]
-timestamp: 2026-10-18T00:00:00Z
+apply_on_edit: ["*.c", "*.cc", "*.cpp", "*.cxx", "*.h", "*.hh", "*.hpp", "*.hxx", "*.inl", "*.ipp", "*.cs", "*.go", "*.py", "*.js", "*.mjs", "*.cjs", "*.jsx", "*.ts", "*.mts", "*.cts", "*.tsx", "*.lua", "*.gd", "*.java", "*.kt", "*.swift", "*.rs"]
+timestamp: 2026-10-21T00:00:00Z
 ---
 
 # 언어 공통 코딩 스타일
