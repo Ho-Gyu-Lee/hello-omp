@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: godot-cpp 빌드·등록·디버깅·export와 실행 검증
-description: godot-cpp v10 핀의 빌드 옵션·manifest 매칭·hot reload, 시그널 반환값과 동기 콜백 재진입, macOS export, 프로젝트 설정·vendor 바이트, headless 검증 차이를 정리합니다.
+description: godot-cpp v10 핀의 빌드 옵션·manifest 매칭·hot reload, 시그널 반환값과 동기 콜백 재진입, macOS export, 프로젝트 설정·vendor 바이트, headless 검증 차이와 Windows 콘솔 래퍼 실행의 자원 측정 대상을 정리합니다.
 tags: [game, godot, cpp, gdextension, build, scons, export, headless]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-10-22T00:00:00Z
 ---
 
 # godot-cpp 빌드·등록·디버깅·export와 실행 검증
@@ -47,3 +47,4 @@ timestamp: 2026-10-18T00:00:00Z
 
 - `RenderingServer.frame_post_draw`를 기다린 뒤 준비를 시작하는 제품을 headless로 검사하면 headless는 창 그리기를 진행하지 않으므로, 검증 루프에서 `RenderingServer.force_draw(false)` 등으로 draw 경계를 진행시켜야 합니다. 계속 `LOADING`이고 준비 시작 계측이 0이면 timeout을 늘리거나 제품 초기화를 우회하기 전에 이 차이를 확인합니다. (엔진 `main/main.cpp` L5080-L5097, `servers/display/display_server_headless.h` L141)
 - 무거운 동기 검사를 실시간 세션의 입력 앞에 몰아 넣는 검증기는 liveness를 만료시킬 수 있으므로 코어/직렬화 회귀와 실제 입력 스모크의 실행 경계를 분리합니다.
+- **Windows `*_console.exe` (4.7.2):** 게임은 같은 폴더의 GUI exe가 콘솔 런처의 자식 프로세스로 실행하므로(런처가 `CreateProcessW`로 띄워 Job Object에 넣음) 런처 PID의 CPU·메모리는 게임 수치가 아닙니다. 프로세스 자원은 `ParentProcessId`가 런처 PID인 자식 Godot 프로세스에서 잽니다. (엔진 [`platform/windows/console_wrapper_windows.cpp`](https://github.com/godotengine/godot/blob/4.7.2-stable/platform/windows/console_wrapper_windows.cpp) L103-L158)
