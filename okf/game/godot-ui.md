@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: Godot UI 입력·텍스트·HUD 표시
-description: Godot 4.7.2 입력 전달 순서·Windows 휠 이벤트·한글 폰트·첫 import 오류·캡처 크기 불일치·focus 모양, godot-cpp v10 문자열 인코딩, 실제 렌더 경계 검증 원칙입니다.
+description: Godot 4.7.2 입력 전달 순서·장치 ID·Windows 휠 이벤트·한글 폰트·첫 import 오류·캡처 크기 불일치·focus 모양, godot-cpp v10 문자열 인코딩, 실제 렌더 경계 검증 원칙입니다.
 tags: [game, godot, cpp, ui, input, font, hud]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-10-23T00:00:00Z
 ---
 
 # Godot UI 입력·텍스트·HUD 표시
@@ -16,6 +16,7 @@ timestamp: 2026-10-18T00:00:00Z
 - **합성 mouse:** 합성 mouse가 원본 touch보다 먼저 전달되므로 수동 터치와 native GUI를 함께 쓸 때 원본 touch만 소비해서는 native Button의 중복 클릭을 막지 못합니다. 직접 소유하는 제스처의 합성 press/motion/release도 GUI 이전에 차단하고 텍스트 컨트롤의 내부 스크롤바 같은 자손은 native 경로로 남깁니다. (엔진 `core/input/input.cpp`, `scene/gui/rich_text_label.cpp`)
 - **Windows 휠:** Windows backend는 휠에도 press 뒤 release를 전달하므로 스모크가 press만 주입하면 Viewport의 mouse focus mask가 남아 다른 버튼 클릭까지 실패할 수 있습니다. 이 검증기 결함을 제품의 좌표 보정으로 해결하지 않고 실제 OS 입력과 같은 이벤트 쌍·순서로 확인합니다. (엔진 `platform/windows/display_server_windows.cpp`, `scene/main/viewport.cpp`)
 - 입력 소유권이 넘어가는 경계(포커스 상실 등)에서는 release를 놓칠 수 있으므로 복귀 시 각 키의 새 non-echo press만 인정하고 한 키로 다른 held key를 재활성화하지 않습니다.
+- 4.7부터 마우스·키보드 이벤트의 `device`는 0이 아니라 `InputEvent.DEVICE_ID_MOUSE`(32)·`DEVICE_ID_KEYBOARD`(16)이고 조이패드가 0일 수 있으므로, `device == 0`으로 키보드·마우스를 판별하지 않고 이벤트 타입이나 이 상수로 비교합니다. 스크립트로 만든 `InputEventKey.new()`·`InputEventMouseButton.new()`도 기본값이 16·32입니다([4.7 업그레이드](https://docs.godotengine.org/en/4.7/tutorials/migrating/upgrading_to_godot_4.7.html), [GH-116274](https://github.com/godotengine/godot/pull/116274), 4.7.2 headless 실행 확인 2026-10-23).
 - `gui/common/show_focus_state_on_pointer_event`의 4.7 기본값 1은 마우스·터치로 얻은 포커스에 텍스트 입력 컨트롤만 focus 모양을 그리므로 버튼의 상속 focus 테두리는 키보드·게임패드 포커스에서만 보입니다. [ProjectSettings](https://docs.godotengine.org/en/4.7/classes/class_projectsettings.html)(확인 2026-10-15)
 
 ## 표시 경계

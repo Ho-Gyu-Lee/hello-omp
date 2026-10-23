@@ -1,10 +1,10 @@
 ---
 type: Concept
 title: Godot와 C++ 게임 개발
-description: Godot·godot-cpp 버전 핀과 출처 간 차이, 임의 업그레이드 금지, 하위 개념(시뮬레이션 코어·빌드·수명·UI·에셋) 안내입니다.
+description: Godot·godot-cpp 버전 핀과 출처 간 차이, 임의 업그레이드 금지, 4.5~4.7 동작 변경의 확인 경로, 하위 개념(시뮬레이션 코어·빌드·수명·UI·에셋) 안내입니다.
 tags: [game, godot, cpp, gdextension, version-pin]
 apply_on_edit: ["project.godot", "*.gd", "*.tscn", "*.tres", "*.gdextension", "*.gdshader"]
-timestamp: 2026-10-21T00:00:00Z
+timestamp: 2026-10-23T00:00:00Z
 ---
 
 # Godot와 C++ 게임 개발
@@ -37,3 +37,5 @@ timestamp: 2026-10-21T00:00:00Z
 **업그레이드:** 이 문서를 읽었다는 이유로 엔진·바인딩·API 대상을 올리지 않습니다. 기존 프로젝트는 검증된 핀을 유지하고, 사용자가 업그레이드를 정했을 때만 공식 아카이브·릴리스·태그를 다시 확인해 확인일과 발표일을 각각 갱신합니다.
 
 **지원 상태:** 같은 minor 계열은 최신 패치만 지원됩니다. [정책 표](https://docs.godotengine.org/en/4.7/about/release_policy.html)(확인 2026-10-15)는 4.7·4.6을 전체 지원, 4.5를 보안·플랫폼 지원만, 4.0~4.4를 지원 종료로 표시합니다. godot-cpp v10 핀이 `api_version` 4.3·4.4를 받아도 해당 엔진 계열의 지원 종료 상태와는 별개입니다.
+
+**4.5~4.7 동작 변경:** 4.4까지의 지식으로 쓴 코드가 오류 없이 다르게 동작하는 변경이 있으므로, 하위 시스템을 다루기 전에 공식 [4.5](https://docs.godotengine.org/en/4.7/tutorials/migrating/upgrading_to_godot_4.5.html)·[4.6](https://docs.godotengine.org/en/4.7/tutorials/migrating/upgrading_to_godot_4.6.html)·[4.7](https://docs.godotengine.org/en/4.7/tutorials/migrating/upgrading_to_godot_4.7.html) 업그레이드 문서의 해당 절을 확인합니다. 예: 다른 객체의 packed array 프로퍼티 원소 대입(`holder.values[0] = 9`)은 값은 바꾸지만 그 프로퍼티의 setter를 부르지 않으므로(전체 대입만 부름) setter에 둔 dirty 표시·갱신이 빠집니다([GH-113228](https://github.com/godotengine/godot/pull/113228), 4.7.2 headless 실행 확인 2026-10-23). Resource 깊은 복제는 [수명과 경계](/game/godot-runtime.md), 입력 장치 ID는 [UI 입력](/game/godot-ui.md)에 둡니다.

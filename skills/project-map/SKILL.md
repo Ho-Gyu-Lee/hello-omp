@@ -1,6 +1,6 @@
 ---
 name: project-map
-description: 지속 프로젝트 지도(docs/project-map 등)를 hello-omp 공용 템플릿으로 만들고 고치고 게시하고 신선도를 확인한다. `/project-map` 요청, 프로젝트 지침의 `프로젝트 지도: 유지` 선언 범위의 지도 갱신, `/project-map status`(읽기 전용)에서 쓴다. 단순 질문·읽기 전용 리뷰·유지 선언이 없는 프로젝트의 자동 생성에는 쓰지 않는다. 관계도 그림 자체는 archify 스킬로 만든다.
+description: "`/project-map` 요청과 `프로젝트 지도: 유지` 선언 범위에서만 쓰고 단순 질문·읽기 전용 리뷰·미선언 프로젝트의 자동 생성에는 쓰지 않는다. 지속 프로젝트 지도(docs/project-map 등)를 hello-omp 공용 템플릿으로 만들고 고치고 게시하고 신선도를 확인하며, `/project-map status`는 읽기 전용이다. 관계도 그림 자체는 archify 스킬로 만든다."
 ---
 
 # 프로젝트 지도 (project-map)

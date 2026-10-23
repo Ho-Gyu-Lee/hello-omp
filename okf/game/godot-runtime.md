@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: Godot C++ Scene·물리·Resource 수명과 경계
-description: Godot 객체 소유권, 스레드 경계, 에디터 복제 flags·트리 밖 좌표 캐시·text Resource 숫자 정밀도·직렬화 크기의 버전 특정 계약입니다.
+description: Godot 객체 소유권, 스레드 경계, 에디터 복제 flags·Resource 깊은 복제 범위·트리 밖 좌표 캐시·text Resource 숫자 정밀도·직렬화 크기의 버전 특정 계약입니다.
 tags: [game, godot, cpp, ownership, threading, resource, serialization]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-10-23T00:00:00Z
 ---
 
 # Godot C++ Scene·물리·Resource 수명과 경계
@@ -24,6 +24,7 @@ timestamp: 2026-10-18T00:00:00Z
 ## 복제·좌표·직렬화
 
 - **`Node.duplicate()` flags:** GDScript·godot-cpp 바인딩의 [`Node.duplicate()`](https://docs.godotengine.org/en/4.7/classes/class_node.html#class-node-method-duplicate) 기본 flags 15에는 `DUPLICATE_USE_INSTANTIATION`이 포함되어 `scene_file_path`가 있는 저장 장면 루트·하위 장면 인스턴스는 저장된 PackedScene을 다시 instantiate합니다. 엔진 모듈 C++의 `Node::duplicate()` 기본 인자는 signals/groups/scripts 조합 7입니다(엔진 `scene/main/node.h` L732). 현재 편집 메모리의 추가·삭제를 보존해야 하는 후보/Undo 복제에는 flags를 명시하고 `DUPLICATE_USE_INSTANTIATION`을 제외합니다.
+- **`Resource.duplicate(true)` (4.5+):** 그 리소스 파일 안의 내장 하위 리소스만 복제하고 `resource_path`가 있는 외부 리소스는 원본을 공유합니다(4.4는 외부까지 복제). 외부까지 독립 사본이 필요하면 `duplicate_deep(Resource.DEEP_DUPLICATE_ALL)`을 씁니다([4.5 업그레이드](https://docs.godotengine.org/en/4.7/tutorials/migrating/upgrading_to_godot_4.5.html), 4.7.2 headless 실행 확인 2026-10-23).
 - **트리 밖 좌표:** 분리된 Node2D의 읽어 둔 `global_transform`/`global_position`은 조상 편집 뒤 갱신된다고 가정하지 않으며, 공통 루트 기준 좌표는 [`get_relative_transform_to_parent()`](https://docs.godotengine.org/en/4.7/classes/class_node2d.html#class-node2d-method-get-relative-transform-to-parent) 등 현재 local transform의 합성으로 구합니다.
 - **text Resource의 숫자:** JSON 숫자를 그대로 text Resource에 넣으면 정수 식별자가 FLOAT로 저장되거나 float32 shortest 출력 때문에 round-trip 값과 raw Variant hash가 달라질 수 있습니다. 검증된 정수 ID/seed는 int로 저장하고 소수 설정은 full-precision JSON 같은 손실 없는 정본 하나에 둡니다.
 - **직렬화 크기:** 반복 metadata가 많은 장면 전체를 하나의 중첩 Variant로 직렬화하지 않고 subtree별 digest를 부모에 순서대로 넣으며, `encode_variant`의 길이 인자가 `int`이므로(엔진 `core/io/marshalls.h`) 최대 입력으로 실제 저장 경로를 검증합니다. 작은 crop마다 Node·Dictionary를 복제하지 않고 TileMapLayer·공유 atlas로 묶으며 READY·정상 종료를 메모리 수락으로 보지 않습니다.
