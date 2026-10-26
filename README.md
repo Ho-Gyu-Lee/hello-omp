@@ -7,7 +7,7 @@
 ```
 hello-omp/
   setup.sh / setup.ps1     OS별 부트스트랩 (사전 점검 후 8단계 배포)
-  config/settings.conf     OMP 설정 키의 단일 소스: 역할별 모델·fallback·advisor·표시·도구 승인·격리
+  config/settings.conf     OMP 설정 키의 단일 소스: 역할별 모델·fallback·advisor·표시·도구 승인·격리·이미지 생성
   rules/RULES.md           모든 에이전트(서브에이전트 포함)에 매 요청 적용되는 공통 방향 (sticky rule)
   rules/AGENTS.md          메인 세션 전용 규칙: 소통·질문·검증·독립 검토·지식 기록
   rules/WATCHDOG.md        advisor 전용 지침 (한국어 노트, 근거 없는 빈 노트 금지)
@@ -64,9 +64,11 @@ sh setup.sh
 
 배포한 지침은 **새 세션**부터 적용된다. 이미 열린 세션은 이전 지침을 계속 쓰므로 `omp`를 다시 시작한다.
 
-역할별 모델·추론 강도·fallback은 `config/settings.conf`가 정본이다. 메인·계획·구현·정밀 검토는 `xhigh`, 디자인·화면 분석·advisor는 `high`, 탐색·커밋은 `medium`, 제목·메모리는 `low`이며 각 역할에 다른 provider의 fallback을 하나 둔다. 배정 이유와 운영 경계는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다. 적용값은 `omp config list`로 확인한다. 현재 대화의 모델만 바꿀 때는 `/switch <provider/model:effort>`를 쓴다(`/model`은 선택기라 인자를 받지 않는다).
+역할별 모델·추론 강도·fallback은 `config/settings.conf`가 정본이다. 메인·계획·구현·정밀 검토는 `xhigh`, 디자인·화면 분석·advisor는 `high`, 탐색·커밋은 `medium`, 제목·메모리는 `low`이며 각 chat 역할에 다른 provider의 fallback을 하나 둔다. 배정 이유와 운영 경계는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다. 적용값은 `omp config list`로 확인한다. 현재 대화의 모델만 바꿀 때는 `/switch <provider/model:effort>`를 쓴다(`/model`은 선택기라 인자를 받지 않는다).
 
 비동기 advisor는 작업 중 위험 감시용으로 켜 둔다(`advisor.enabled=true`). 완료 전 독립 검토를 대신하지 않는다([워크플로](okf/workflow.md#독립-검토-시점과-최종-응답)).
+
+이미지 생성 도구는 켜 두고(`generate_image.enabled=true`) `image` 역할을 구독 경로의 `openai-codex/gpt-image-2`로 고정하며 fallback을 두지 않는다. API 과금 경로로 자동 전환되지 않게 하려는 것으로, 이유와 한계는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다.
 
 ## 명령과 스킬
 

@@ -22,6 +22,7 @@ OMP 18.12.1 `omp agents unpack --dir <격리 경로> --json`·`omp://models.md`�
 - 정밀 검토 `slow`·화면 분석 `vision`·감시 `advisor`·탐색·커밋은 OpenAI 계열이라 기본 경로에서 메인·구현과 교차 검토가 된다. fallback은 반대 provider를 두어 한도·장애에 대응하며 품질에 따른 자동 상향이 아니다.
 - 추론 강도는 난도별이다. 메인·계획·구현·정밀 검토는 xhigh, 디자인·화면 분석·advisor는 high, 탐색·커밋은 medium, 제목·메모리는 low다. 자동 난도 판정과 일괄 xhigh·max 강제는 도입하지 않는다. 이는 운영 판단이지 품질·비용 A/B 결과가 아니며 외부 평가도 로컬 품질 비교가 아니다([정확성](/accuracy.md)).
 - Fable 5.1은 기본 역할·fallback에 넣지 않고 고난도에만 `/switch anthropic/claude-fable-5-1:xhigh`(세션 전용)로 고른다. TUI `/model`은 인수 없이 선택기를 열고 선택자는 `/switch`가 받는다(설치본 `src/slash-commands/builtin-modes.ts`, 확인: 2026-10-18).
+- `image`는 구독 경로 `openai-codex/gpt-image-2`로 고정하고 fallback을 `[]`로 비우며 `generate_image.enabled=true`로 켠다(사용자 결정, 2026-10-26). 다른 인증이 생겨도 역할 기본 우선순위 목록의 다른 이미지 모델(API 과금 경로일 수 있음)로 자동 전환되지 않게 하려는 것이다. `[]`는 활성 모델 자신의 이미지 후보와 요청의 `model` 인자를 막지 않으므로(OMP 18.12.6, `omp://tools/generate_image.md`) API 키 OpenAI 모델로 세션을 돌리면 Codex 후보가 HTTP 오류(한도 소진 포함)로 실패할 때 그 경로가 쓰일 수 있고, 다른 이미지 인증이 생기면 `model` 지정으로 그 모델이 직접 선택될 수 있다. 경로 선택 방향은 [AI 에셋 생성](/development/ai-asset-generation.md#유료로컬-경로-선택)을 따른다.
 
 ## 설정 계약
 - 설정 저장 위치는 활성 agent dir의 `config.yml`이다. `omp config set task.agentModelOverrides ...`는 dotted path이지만 YAML에는 `task: { agentModelOverrides: ... }`처럼 중첩해 쓴다.
