@@ -1,14 +1,21 @@
 ---
 type: Concept
 title: AI 에셋 생성의 모델 라이선스·로컬 메모리·LoRA 학습·VLM 런타임
-description: 로컬 이미지 생성·VLM 모델의 가중치 라이선스 예외, Apple Silicon 통합 메모리 조회와 mflux 캐시, seed 재현성, 8방향 스프라이트 구조 고정, mflux LoRA 학습 설정과 투명 스프라이트의 키 배경 학습·복원, Ollama(MLX) 유효 설정과 구조화 출력 결함, VLM 채점의 양성 대조를 정리합니다.
+description: 유료·로컬 이미지 생성 경로 선택과 GPT Image 2.5 모델 지정 경로, 로컬 이미지 생성·VLM 모델의 가중치 라이선스 예외, Apple Silicon 통합 메모리 조회와 mflux 캐시, seed 재현성, 8방향 스프라이트 구조 고정, mflux LoRA 학습 설정과 투명 스프라이트의 키 배경 학습·복원, Ollama(MLX) 유효 설정과 구조화 출력 결함, VLM 채점의 양성 대조를 정리합니다.
 tags: [development, assets, ai, image-generation, vlm, license, apple-silicon, mlx, lora, ollama, structured-output, sprite, transparency]
-timestamp: 2026-10-23T00:00:00Z
+timestamp: 2026-10-26T00:00:00Z
 ---
 
 # AI 에셋 생성의 모델 라이선스·로컬 메모리·LoRA 학습·VLM 런타임
 
 입력 에셋 쪽 권리는 [에셋의 AI 사용 권리](/development/assets-editor.md#에셋의-ai-사용-권리), 부분 수정 방법은 [생성 이미지의 결정적 국소 합성](/tools/builtin.md)을 따릅니다.
+
+## 유료·로컬 경로 선택
+
+- 사용자 방향(2026-10-26): 품질이 결정적인 에셋은 유료 이미지 모델을, 로컬 품질로 충분하면서 시간·작업량이 큰 에셋은 로컬 모델을 씁니다. 유료 경로의 과금 한도는 사용자가 정하므로 구독 포함 사용량을 넘는 과금 경로(API 키·크레딧 추가 구매)는 확인받은 뒤에만 씁니다.
+- ChatGPT 사용 크레딧(Settings > Usage)은 API 크레딧이 아니어서 API 키 호출에 쓰이지 않습니다([도움말](https://help.openai.com/en/articles/12642688-using-credits-for-flexible-usage-in-chatgpt-personal-plans), [결제 분리](https://help.openai.com/en/articles/9039756-managing-billing-for-chatgpt-and-the-api-platform)). Codex(ChatGPT 로그인)의 이미지 생성은 포함 한도를 먼저 쓰고 그다음 이 크레딧에서 차감되며(GPT-Image-2 이미지 출력 100만 토큰당 750 크레딧, [Codex 요금](https://developers.openai.com/codex/pricing)), 자동 충전(automatic reload)이 켜져 있으면 잔액이 설정한 최소값 아래로 내려갈 때(켤 때 이미 미만이면 즉시) 기본 결제 수단으로 목표 잔액까지 구매됩니다(확인 2026-10-26).
+- GPT Image 2.5(`gpt-image-2.5-flare`·`gpt-image-2.5-sunburst`, 2026-09-08 출시)를 모델 ID로 지정하는 확인된 경로는 OpenAI API 키(토큰 과금)입니다. 확인한 Codex 내장 `image_gen`에는 이미지 모델 선택 인자가 없으며, 공개 소스·문서와 보고된 결과만으로는 구독 경로의 개별 실행이 GPT Image 2.5인지 확정할 수 없습니다. 이 도구는 생성·편집 모두 `IMAGE_MODEL = "gpt-image-2"`를 고정해 보내고([tool.rs](https://github.com/openai/codex/blob/970111f6cb62cc02fe36a82ea7d71b37a2889c97/codex-rs/ext/image-generation/src/tool.rs), rust-v0.164.0과 동일) [공식 문서](https://developers.openai.com/codex/image-generation)도 `gpt-image-2`라 하지만 2.5 공지는 Codex 사용자 제공을 밝혀, 실효 모델 공개 요청이 [openai/codex#43965](https://github.com/openai/codex/issues/43965)로 열려 있습니다(확인 2026-10-26).
+- 2.5는 품질 `xhigh`·`max`를 추가했지만 API 키 경로의 래퍼가 이를 막습니다. Codex 번들 `imagegen` 스킬의 fallback CLI(`scripts/image_gen.py`, main 2026-10-23)는 `--model gpt-image-2.5-*`를 받되 품질을 `low`·`medium`·`high`·`auto`로, 크기를 `1024x1024`·`1536x1024`·`1024x1536`·`auto`로 제한하고, OMP `generate_image`에는 품질 입력이 없습니다. 이 설정이 필요하면 Images API(`/v1/images/generations`)를 직접 호출합니다. OMP 설정은 [에이전트 가이드](/agents/guide.md)를 따릅니다.
 
 ## 가중치 라이선스
 
