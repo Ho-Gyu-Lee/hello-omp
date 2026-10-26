@@ -3,7 +3,7 @@ type: Rule
 title: OKF 학습 축적
 description: 무엇을 기록하는지(사용자 방향과 비자명 사실만)와 기록 판정 세 질문, 실수를 원리로 일반화하고 고친 원리 문장을 재실행으로 확인, 기록 위치(공개 소스·로컬·프로젝트 레포), description을 정본으로 한 index 반영·검증·배포와 보고.
 tags: [learning, okf, memory, direction, promotion]
-timestamp: 2026-10-21T00:00:00Z
+timestamp: 2026-10-26T00:00:00Z
 ---
 
 # OKF 학습 축적
@@ -37,6 +37,7 @@ OKF는 사용자와 같은 지식을 갖추려는 백과사전이 아니다. 모
 
 - **사용자 방향:** [direction.md](/direction.md). 모든 에이전트가 받는 요약은 설정 레포의 `rules/RULES.md`이며 둘을 함께 고친다.
 - **공개 가능한 규칙·비자명 사실:** 설정 레포 `okf/`(소스)에서 주제가 맞는 기존 concept. 배포본(`<configdir>/okf/`)의 공개 파일만 고치면 다음 setup에서 소스 내용으로 되돌아간다.
+- **공개 소스의 범위:** 설정 레포 전체(`okf/`·`rules/`·`ttsr/`·`skills/`·`commands/`·`agents/`·`extensions/`·`scripts/`·`config/`·README 등)에 현 직장·고객사·사내 서비스에 고유한 작업·사례·수치·용어·식별자를 넣지 않는다. 이것은 제외 규칙이지 분야 제한이 아니다. 소프트웨어 개발·인프라·운영·게임 개발·도구·AI 활용 등 분야와 무관하게 위 세 질문을 통과하면 공개 소스에 둔다. 직장 업무에서 얻은 교훈은 고유 요소를 걷어 낸 일반 원리로 바꿀 수 있을 때만 원리로 둔다(예: 특정 서비스의 장애 사례 대신 공유 인프라 변경의 영향 범위 원리).
 - **프로젝트 한정 결정·용어·사실:** 그 프로젝트 레포의 기존 문서 구조(설계 문서의 결정 절·용어집)에 둔다. 결정 기록은 되돌리기 비싸고, 맥락 없이는 의아하고, 실제 대안 사이의 선택일 때만 남긴다. 프로젝트 `AGENTS.md`는 매 세션 상시 로드되므로 현행 지침과 정본 링크만 두고 작업 이력·검증 실행 기록·커밋 해시를 쓰지 않는다.
 - **개인·민감하거나 공개 범위를 검토 중인 지식:** 설정 폴더의 `<configdir>/okf/learned/`. 로컬 전용이고 setup이 보존하지만 다른 PC로 동기화되지 않는다. 레포의 `okf/learned/`에는 만들지 않는다. `.gitignore`는 덮어쓰기를 막지 않고 `git merge`·`git pull`은 기본값 `--overwrite-ignore`로 무시된 파일을 덮어쓴다([git merge](https://git-scm.com/docs/git-merge)). Git 2.54에서는 `--no-overwrite-ignore`도 일반 병합에서는 지키지 못했다(2026-10-12 프로브). `learned/index.md`는 setup과 `--record`가 로컬 concept의 frontmatter로 다시 만들므로 고치지 않는다.
 - 기록하지 않는다: API 키·토큰·PII·내부 접속정보, 검증되지 않은 추측, 진행 상태.
@@ -45,7 +46,7 @@ OKF는 사용자와 같은 지식을 갖추려는 백과사전이 아니다. 모
 
 1. 같은 주제의 기존 문장을 먼저 찾아 고친다. 새 concept은 독립 주제일 때만 만들고 그 디렉터리의 `index.md`에 `* [제목](/path.md) - 설명` 항목으로 등록한다. 루트 `/index.md`에서 디렉터리 항목을 따라 닿아야 한다.
 2. frontmatter `description`이 index 항목 설명과 `okf-*` 규칙 설명의 정본이다. 무엇을 다루는지와, 읽을 시점이 자명하지 않으면 언제 읽는지를 한 문장으로 쓴다. 항목 문구는 직접 쓰지 않고 description·title을 고친 뒤 `bun scripts/validate-okf.ts --fix okf`로 맞춘다. 파일 종류로 적용 시점이 정해지는 개념은 `apply_on_edit`에 glob 목록(예: `["*.cpp", "*.h"]`)을 두어, 일치하는 파일을 편집·작성할 때 본문이 자동 주입되게 한다.
-3. 하나를 더하면 같은 문서에서 합치거나 지울 것이 없는지 본다. concept은 짧게 유지한다.
+3. 하나를 더하면 같은 문서에서 합치거나 지울 것이 없는지 본다. concept은 짧게 유지한다. 규칙의 적용 범위는 분야·대상을 나열해 닫지 말고 판단 원리(결과·속성)로 쓰며, 분야·대상은 비한정 사례로만 든다. 사용자의 `~등`·예시를 닫힌 목록으로 옮기지 않는다. 닫힌 목록은 같은 성격의 다른 경우를 빠뜨린다.
 4. 공개 소스를 고쳤으면 레포 루트에서 `bun scripts/validate-okf.ts okf`로 검사하고 setup으로 배포한 뒤 배포본이 소스와 같은지 확인한다. 검사기는 frontmatter(`type`·`description`), `index.md`의 섹션 제목과 항목 title·description 일치, 루트 index에서의 도달성, `log.md` 날짜 제목 형식·최신순을 보며 내용의 정확성은 판정하지 않는다.
 5. 로컬 concept을 만들거나 고치거나 지웠으면 `bun <레포>/scripts/deploy-okf.ts --record <configdir>`로 검증하고 `learned/index.md`와 `okf-*` 규칙을 다시 만들어 이력에 기록한다. 지운 concept이 예전 setup의 삭제 복원 절차로 되살아나지 않게 하기 위해서다.
 6. 구조 변경(분할·병합·삭제·이름 변경)만 `/log.md`에 한 줄로 남긴다. 내용 갱신의 이력은 Git이 맡는다.

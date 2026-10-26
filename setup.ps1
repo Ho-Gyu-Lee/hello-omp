@@ -77,7 +77,7 @@ Write-Host "[1/8] applying model settings..."
 Set-OmpSettings (Join-Path $ScriptDir 'config\settings.conf')
 
 # --- 2) global/advisor rules ---
-Write-Host "[2/8] deploying global/advisor rules (AGENTS.md, RULES.md, WATCHDOG.md)..."
+Write-Host "[2/8] deploying global/advisor rules (AGENTS.md, RULES.md, WATCHDOG.md, ttsr/*.md)..."
 $agentsMd = Join-Path $ConfigDir 'AGENTS.md'
 if ((Test-Path $agentsMd) -and -not (Test-Path "$agentsMd.bak")) { Copy-Item $agentsMd "$agentsMd.bak" -Force }
 Copy-Item (Join-Path $ScriptDir 'rules\AGENTS.md') $agentsMd -Force
@@ -90,6 +90,20 @@ Set-OkfPath $rulesMd
 $watchdogMd = Join-Path $ConfigDir 'WATCHDOG.md'
 if ((Test-Path $watchdogMd) -and -not (Test-Path "$watchdogMd.bak")) { Copy-Item $watchdogMd "$watchdogMd.bak" -Force }
 Copy-Item (Join-Path $ScriptDir 'rules\WATCHDOG.md') $watchdogMd -Force
+# TTSR rules (reminders injected when the model's output or tool call matches) -> <configdir>/rules/, beside the okf-* rules deploy-okf generates
+$ttsrDir = Join-Path $ScriptDir 'ttsr'
+$srcTtsr = @()
+if (Test-Path -LiteralPath $ttsrDir) {
+  $srcTtsr = @(Get-ChildItem -LiteralPath $ttsrDir -File -Filter *.md)
+}
+if ($srcTtsr.Count -gt 0) {
+  $rulesDst = Join-Path $ConfigDir 'rules'
+  New-Item -ItemType Directory -Force $rulesDst | Out-Null
+  $srcTtsr | ForEach-Object {
+    Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $rulesDst $_.Name) -Force
+  }
+}
+Write-Host "  deployed $($srcTtsr.Count) TTSR rule(s)"
 
 # --- 3) OKF bundle (validate source, then redeploy public files; local learned/ is preserved) ---
 Write-Host "[3/8] validating and deploying OKF bundle..."

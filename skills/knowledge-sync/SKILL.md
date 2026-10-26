@@ -128,7 +128,7 @@ description: hello-omp 설정 레포의 원격 변경(공유 지식·OMP 설정�
 
 **설정·코드**
 - **`config/settings.conf`:** 같은 키를 양쪽이 다른 값으로 바꿨거나, 한쪽이 키를 지우고 다른 쪽이 값을 바꿨으면 결정 충돌입니다. 지운 쪽의 커밋 메시지와 `log.md`에서 사유를 확인하고, 두 안과 추천안을 보여 주고 사용자에게 묻습니다. 다른 키의 변경은 모두 유지합니다.
-- **고정 배포본:** `skills/archify/**`처럼 `UPSTREAM.md`로 고정한 배포본은 병합하지 않고, 고정 정보가 가리키는 쪽 전체를 택합니다. 고정 정보 자체가 충돌하면 묻습니다.
+- **고정 배포본:** `skills/archify/**`처럼 `UPSTREAM.md`에 전체 배포본을 그대로 들여왔다고 선언한(vendored) 디렉터리는 병합하지 않고, 고정 정보가 가리키는 쪽 전체를 택합니다. 고정 정보 자체가 충돌하면 묻습니다. 출처만 기록하고 내용을 고쳐 쓴 디렉터리(예: `skills/goldfish-review/`)는 일반 문서처럼 병합합니다.
 - **코드·스크립트·setup:** 양쪽 의도를 모두 반영합니다. 바꾼 TypeScript는 `bun build <파일> --target=bun --outdir W/build-check`로 구문을 확인합니다.
 
 해소를 마친 뒤에는 자동 병합된 파일도 포함해 `validate-okf`와 `links` 검사를 다시 통과해야 합니다.
@@ -152,7 +152,7 @@ description: hello-omp 설정 레포의 원격 변경(공유 지식·OMP 설정�
   - 생성 규칙 이름 충돌: 생성할 `okf-*` 규칙 이름이 개념끼리 겹치거나, `<configdir>/rules/`에 `okf_source` 없는 같은 이름의 사용자 규칙(`.md`·`.mdc`)이 있거나, `rules` 디렉터리·`okf-*` 규칙이 링크인 경우입니다. 사용자 규칙의 이름을 바꿀지 묻습니다.
 - **setup 단계(`[n/8]`, 이 스킬의 단계 번호와 다름)별 의미:**
   - `[1/8]`: `config/settings.conf` 적용.
-  - `[2/8]`: 전역·advisor 지침.
+  - `[2/8]`: 전역·advisor 지침과 TTSR 규칙(`ttsr/` → `C/rules/`).
   - `[3/8]`: 공개 OKF(로컬 `learned/` 보존).
   - `[4/8]`–`[7/8]`: 확장·에이전트·명령·스킬.
   - `[8/8]`: 원격에서 지운 관리 항목 정리와 설정값 검증. 지운 설정 키는 현재 값이 setup이 적용한 값 그대로일 때만 `omp config reset`으로 되돌리고, 지운 파일·스킬은 `C/.managed-retired-<stamp>/`로 이동합니다. 로컬에서 바꾼 설정값과 고친 사본은 그대로 두고 경고합니다.
@@ -175,11 +175,11 @@ description: hello-omp 설정 레포의 원격 변경(공유 지식·OMP 설정�
 
 다음을 한국어로 보고합니다.
 
-- **받은 변경:** 커밋 수, 그리고 영역별 파일 목록입니다. 영역은 `okf/`, `rules/`, `config/`, `skills/`, `extensions/`, `commands/`, `agents/`, `scripts/`, `setup.*`이며 그 밖의 파일(`README.md`, `AGENTS.md`, `.gitignore` 등)은 "기타"로 묶습니다.
+- **받은 변경:** 커밋 수, 그리고 영역별 파일 목록입니다. 영역은 `okf/`, `rules/`, `ttsr/`, `config/`, `skills/`, `extensions/`, `commands/`, `agents/`, `scripts/`, `setup.*`이며 그 밖의 파일(`README.md`, `AGENTS.md`, `.gitignore` 등)은 "기타"로 묶습니다.
 - **충돌:** 충돌 파일마다 무엇을 근거로 어떻게 해소했는지 적고, 사용자가 결정한 항목은 따로 표시합니다.
 - **병합 결과:** fast-forward였는지 로컬 merge 커밋을 만들었는지 적습니다. merge 커밋이면 sha를 적습니다. push는 하지 않았으며, 사용자가 확인한 뒤 직접 push합니다.
 - **미커밋 작업:** 복원 결과와 stash를 남겼는지 적습니다.
 - **로컬 지식:** 검증 결과(파일 수, 이상 유무)와 백업 위치 `W/learned-backup/`를 적습니다.
 - **설정과 배포:** 바뀐 설정 키, 정리(retire)된 항목, setup 경고를 적습니다.
-- **적용 시점:** `rules/`나 `okf/`가 바뀌었으면 새 OMP 세션부터 적용된다고 알립니다. 이미 열려 있는 세션은 이전 지침을 계속 씁니다.
+- **적용 시점:** `rules/`·`ttsr/`·`okf/`·`agents/`·`skills/`·`commands/`·`extensions/`가 바뀌었으면 새 OMP 세션부터 적용된다고 알립니다. 이미 열려 있는 세션은 이전 지침을 계속 씁니다.
 - **증거 위치:** 작업 디렉터리 `W`를 적습니다.

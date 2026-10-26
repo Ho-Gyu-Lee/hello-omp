@@ -8,10 +8,12 @@ import { fileURLToPath } from "node:url";
 const OS_METADATA_PATTERN = /^(?:\.DS_Store|desktop\.ini|Thumbs\.db|\._.*)$/i;
 const FORMAT_VERSION = 1;
 const RECORD_NAME = ".hello-omp-managed.json";
+// `source` is the repository directory; deployed files live in <configdir>/<kind>.
 const FILE_KINDS = [
-    { kind: "extensions", pattern: /\.(?:js|ts)$/ },
-    { kind: "agents", pattern: /\.md$/ },
-    { kind: "commands", pattern: /\.md$/ },
+    { kind: "extensions", source: "extensions", pattern: /\.(?:js|ts)$/ },
+    { kind: "agents", source: "agents", pattern: /\.md$/ },
+    { kind: "commands", source: "commands", pattern: /\.md$/ },
+    { kind: "rules", source: "ttsr", pattern: /\.md$/ },
 ] as const;
 
 type FileKind = (typeof FILE_KINDS)[number]["kind"];
@@ -22,6 +24,7 @@ type ManagedRecord = {
     extensions: Record<string, string>;
     agents: Record<string, string>;
     commands: Record<string, string>;
+    rules: Record<string, string>;
     skills: Record<string, string>;
 };
 
@@ -194,6 +197,12 @@ async function LoadRecord(path: string): Promise<ManagedRecord | null>
         throw new Error(`cannot read ${path} (${error instanceof Error ? error.message : String(error)}); ${recovery}`);
     }
 
+    // Records written before TTSR rules were managed lack the key; nothing was deployed under it then. Other shapes fail the check below.
+    if (record !== null && typeof record === "object" && !Array.isArray(record) && !("rules" in record))
+    {
+        record.rules = {};
+    }
+
     if (["settings", ...FILE_KINDS.map(item => item.kind), "skills"].some(kind => typeof record[kind] !== "object" || record[kind] === null || Array.isArray(record[kind])))
     {
         throw new Error(`unexpected content in ${path}; ${recovery}`);
@@ -248,7 +257,7 @@ try
     const recordPath = join(configDir, RECORD_NAME);
     const previous = await LoadRecord(recordPath);
     const settings = await ReadSettings(join(repoRoot, "config", "settings.conf"));
-    const current: ManagedRecord = { version: FORMAT_VERSION, settings: Object.fromEntries(settings), extensions: {}, agents: {}, commands: {}, skills: {} };
+    const current: ManagedRecord = { version: FORMAT_VERSION, settings: Object.fromEntries(settings), extensions: {}, agents: {}, commands: {}, rules: {}, skills: {} };
     const retireRoot = join(configDir, `.managed-retired-${new Date().toISOString().replace(/[:.]/g, "-")}`);
     const applied = JSON.parse(RunOmp(ompPath, ["config", "list", "--json"])) as Record<string, { value: unknown }>;
     const warnings: string[] = [];
@@ -285,9 +294,9 @@ try
         }
     }
 
-    for (const { kind, pattern } of FILE_KINDS)
+    for (const { kind, source, pattern } of FILE_KINDS)
     {
-        const names = await ListRepoFiles(join(repoRoot, kind), pattern);
+        const names = await ListRepoFiles(join(repoRoot, source), pattern);
         const deployedDir = join(configDir, kind);
 
         for (const [name, hash] of Object.entries(previous?.[kind] ?? {}))

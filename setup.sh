@@ -79,7 +79,7 @@ echo "[1/8] applying model settings..."
 apply_settings_file "${SCRIPT_DIR}/config/settings.conf"
 
 # --- 2) global/advisor rules ---
-echo "[2/8] deploying global/advisor rules (AGENTS.md, RULES.md, WATCHDOG.md)..."
+echo "[2/8] deploying global/advisor rules (AGENTS.md, RULES.md, WATCHDOG.md, ttsr/*.md)..."
 if [ -f "${CONFIG_DIR}/AGENTS.md" ] && [ ! -f "${CONFIG_DIR}/AGENTS.md.bak" ]; then
   cp "${CONFIG_DIR}/AGENTS.md" "${CONFIG_DIR}/AGENTS.md.bak"
 fi
@@ -95,6 +95,15 @@ if [ -f "${CONFIG_DIR}/WATCHDOG.md" ] && [ ! -f "${CONFIG_DIR}/WATCHDOG.md.bak" 
   cp "${CONFIG_DIR}/WATCHDOG.md" "${CONFIG_DIR}/WATCHDOG.md.bak"
 fi
 cp "${SCRIPT_DIR}/rules/WATCHDOG.md" "${CONFIG_DIR}/WATCHDOG.md"
+# TTSR rules (reminders injected when the model's output or tool call matches) -> <configdir>/rules/, beside the okf-* rules deploy-okf generates
+n=0
+for rule in "${SCRIPT_DIR}/ttsr/"*.md; do
+  [ -f "$rule" ] || continue
+  if [ "$n" -eq 0 ]; then mkdir -p "${CONFIG_DIR}/rules"; fi
+  cp "$rule" "${CONFIG_DIR}/rules/$(basename "$rule")"
+  n=$((n+1))
+done
+echo "  deployed ${n} TTSR rule(s)"
 
 # --- 3) OKF bundle (validate source, then redeploy public files; local learned/ is preserved) ---
 echo "[3/8] validating and deploying OKF bundle..."
