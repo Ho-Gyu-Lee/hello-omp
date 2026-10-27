@@ -3,7 +3,7 @@ type: Concept
 title: 에셋의 AI 사용 권리와 검수·조립 원리
 description: Unity Asset Store 에셋의 AI/ML 사용 제한과 취득 채널별 권리 확인, 구매·생성 에셋 검수·조립·화풍 대조에서 최종 결과와 측정 타당성으로 판단하는 원리를 다룹니다.
 tags: [development, assets, licensing, ai, validation, composition]
-timestamp: 2026-10-27T00:00:00Z
+timestamp: 2026-10-28T00:00:00Z
 ---
 
 # 에셋의 AI 사용 권리와 검수·조립 원리
@@ -12,7 +12,7 @@ Godot TileMap/에디터·게임 판정/예측의 정본은 [Godot 에셋·에디
 
 ## 에셋의 AI 사용 권리
 
-- 게임에 넣을 권리와 AI 참조 입력·학습(LoRA 포함)·생성물 판매·도구/모델 배포 권리는 분리해 실제 취득 채널과 적용 라이선스로 확인합니다.
+- 게임에 넣을 권리와 AI 참조 입력·학습(LoRA 포함)·생성물 판매·도구/모델 배포 권리는 분리해 실제 취득 채널과 적용 라이선스로 확인합니다. 취득 채널은 사용자 확인과 구매 기록으로 정합니다. Package Manager로 받은 Asset Store 패키지는 캐시(Windows 기본 `%APPDATA%\Unity\Asset Store-5.x\<publisher>\…\*.unitypackage`, [Unity 문서](https://docs.unity.com/asset-store/downloads/asset-store-packages))에 남아 풀어서 프로젝트 사본과 SHA-256을 대조할 수 있지만, 이것은 내용 동일성의 보조 근거일 뿐입니다. 같은 파일을 여러 채널이 배포하면 해시 일치만으로 사본의 출처나 적용 권리가 정해지지 않습니다. 같은 팩을 여러 채널에서 샀다면 AI 사용 근거 채널과 사본이 바이트 단위로 일치하는 다운로드를 따로 기록합니다.
 - Unity Asset Store로 취득한 에셋은 [AS Terms 3.8(v)·EULA 2.2.1.1(g)](https://unity.com/legal/as-terms)(본문 개정 2024-12-04, 확인 2026-10-15)가 `Provider and/or Unity`의 명시적 동의 없는 AI/ML 학습·데이터셋·모델 입력 사용을 제한합니다. 로컬 추론이나 API 제공자의 학습 미사용 약속을 동의의 대체물로 보지 않습니다.
 - 다른 판매 채널의 수정 허가나 제작 당시 `No AI` 표시만으로 AI 사용·재배포 허가를 추정하지 않습니다.
 
