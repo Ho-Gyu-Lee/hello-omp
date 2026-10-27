@@ -1,10 +1,10 @@
 ---
 type: Concept
 title: DB 제품별 비자명 계약(MySQL·SQLite·DynamoDB)
-description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·PutItem·Go 페이지네이터와 CloudWatch 지표 계약을 정리합니다.
+description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행·REVOKE ALL의 회수자 권한 요건·caching_sha2_password 비밀번호 길이 상한, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·PutItem·Go 페이지네이터와 CloudWatch 지표 계약을 정리합니다.
 tags: [database, mysql, sqlite, dynamodb, cloudwatch, wal, verification]
 apply_on_edit: ["*.sql"]
-timestamp: 2026-10-22T00:00:00Z
+timestamp: 2026-10-28T00:00:00Z
 ---
 
 # DB 제품별 비자명 계약
@@ -17,6 +17,8 @@ timestamp: 2026-10-22T00:00:00Z
 - connector의 matched rows와 changed rows 의미를 확인합니다. MySQL의 동일값 UPDATE 결과 0을 조건 불일치와 무조건 동일시하지 않습니다([MySQL UPDATE](https://dev.mysql.com/doc/refman/8.4/en/update.html), 확인 2026-10-15). "정확히 1행" 검사에는 `CLIENT_FOUND_ROWS`가 필요하며 Boost.MySQL 1.92는 handshake에서 이 플래그를 요청하지 않습니다(`handshake.hpp`, 확인 2026-10-21).
 - 한 문장 `INSERT … ON DUPLICATE KEY UPDATE`에서 `c = IF(t.seq < n.seq, n.c, t.c)`처럼 갱신 대상 열을 조건에 쓰면, 앞서 바뀐 값을 뒤 대입이 보므로 순서에 따라 일부 열만 바뀝니다. 문서는 단일 표 `UPDATE` 대입이 "대체로" 왼쪽부터 평가된다고만 적고 ODKU의 순서는 정하지 않습니다([UPDATE](https://dev.mysql.com/doc/refman/8.4/en/update.html), 8.4). 가드는 `UPDATE … WHERE pk = ? AND seq < ?`로 하고, 0행이면 일반 `INSERT`를 하며 중복 키 오류(1062)면 그 사이 생긴 행에 `UPDATE`를 다시 시도합니다. `INSERT … ON DUPLICATE KEY UPDATE pk = pk`로 대신하면 두 문장 사이에 다른 작성자가 만든 행 때문에 갱신이 오류 없이 사라지고, `CLIENT_FOUND_ROWS`에서는 현재 값 유지도 1을 반환해 삽입과 구분되지 않습니다([ODKU](https://dev.mysql.com/doc/refman/8.4/en/insert-on-duplicate.html), 확인 2026-10-22).
 - 권한은 계정이 아니라 권한 표의 (User, Host) 행으로 맞춰집니다: `DROP DATABASE`는 그 DB의 DB·표 수준 권한을 지우지 않아 같은 이름으로 다시 만든 DB가 옛 권한을 물려받고, User가 빈 `mysql.db` 행은 모든 계정에 적용되며, 계정 없는 `user@'172.%'` 같은 행도 접속 호스트가 맞으면 적용되는데 어느 쪽도 그 계정의 `SHOW GRANTS`에 나오지 않습니다(MySQL 8.4 `sql_auth_cache.cc` `acl_get`, [DROP DATABASE](https://dev.mysql.com/doc/refman/8.4/en/drop-database.html), 확인 2026-10-21). DB를 지우는 경로는 먼저 REVOKE하고, 권한 검증은 루트로 빈 User·계정 없는 행을 함께 봅니다.
+- 객체 수준 `REVOKE`는 회수하는 계정이 `GRANT OPTION`과 회수할 권한을 모두 가져야 하고, `REVOKE ALL PRIVILEGES, GRANT OPTION FROM …`은 전역 `CREATE USER` 또는 `mysql` 스키마 `UPDATE`가 필요합니다([REVOKE](https://dev.mysql.com/doc/refman/8.4/en/revoke.html), 8.4, 확인 2026-10-28). 그래서 `CREATE VIEW`·`SHOW VIEW` 같은 권한이 없는 제한된 관리 계정에서 `REVOKE ALL PRIVILEGES ON db.t`는 준 적 없는 권한까지 회수하려다 1142로 실패합니다. 정리 경로는 실제로 준 권한 목록을 `REVOKE IF EXISTS … IGNORE UNKNOWN USER`로 회수합니다.
+- `caching_sha2_password`는 256바이트를 넘는 평문 비밀번호를 계정 생성·변경과 인증 모두에서 거절합니다(MySQL 8.4 `include/crypt_genhash_impl.h`의 `MAX_PLAINTEXT_LENGTH 256`, `sql/auth/sha2_password.cc`, 확인 2026-10-28). 비밀번호 생성기와 비밀 파일 검증의 상한을 256바이트 이하로 둡니다.
 - MariaDB Connector/C 3.4.11은 호스트 문자열이 정확히 `127.0.0.1`·`::1`(Windows 빌드는 `localhost`도)이면 `MYSQL_OPT_SSL_VERIFY_SERVER_CERT`를 켜도 서버 인증서의 호스트 이름을 검증하지 않고, CA 신뢰도 `ssl_ca`·`ssl_capath`를 지정했을 때만 봅니다(`plugins/auth/my_auth.c` `is_local_connection`, 확인 2026-10-22). 인증서 SAN의 이름(Linux는 TCP를 강제한 `localhost`)으로 접속하거나 그 문자열을 설정 오류로 거절합니다.
 
 ## SQLite

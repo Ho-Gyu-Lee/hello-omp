@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 서비스 영속성·생존 감시·프로세스와 소유권 수명
-description: 내구 확인·grpc-go 종료 계약, identity 결속 이전, 생존 감시와 장애 반응, pidfd·컨테이너·Windows 감독의 확인된 함정, 소유권 fencing의 기준과, 대규모 상태·부하 서비스 운영 설계의 참조 사례(DeepSeek 추론 배포 Q&A)입니다.
+description: 내구 확인·grpc-go 종료 계약, identity 결속 이전, 생존 감시와 장애 반응, pidfd·flock 잠금 파일·컨테이너·Windows 감독의 확인된 함정, 소유권 fencing의 기준과, 대규모 상태·부하 서비스 운영 설계의 참조 사례(DeepSeek 추론 배포 Q&A)입니다.
 tags: [development, server, persistence, heartbeat, process, pidfd, container, fencing, lifecycle]
-timestamp: 2026-10-27T00:00:00Z
+timestamp: 2026-10-28T00:00:00Z
 ---
 
 # 서비스 영속성·생존 감시·프로세스와 소유권 수명
@@ -25,6 +25,7 @@ timestamp: 2026-10-27T00:00:00Z
 - [ ] 종료 대상(테스트 harness·이전 도구가 띄운 프로세스)은 재사용 가능한 PID가 아니라 프로세스 인스턴스에 결박한다. PID·시작 시각을 확인한 뒤 별도 `kill`을 호출해도 검사와 신호 사이의 재사용 경합이 남는다. Linux [pidfd 신호](https://man7.org/linux/man-pages/man2/pidfd_send_signal.2.html)는 확보한 인스턴스를 가리키며 회수된 뒤에는 `ESRCH`로 실패한다(확인 2026-10-15).
   - 직접 `fork`한 자식은 부모가 pidfd를 확보한 뒤에만 작업을 실행하게 한다. 미회수 좀비는 PID가 재사용되지 않지만 `SIGCHLD=SIG_IGN`·`SA_NOCLDWAIT`·다른 회수 경로(다른 스레드의 `wait`, 비동기 시그널 핸들러)가 하나라도 있으면 이 보장이 깨지므로([pidfd_open](https://man7.org/linux/man-pages/man2/pidfd_open.2.html)) 그 경우 `clone`의 `CLONE_PIDFD`로 자식과 pidfd를 함께 만든다(man-pages 6.19, 확인 2026-10-15).
   - 기존 프로세스를 나중에 포착할 때 `/proc`의 [starttime은 clock tick 단위](https://man7.org/linux/man-pages/man5/proc_pid_stat.5.html)라 고유 실행 세대가 아니다. 자기 launch의 제어 채널에서 얻은 새 세대 식별·실제 부모 관계 같은 독립된 근거로 검증하고 발견한 대상의 값을 기대값으로 다시 채택하지 않는다. 협력하는 도구의 동일성 계약이지 악성 동일 UID 프로세스에 대한 샌드박스가 아니다.
+- [ ] `flock` 잠금은 경로가 아니라 열린 파일 description에 걸리고, 그 파일을 가리키는 모든 descriptor가 닫혀야 풀린다([flock(2)](https://man7.org/linux/man-pages/man2/flock.2.html), man-pages 6.19). 남은 잠금을 잠금 파일 삭제로 복구하면 기존 보유자는 지워진 파일의 잠금을 계속 쥐고, 새 프로세스는 같은 경로에 새로 생긴 파일을 잠가 두 프로세스가 동시에 소유자가 된다(WSL2 커널 6.18 실측, 확인 2026-10-28). 잠금 파일은 지우지 않는다. 보유자 인스턴스(위 pidfd·실행 세대)로 생존을 확인한 뒤 그 보유자를 멈추거나 회수해서 잠금을 풀고, 판정할 수 없으면 잠금을 유지한다.
 - [ ] 검토·승인 뒤 실행하는 영속 데이터 이전 작업은 검토한 입력을 실행별 불변 manifest로 고정하고 검토 근거에 manifest 해시를 포함한다. 확인된 공유 설정 파일을 하위 helper가 다시 읽게 두면 검토 대기 중 바뀐 다른 DB·원본·namespace를 건드릴 수 있다.
 
 ## 컨테이너 이전과 실행 이미지

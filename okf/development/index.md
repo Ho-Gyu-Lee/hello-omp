@@ -6,7 +6,7 @@
 * [내장 Lua 스크립트의 실행 경계](/development/execution.md) - 내장 Lua 스크립트의 count hook·선점 한계를 다룹니다.
 * [런타임 진단·측정 범위·출하 진단](/development/runtime-diagnostics.md) - 측정·검증이 증명하는 범위, 교체 allocator 앱에 결합하는 정적 라이브러리의 할당/해제 도메인, Fluent Bit 라벨/심각도·연결 종료 진단·Docker pause 관측·Windows 덤프 API의 확인된 조건입니다.
 * [서버 프로토콜·메모리·큐 운영 기준](/development/server-checklist.md) - 비동기 완료의 상태 소유자 적용, 공유 상수·메시지 ID·codec 경계, 큐 소비 장벽의 처리율 상한, Mirror·Asio·OpenSSL의 버전별 함정을 다룹니다.
-* [서비스 영속성·생존 감시·프로세스와 소유권 수명](/development/service-lifecycle.md) - 내구 확인·grpc-go 종료 계약, identity 결속 이전, 생존 감시와 장애 반응, pidfd·컨테이너·Windows 감독의 확인된 함정, 소유권 fencing의 기준과, 대규모 상태·부하 서비스 운영 설계의 참조 사례(DeepSeek 추론 배포 Q&A)입니다.
+* [서비스 영속성·생존 감시·프로세스와 소유권 수명](/development/service-lifecycle.md) - 내구 확인·grpc-go 종료 계약, identity 결속 이전, 생존 감시와 장애 반응, pidfd·flock 잠금 파일·컨테이너·Windows 감독의 확인된 함정, 소유권 fencing의 기준과, 대규모 상태·부하 서비스 운영 설계의 참조 사례(DeepSeek 추론 배포 Q&A)입니다.
 
 ## 데이터·네트워크
 * [데이터 형식·콘텐츠 게시 계약](/development/data-formats.md) - 외부 decoder의 길이 검증 한계, 부분 생성의 보호 기준 전환, CloudFront minimum TTL의 origin 캐시 지시어 우선 예외를 다룹니다.
