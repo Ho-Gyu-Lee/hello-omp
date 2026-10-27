@@ -152,7 +152,7 @@ description: hello-omp 설정 레포의 원격 변경(공유 지식·OMP 설정�
   - 생성 규칙 이름 충돌: 생성할 `okf-*` 규칙 이름이 개념끼리 겹치거나, `<configdir>/rules/`에 `okf_source` 없는 같은 이름의 사용자 규칙(`.md`·`.mdc`)이 있거나, `rules` 디렉터리·`okf-*` 규칙이 링크인 경우입니다. 사용자 규칙의 이름을 바꿀지 묻습니다.
 - **setup 단계(`[n/8]`, 이 스킬의 단계 번호와 다름)별 의미:**
   - `[1/8]`: `config/settings.conf` 적용.
-  - `[2/8]`: 전역·advisor 지침과 TTSR 규칙(`ttsr/` → `C/rules/`).
+  - `[2/8]`: 전역·advisor 지침, personality·제목 프롬프트, TTSR 규칙(`ttsr/` → `C/rules/`).
   - `[3/8]`: 공개 OKF(로컬 `learned/` 보존).
   - `[4/8]`–`[7/8]`: 확장·에이전트·명령·스킬.
   - `[8/8]`: 원격에서 지운 관리 항목 정리와 설정값 검증. 지운 설정 키는 현재 값이 setup이 적용한 값 그대로일 때만 `omp config reset`으로 되돌리고, 지운 파일·스킬은 `C/.managed-retired-<stamp>/`로 이동합니다. 로컬에서 바꾼 설정값과 고친 사본은 그대로 두고 경고합니다.

@@ -3,23 +3,23 @@ type: Concept
 title: AI 에셋 생성의 모델 라이선스·로컬 메모리·LoRA 학습·VLM 런타임
 description: 유료·로컬 이미지 생성 경로 선택과 GPT Image 2.5 모델 지정 경로, 로컬 이미지 생성·VLM 모델의 가중치 라이선스 예외, Apple Silicon 통합 메모리 조회와 mflux 캐시, seed 재현성, 8방향 스프라이트 구조 고정, mflux LoRA 학습 설정과 투명 스프라이트의 키 배경 학습·복원, Ollama(MLX) 유효 설정과 구조화 출력 결함, VLM 채점의 양성 대조를 정리합니다.
 tags: [development, assets, ai, image-generation, vlm, license, apple-silicon, mlx, lora, ollama, structured-output, sprite, transparency]
-timestamp: 2026-10-26T00:00:00Z
+timestamp: 2026-10-27T00:00:00Z
 ---
 
 # AI 에셋 생성의 모델 라이선스·로컬 메모리·LoRA 학습·VLM 런타임
 
-입력 에셋 쪽 권리는 [에셋의 AI 사용 권리](/development/assets-editor.md#에셋의-ai-사용-권리), 부분 수정 방법은 [생성 이미지의 결정적 국소 합성](/tools/builtin.md)을 따릅니다.
+입력 에셋 쪽 권리는 [에셋의 AI 사용 권리](/development/assets-editor.md#에셋의-ai-사용-권리), 부분 수정 방법은 [생성 이미지의 결정적 국소 합성](/tools/builtin.md#원본-보존)을 따릅니다.
 
 ## 유료·로컬 경로 선택
 
 - 사용자 방향(2026-10-26): 품질이 결정적인 에셋은 유료 이미지 모델을, 로컬 품질로 충분하면서 시간·작업량이 큰 에셋은 로컬 모델을 씁니다. 유료 경로의 과금 한도는 사용자가 정하므로 구독 포함 사용량을 넘는 과금 경로(API 키·크레딧 추가 구매)는 확인받은 뒤에만 씁니다.
 - ChatGPT 사용 크레딧(Settings > Usage)은 API 크레딧이 아니어서 API 키 호출에 쓰이지 않습니다([도움말](https://help.openai.com/en/articles/12642688-using-credits-for-flexible-usage-in-chatgpt-personal-plans), [결제 분리](https://help.openai.com/en/articles/9039756-managing-billing-for-chatgpt-and-the-api-platform)). Codex(ChatGPT 로그인)의 이미지 생성은 포함 한도를 먼저 쓰고 그다음 이 크레딧에서 차감되며(GPT-Image-2 이미지 출력 100만 토큰당 750 크레딧, [Codex 요금](https://developers.openai.com/codex/pricing)), 자동 충전(automatic reload)이 켜져 있으면 잔액이 설정한 최소값 아래로 내려갈 때(켤 때 이미 미만이면 즉시) 기본 결제 수단으로 목표 잔액까지 구매됩니다(확인 2026-10-26).
-- GPT Image 2.5(`gpt-image-2.5-flare`·`gpt-image-2.5-sunburst`, 2026-09-08 출시)를 모델 ID로 지정하는 확인된 경로는 OpenAI API 키(토큰 과금)입니다. 확인한 Codex 내장 `image_gen`에는 이미지 모델 선택 인자가 없으며, 공개 소스·문서와 보고된 결과만으로는 구독 경로의 개별 실행이 GPT Image 2.5인지 확정할 수 없습니다. 이 도구는 생성·편집 모두 `IMAGE_MODEL = "gpt-image-2"`를 고정해 보내고([tool.rs](https://github.com/openai/codex/blob/970111f6cb62cc02fe36a82ea7d71b37a2889c97/codex-rs/ext/image-generation/src/tool.rs), rust-v0.164.0과 동일) [공식 문서](https://developers.openai.com/codex/image-generation)도 `gpt-image-2`라 하지만 2.5 공지는 Codex 사용자 제공을 밝혀, 실효 모델 공개 요청이 [openai/codex#43965](https://github.com/openai/codex/issues/43965)로 열려 있습니다(확인 2026-10-26).
+- GPT Image 2.5(`gpt-image-2.5-flare`·`gpt-image-2.5-sunburst`, 2026-09-08 출시)를 모델 ID로 지정하는 설정은 [에이전트 가이드](/agents/guide.md)를 따릅니다. 확인한 Codex 내장 `image_gen`에는 이미지 모델 선택 인자가 없으며, 공개 소스·문서와 보고된 결과만으로는 구독 경로의 개별 실행이 GPT Image 2.5인지 확정할 수 없습니다. 이 도구는 생성·편집 모두 `IMAGE_MODEL = "gpt-image-2"`를 고정해 보내고([tool.rs](https://github.com/openai/codex/blob/970111f6cb62cc02fe36a82ea7d71b37a2889c97/codex-rs/ext/image-generation/src/tool.rs), rust-v0.164.0과 동일) [공식 문서](https://developers.openai.com/codex/image-generation)도 `gpt-image-2`라 하지만 2.5 공지는 Codex 사용자 제공을 밝혀, 실효 모델 공개 요청이 [openai/codex#43965](https://github.com/openai/codex/issues/43965)로 열려 있습니다(확인 2026-10-26).
 - 2.5는 품질 `xhigh`·`max`를 추가했지만 API 키 경로의 래퍼가 이를 막습니다. Codex 번들 `imagegen` 스킬의 fallback CLI(`scripts/image_gen.py`, main 2026-10-23)는 `--model gpt-image-2.5-*`를 받되 품질을 `low`·`medium`·`high`·`auto`로, 크기를 `1024x1024`·`1536x1024`·`1024x1536`·`auto`로 제한하고, OMP `generate_image`에는 품질 입력이 없습니다. 이 설정이 필요하면 Images API(`/v1/images/generations`)를 직접 호출합니다. OMP 설정은 [에이전트 가이드](/agents/guide.md)를 따릅니다.
 
 ## 가중치 라이선스
 
-상업 게임에 출하할 에셋의 모델은 품질·속도보다 먼저 라이선스로 거릅니다. 출력물 조항과 모델 사용 목적 조항을 따로 판정하고 배경 제거·업스케일 같은 보조 모델도 같은 게이트를 거치며, 비상업 구성요소를 거친 산출물은 출하 승인과 학습 데이터셋에서 제외합니다. 라이선스 조사는 다운로드·설치·유료 호출의 사용자 승인이 아닙니다.
+상업 게임에 출하할 에셋의 모델은 품질·속도보다 먼저 라이선스로 거릅니다. 출력물 조항과 모델 사용 목적 조항을 따로 판정하고 배경 제거·업스케일 같은 보조 모델도 같은 게이트를 거치며, 비상업 구성요소를 거친 산출물은 출하 승인과 학습 데이터셋에서 제외합니다.
 
 - [FLUX Non-Commercial](https://raw.githubusercontent.com/black-forest-labs/flux2/main/model_licenses/LICENSE-FLUX-NON-COMMERICAL): §2(d)는 Output의 어떤 목적 사용도 허용하지만 §4(a)는 모델과 "모델이 만든 데이터"의 "commercial or production purposes" 사용을 금지합니다. 서면 상업 라이선스 없이 출하 경로에 넣지 않습니다(확인 2026-10-14).
 - [HunyuanImage 3.0](https://raw.githubusercontent.com/Tencent-Hunyuan/HunyuanImage-3.0/main/LICENSE)은 Territory에서 EU·영국·대한민국을 제외합니다(확인 2026-10-14). [Hunyuan3D 2.x](https://huggingface.co/tencent/Hunyuan3D-2.1/blob/main/LICENSE)도 대한민국이 빠지고 출력물 사용을 지역으로 제한합니다(확인 2026-10-15).
@@ -39,7 +39,7 @@ timestamp: 2026-10-26T00:00:00Z
 ## 재현성과 스프라이트
 
 - seed만으로는 같은 이미지가 보장되지 않습니다. [mflux Z-Image README](https://github.com/mflux-community/mflux/blob/main/src/mflux/models/z_image/README.md)에 따르면 0.20 이하는 transformer를 float32로, 이후 릴리스는 bfloat16으로 실행해 같은 seed라도 이미지가 다르며 이전 결과를 재현하려면 `--float32`가 필요합니다(확인 2026-10-14).
-- 8방향 스프라이트의 방향·포즈·프레임처럼 정확한 구조는 이미지 모델에 맡기지 않고 제어 가능한 경로(고정 정사영 카메라의 3D 렌더 + 리그 애니메이션, ControlNet 같은 구조 제어)로 정하며, 이미지 모델은 컨셉·텍스처·정체성 보정에 씁니다. 근거 관찰(FLUX.2 klein 4B·mflux 0.22.0·레퍼런스 1장, 2026-10-15)의 방향 일치는 한 장 8방향 시트 2/8, 방향별 텍스트 편집 약 5/8, 박스 마네킹 레퍼런스 편집 1/8이었고 다른 모델·제어 방식으로 일반화하지 않습니다.
+- 8방향 스프라이트의 방향·포즈·프레임처럼 정확한 구조는 이미지 모델에 맡기지 않고 제어 가능한 경로(고정 정사영 카메라의 3D 렌더 + 리그 애니메이션, ControlNet 같은 구조 제어)로 정하며, 이미지 모델은 컨셉·텍스처·정체성 보정에 씁니다.
 - 픽셀화는 결정적 후처리로 합니다. 모든 방향·프레임을 같은 캔버스·발 기준·배율로 맞춰 축소하고 하나의 공유 팔레트로 양자화합니다.
 
 ## LoRA 학습 (mflux 0.22.0)
@@ -47,14 +47,13 @@ timestamp: 2026-10-26T00:00:00Z
 - **메모리가 넘치면 실패하지 않고 swap으로 몇 배 느려집니다.** FLUX.2 klein base 4B를 gradient checkpointing·`low_ram` 없이 학습하면 GPU 할당(`ioreg`)이 71 GB까지 올라 swap 30.4 GB를 쓰며 78초/step이었고, 둘을 켜면 13.0~13.6초/step·최대 메모리 25.0 GiB(`/usr/bin/time -l`)였습니다(M4 Pro 48 GB, 512×1024, rank 128, 2026-10-18). 학습 일정과 시안 수를 정하기 전에 짧은 탐색 실행으로 단계 시간·최대 메모리·`vm.swapusage`를 잽니다.
 - `mflux-train`은 CLI의 `--low-ram`·`--mlx-cache-limit-gb`·`--quantize`를 학습 설정에 넘기지 않으므로 설정 JSON의 `low_ram`·`gradient_checkpointing`·`cache_limit_gb`·`quantize`에 씁니다(설치본 `mflux/models/common/cli/train.py`).
 - FLUX.2 klein은 base로 학습하고 distilled(4단계)에서 LoRA를 쓰는 것이 BFL 권장 경로입니다([BFL 가이드](https://huggingface.co/blog/black-forest-labs/flux-2-klein-lora), 게시 2026-06-04). 다른 계열의 SFT→Turbo 전이는 계열마다 따로 확인합니다.
-- 큰 모델이 시안 품질에서 이긴다고 가정하지 않습니다. 같은 데이터셋·비슷한 학습 시간(ERNIE 1 epoch 8시간 29분, klein 2 epoch 9시간 9분)에서 ERNIE-Image 8B LoRA는 식생·나무의 주제 추종만 klein 4B보다 나았고 같은 범주 안의 물체 크기가 더 흔들렸으며, 50단계 생성이 klein distilled 4단계보다 약 50배 느렸습니다(2026-10-19). 학습량이 달라 같은 시간 예산의 비교로만 읽습니다.
 
 ## 투명 스프라이트의 키 배경 학습과 복원
 
 - mflux 0.22.0 학습기는 알파가 있는 PNG를 흰색 위에 합성해 RGB로 학습합니다(설치본 `mflux/utils/image_util.py`). 흰 배경에서는 밝은 물체의 알파를 되돌릴 수 없으므로 팩 색과 겹치지 않는 채도 높은 키 색(예: 마젠타) 위에 straight-alpha로 합성해 학습하고, 생성물은 같은 경로로 되돌립니다. 키 합성 이미지를 확대할 때는 링잉이 적은 커널(Mitchell)을 씁니다.
-- 생성물의 배경은 선언 키 색 그대로가 아닐 수 있습니다(예: sprite-gen 코드 주석의 관측에서 Grok은 `#FF00FF`를 (216,46,147)로 칠해 선언 키 기준 제거 반경 밖에 배경 전체가 남음). 모서리·테두리의 비투명 표본 중 선언 키 색 계열이 충분할 때만 그 최빈 색 구간(전체 평균은 군집 사이의 없는 색)을 관측 키로 써서 제거와 차이 키의 `키 값`에 반영하고, 근거가 없으면 선언 키를 유지하며 임의의 테두리색을 키로 삼지 않습니다. 선언 키의 제거 반경은 그대로 두고 관측 키의 반경은 키 hue 특징(키가 아닌 채널이 어두움)을 가진 화소와 거기에 이어진 화소에만 더해 본체 안의 비슷한 색(G가 밝은 핫핑크 등)을 지우지 않습니다([sprite-gen `extract.py`](https://github.com/aldegad/sprite-gen/blob/59b2738a2e76ed7043d9691a230396ed6374a336/sprite_gen/frames/extract.py#L215-L451), 코드 확인 2026-10-23).
-- 마젠타 차이 키 `alpha = 1 − (min(R,B) − G) / 키 값`은 검은 그림자는 정확히 되돌리지만 G가 B보다 큰 색(녹색·노랑·주황)의 가장자리를 너무 불투명하게 읽어 분홍으로 번지게 합니다. 이 값을 상한으로 두고 가장자리 화소를 "가장 가까운 안쪽 색의 어떤 명암 + 키"의 2변수 최소제곱으로 다시 맞추며, 맞춤 오차가 작을 때만 그 알파를 씁니다(팩 스프라이트 176장을 합성→4배 확대→키 제거→축소로 왕복했을 때 알파·색 오차 평균 1.66·1.10, 차이 키만 2.06·1.97, 2026-10-18).
-- 팩 왕복 시험만으로 검증하지 않습니다. 생성 모델은 회색·어두운 면 전체를 키 쪽으로 물들여(FLUX.2 klein 4B + 스타일 LoRA, 마젠타 키, 2026-10-18) 그대로 읽으면 본체가 비치고, 가장자리 재맞춤은 그 색을 다른 색 얼룩으로 풀어냅니다. 주변이 모두 거의 불투명한 안쪽 화소는 불투명으로 두고 키 성분만 빼며, 그만큼 진한 그림자 중심도 불투명해질 수 있으므로 그림자 알파 통계를 기준 범위와 계속 비교합니다. 키 색 계열(빨강·분홍·녹슨 금속) 면은 화소 값으로 키와 구분할 수 없으므로 "어둡지 않은 반투명 화소의 비율"을 기준 범위와 비교해 표시하고 다른 seed를 고릅니다.
+- 생성물의 배경은 선언 키 색 그대로가 아닐 수 있습니다(생성 모델이 `#FF00FF`를 다른 분홍으로 칠하면 선언 키 기준 제거 반경 밖에 배경 전체가 남음). 모서리·테두리의 비투명 표본 중 선언 키 색 계열이 충분할 때만 그 최빈 색 구간(전체 평균은 군집 사이의 없는 색)을 관측 키로 써서 제거와 차이 키의 `키 값`에 반영하고, 근거가 없으면 선언 키를 유지하며 임의의 테두리색을 키로 삼지 않습니다. 관측 키의 반경은 키 hue 특징(키가 아닌 채널이 어두움)을 가진 화소와 거기에 이어진 화소에만 더해 본체 안의 비슷한 색을 지우지 않습니다([sprite-gen `extract.py`](https://github.com/aldegad/sprite-gen/blob/59b2738a2e76ed7043d9691a230396ed6374a336/sprite_gen/frames/extract.py#L215-L451), 코드 확인 2026-10-23).
+- 마젠타 차이 키 `alpha = 1 − (min(R,B) − G) / 키 값`은 검은 그림자는 정확히 되돌리지만 G가 B보다 큰 색(녹색·노랑·주황)의 가장자리를 너무 불투명하게 읽어 분홍으로 번지게 합니다. 이 값을 상한으로 두고 가장자리 화소를 "가장 가까운 안쪽 색의 어떤 명암 + 키"의 2변수 최소제곱으로 다시 맞추며, 맞춤 오차가 작을 때만 그 알파를 씁니다.
+- 팩 스프라이트 왕복 시험만으로 검증하지 않습니다. 생성 모델은 회색·어두운 면 전체를 키 쪽으로 물들여 그대로 읽으면 본체가 비치고, 가장자리 재맞춤은 그 색을 다른 색 얼룩으로 풀어냅니다. 주변이 모두 거의 불투명한 안쪽 화소는 불투명으로 두고 키 성분만 빼며, 그림자 알파 통계를 기준 범위와 비교합니다. 키 색 계열(빨강·분홍·녹슨 금속) 면은 화소 값으로 키와 구분할 수 없으므로 "어둡지 않은 반투명 화소의 비율"을 기준 범위와 비교해 표시하고 다른 seed를 고릅니다.
 
 ## Ollama(MLX) 런타임 (v0.40.4 기준)
 
@@ -65,4 +64,4 @@ timestamp: 2026-10-26T00:00:00Z
 
 ## VLM 채점
 
-- VLM 점수도 [측정 타당성 원리](/development/assets-editor.md#검수조립-원리)대로 후보 선별에 쓰기 전에 기준 원본을 후보와 똑같이 채점해 양성 대조하고, 원본이 높은 점수를 받지 못하는 항목은 판별력이 없으므로 기록만 하고 순위에서 뺍니다. 예: `qwen3.8:27b-mlx`(Ollama 0.40.6)의 "화풍 일치"는 원본 팩 스프라이트에도 평균 4.8/10이었고 내용 차이를 화풍 차이로 읽었지만, "주제 일치"·"정리 상태"는 8.1·8.8이었습니다(2026-10-18).
+- VLM 점수도 [측정 타당성 원리](/development/assets-editor.md#검수조립-원리)대로 후보 선별에 쓰기 전에 기준 원본을 후보와 똑같이 채점해 양성 대조하고, 원본이 높은 점수를 받지 못하는 항목은 판별력이 없으므로 기록만 하고 순위에서 뺍니다. VLM 화풍 점수는 원본 에셋에도 낮게 나올 수 있어 원본 기준선과 비교해서만 읽습니다.

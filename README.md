@@ -1,6 +1,6 @@
 # omp 다중 PC 자동 설정
 
-다른 로컬 PC(macOS/Linux/Windows)에 같은 omp 환경을 재현하는 부트스트랩이다. 설정의 목적은 에이전트가 사용자와 같은 지식을 갖게 하는 것이 아니라, 모델이 이미 아는 일반 지식 가운데 **사용자의 방향과 다른 부분을 사용자에 맞게 바꾸는 것**이다. 일반 지식·일회성 작업 기록은 쌓지 않는다.
+다른 로컬 PC(macOS/Linux/Windows)에 같은 omp 환경을 재현하는 부트스트랩이다. 설정의 목적은 에이전트가 사용자와 같은 지식을 갖게 하는 것이 아니라, **모델의 기본 선택을 사용자의 방향으로 바꾸고 모델에 부족한 지식을 채우는 것**이다. 모델이 이미 정확히 아는 일반 지식과 일회성 작업 기록은 쌓지 않는다.
 
 ## 구성
 
@@ -10,8 +10,10 @@ hello-omp/
   config/settings.conf     OMP 설정 키의 단일 소스: 역할별 모델·fallback·advisor·표시·도구 승인·격리·이미지 생성
   rules/RULES.md           모든 에이전트(서브에이전트 포함)에 매 요청 적용되는 공통 방향 (sticky rule)
   rules/AGENTS.md          메인 세션 전용 규칙: 소통·질문·검증·독립 검토·지식 기록
-  rules/WATCHDOG.md        advisor 전용 지침 (한국어 노트, 근거 없는 빈 노트 금지, 구현 전 설계 검토 누락 감시)
-  ttsr/                    TTSR 알림 규칙 → <configdir>/rules/ (구현 전 설계 검토 누락 방지 알림)
+  rules/WATCHDOG.md        advisor 전용 지침 (한국어 노트, 근거 없는 빈 노트 금지, 처리량·위험 실행·중단 지시 감시)
+  rules/PERSONALITY.md     메인 세션의 기본 personality 블록을 대신하는 한국어 문체·처리량 기준
+  rules/TITLE_SYSTEM.md    세션 제목을 한국어로 짓는 제목 생성 프롬프트
+  ttsr/                    TTSR 알림 규칙 → <configdir>/rules/ (현재 없음, 배포·정리 경로만 유지)
   okf/                     OKF 지식 번들 소스 (필요할 때 읽는 방향·규칙·비자명 사실)
   commands/                슬래시 명령 /interview, /arch-review, /project-map, /cleanup
   skills/                  archify, goldfish-review, knowledge-sync, project-map
@@ -32,7 +34,7 @@ flowchart LR
   B -->|목록·설명 매 요청| S
   T[rules/okf-*-on-edit<br/>apply_on_edit 개념] -->|일치 파일 편집 시 본문 주입| M
   T -->|일치 파일 편집 시 본문 주입| S
-  D[ttsr/*<br/>설계 검토 누락 방지] -->|세션 첫 소스 편집 직전| M
+  P2[PERSONALITY.md·TITLE_SYSTEM.md] -->|세션 시작| M
   O[OKF 개념 본문<br/>direction·style·workflow…] -->|필요할 때 읽음| M
   O -->|필요할 때 읽음| S
   P[프로젝트 레포<br/>AGENTS.md·결정 기록·용어집] -->|그 프로젝트에서| M
@@ -41,10 +43,12 @@ flowchart LR
 | 층 | 내용 | 크기 원칙 |
 |---|---|---|
 | `RULES.md` | 코드 표기(PascalCase·줄·빈 줄), 구현 선택 순서, 멀티스레드 관점, 작업 기본값(TS+Bun·작업 파일 위치·증거·실행 경계), OKF 진입점 | 짧게. 매 요청 비용 |
-| `AGENTS.md` | 한국어 존댓말·보고 형식, 질문과 요구 정렬, 정확성·보안 경고, 독립 검토, 프로젝트 지도 트리거, 지식 기록 기준 | 메인 세션에만 로드 |
+| `AGENTS.md` | 한국어 존댓말·보고 형식, 질문과 요구 정렬, 정확성·보안 경고, 위험에 비례한 독립 검토, 프로젝트 지도 트리거, 지식 기록 기준 | 메인 세션에만 로드 |
+| `PERSONALITY.md` | omp 기본 personality(영어 단문·조각 문체)를 대신하는 한국어 완결 문장·결론 우선·처리량 기준 | 메인 세션에만. 서브에이전트는 personality가 없어 `RULES.md`의 「언어」를 따른다 |
+| `TITLE_SYSTEM.md` | 세션 제목을 한국어로 짓게 한다(`title.generator=tiny`의 제목 모델에 적용) | 제목 생성 호출에만 |
 | `okf/` | [사용자 개발 방향](okf/direction.md), 코딩 스타일, 워크플로, 도메인별 비자명 사실 | 작업에 맞는 개념의 본문을 읽음 |
 | `<configdir>/rules/okf-*` | setup·`--record`가 개념마다 생성하는 rulebook 규칙(이름·설명이 매 요청 시스템 프롬프트에 나열, 본문은 `rule://`)과, `apply_on_edit`가 있는 개념의 편집 시 자동 주입 규칙 | 품질 우선: 개념 목록을 매 요청 보인다 |
-| `ttsr/` → `<configdir>/rules/` | 메인 세션 전용 TTSR 알림. 현재는 세션의 첫 소스·인프라·설정 정의(코드·스크립트·Terraform·YAML·JSON·TOML·Gradle·CMake·Dockerfile·.env 등) 직접 편집 직전에 구현 전 설계 검토 대상인지 다시 묻는 `design-review-reminder` 하나. 경로로 제외할 수 없어 작업 디렉터리의 시제품 편집에서도 한 번 쓰이므로, 본문이 본 코드로 옮길 때 다시 판정하라고 지시한다 | 세션당 1회. 판정은 모델이 한다 |
+| `ttsr/` → `<configdir>/rules/` | 메인 세션 전용 TTSR 알림의 배포 경로. 현재 규칙은 없다. 예전 `design-review-reminder`는 첫 편집마다 출력을 끊고 설계 검토를 다시 묻게 해 과잉 절차를 부추겨 지웠고, setup의 관리 항목 정리가 배포본을 옮겨 둔다 | 규칙이 생기면 세션당 1회 |
 | 프로젝트 레포 | 그 프로젝트의 현행 지침(`AGENTS.md`)·결정 기록·용어집 | 작업 이력·검증 기록은 쓰지 않음 |
 
 OMP 18.12.1에서 task 서브에이전트는 `AGENTS.md`를 상속하지 않고 rule(`RULES.md`·`rules/*` 포함)은 받는다(`omp://system-prompt-customization.md`, `omp://rulebook-matching-pipeline.md`). 그래서 서브에이전트에도 필요한 방향은 `RULES.md`에 두고, OKF 개념은 `okf-*` 규칙으로 서브에이전트에도 보인다.
@@ -67,9 +71,9 @@ sh setup.sh
 
 배포한 지침은 **새 세션**부터 적용된다. 이미 열린 세션은 이전 지침을 계속 쓰므로 `omp`를 다시 시작한다.
 
-역할별 모델·추론 강도·fallback은 `config/settings.conf`가 정본이다. 메인·계획·구현·정밀 검토는 `xhigh`, 디자인·화면 분석·advisor는 `high`, 탐색·커밋은 `medium`, 제목·메모리는 `low`이며 각 chat 역할에 다른 provider의 fallback을 하나 둔다. 배정 이유와 운영 경계는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다. 적용값은 `omp config list`로 확인한다. 현재 대화의 모델만 바꿀 때는 `/switch <provider/model:effort>`를 쓴다(`/model`은 선택기라 인자를 받지 않는다).
+역할별 모델·추론 강도·fallback은 `config/settings.conf`가 정본이다. 메인·계획·구현·정밀 검토는 `xhigh`, 디자인·화면 분석·advisor는 `high`, 탐색·커밋은 `medium`, 제목·메모리는 `low`이며 각 chat 역할에 다른 provider의 fallback을 하나 둔다. 배정 이유는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다. 적용값은 `omp config list`로 확인한다. 현재 대화의 모델만 바꿀 때는 `/switch <provider/model:effort>`를 쓴다(`/model`은 선택기라 인자를 받지 않는다).
 
-비동기 advisor는 작업 중 위험 감시용으로 켜 둔다(`advisor.enabled=true`). 완료 전 독립 검토를 대신하지 않는다([워크플로](okf/workflow.md#독립-검토-시점과-최종-응답)).
+비동기 advisor는 작업 중 위험·과잉 절차 감시용으로 켜 둔다(`advisor.enabled=true`). 독립 검토를 대신하지 않는다([워크플로](okf/workflow.md#독립-검토-시점과-최종-응답)).
 
 이미지 생성 도구는 켜 두고(`generate_image.enabled=true`) `image` 역할을 구독 경로의 `openai-codex/gpt-image-2`로 고정하며 fallback을 두지 않는다. API 과금 경로로 자동 전환되지 않게 하려는 것으로, 이유와 한계는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다.
 
@@ -83,7 +87,7 @@ sh setup.sh
 | `/cleanup`, `/cleanup preview`, `/cleanup all` | 작업 산출물을 목록·승인 기반으로 정리한다. `all`은 탐색 확대일 뿐 전체 삭제 승인이 아니다. 정본은 [`commands/cleanup.md`](commands/cleanup.md). |
 | `/skill:knowledge-sync` | 원격에 푸시된 지식·설정을 로컬 작업과 로컬 지식을 지키며 병합하고 setup을 실행한다. push·rebase는 하지 않는다. |
 | `/skill:archify …` | 아키텍처·흐름을 인터랙티브 HTML 다이어그램으로 만든다. 일반 작업에서 HTML을 자동 생성하지 않는다. |
-| (자동) `goldfish-review` | 구현 전 설계 검토 대상([워크플로](okf/workflow.md#독립-검토-시점과-최종-응답))이면 에이전트가 지시 없이 사용한다. 설계 문서를 쓰고 대화 맥락이 없는 `design-reviewer`가 렌즈별로 순차 검토하며, Blocker가 남으면 구현하지 않고 결정만 묻는다. 직접 부를 때는 `/skill:goldfish-review`. 출처는 [Elephant-Goldfish Model](skills/goldfish-review/UPSTREAM.md). |
+| (자동) `goldfish-review` | 설계 선택이 결과를 좌우하는 작업([워크플로](okf/workflow.md#독립-검토-시점과-최종-응답): 여러 모듈 새 기능 통합, 버전 이식, 되돌리기 비싼 미결 대안)이면 에이전트가 지시 없이 사용한다. 짧은 설계 문서를 대화 맥락이 없는 `design-reviewer`가 검토하며 기본은 한 단계, 재검토는 1회까지다. 한 가지 목적의 스크립트·한 지점 수정에는 쓰지 않는다. 직접 부를 때는 `/skill:goldfish-review`(사용자가 요청하면 전체 경로). 출처는 [Elephant-Goldfish Model](skills/goldfish-review/UPSTREAM.md). |
 
 명령 파일은 세션 시작과 cwd 변경 때 발견된다. 실행 중인 세션에서는 `/reload-plugins`로 갱신한다. 작업 디렉터리의 `.omp/commands/`에 같은 이름이 있으면 그쪽이 우선한다.
 
@@ -92,7 +96,7 @@ sh setup.sh
 사전 점검(하나라도 걸리면 설정을 바꾸기 전에 중단): `omp`·`bun` PATH, `title.generator` 지원, `<configdir>`가 레포 루트와 다른지, `deploy-skills.ts --check`(OKF·스킬 경로 겹침), `deploy-okf.ts --check`(로컬 지식 검증·이전 setup의 삭제 감지·레거시 이관 충돌·생성할 `okf-*` 규칙 이름이 개념끼리 겹치거나 `okf_source` 없는 사용자 규칙(`.md`·`.mdc`)과 겹치는지·`rules` 디렉터리나 `okf-*` 규칙이 링크인지).
 
 1. **설정:** `config/settings.conf`의 키를 `omp config set`으로 적용한다.
-2. **글로벌 룰:** `rules/AGENTS.md`·`rules/RULES.md`·`rules/WATCHDOG.md` → `<configdir>/`(각 기존 파일은 최초 1회 `.bak`). `AGENTS.md`·`RULES.md`의 자리표시자 `__OKF_DIR__`(배포본)·`__OKF_SOURCE_DIR__`(소스)를 절대경로로 바꾼다. 다른 자리표시자는 없으므로 레포 루트가 필요하면 `__OKF_SOURCE_DIR__/..`로 쓴다. `ttsr/*.md` → `<configdir>/rules/`(같은 이름 덮어씀, `okf-*` 생성 규칙과 다른 이름).
+2. **글로벌 룰:** `rules/AGENTS.md`·`rules/RULES.md`·`rules/WATCHDOG.md`·`rules/PERSONALITY.md`·`rules/TITLE_SYSTEM.md` → `<configdir>/`(각 기존 파일은 최초 1회 `.bak`). `AGENTS.md`·`RULES.md`의 자리표시자 `__OKF_DIR__`(배포본)·`__OKF_SOURCE_DIR__`(소스)를 절대경로로 바꾼다. 다른 자리표시자는 없으므로 레포 루트가 필요하면 `__OKF_SOURCE_DIR__/..`로 쓴다. `TITLE_SYSTEM.md`는 OMP가 일반 config base(기본 `~/.omp/agent`)에서 찾고 `PI_CODING_AGENT_DIR`은 그 위치를 바꾸지 않으므로, 이 변수로 격리 배포하면 제목 프롬프트는 적용되지 않으며 setup이 경고한다(`omp://config-usage.md`). `ttsr/*.md` → `<configdir>/rules/`(같은 이름 덮어씀, `okf-*` 생성 규칙과 다른 이름).
 3. **OKF:** `validate-okf.ts`로 소스를 검사한 뒤(concept frontmatter, `index.md`의 섹션 제목과 항목 title·description 일치, 루트 index에서의 도달성, `log.md` 날짜 제목 형식·최신순) `deploy-okf.ts`가 공개 번들을 `<configdir>/okf/`에 제자리 갱신한다. 레포에서 사라진 공개 파일은 지우고 `<configdir>/okf/learned/`의 로컬 concept은 건드리지 않는다. `learned/index.md`만 레포 틀과 로컬 concept의 frontmatter로 다시 만든다. 이어서 배포본의 모든 개념을 `<configdir>/rules/okf-*.md` 규칙으로 생성하고 사라진 개념의 규칙은 지운다. `okf_source`가 없는 사용자 규칙은 건드리지 않으며, 같은 이름이면 중단한다.
 4. **확장:** `extensions/*.{js,ts}` → `<configdir>/extensions/`.
 5. **에이전트(있을 때만):** `agents/*.md` → `<configdir>/agents/`.

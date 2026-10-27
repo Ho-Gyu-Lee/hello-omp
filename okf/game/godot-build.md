@@ -8,7 +8,7 @@ timestamp: 2026-10-22T00:00:00Z
 
 # godot-cpp 빌드·등록·디버깅·export와 실행 검증
 
-상위 개념: [Godot와 C++ 게임 개발](/game/godot-cpp.md)(버전 핀 포함). 소스 근거는 godot-cpp [`507ed9d8`](https://github.com/godotengine/godot-cpp/tree/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5)(10.0.0-stable)와 엔진 [`ed1daf0b`](https://github.com/godotengine/godot/tree/ed1daf0bf001b61586d9930840f2f1394092c079)(4.7.2-stable)의 표기한 파일입니다. 종료 코드 0이나 빌드 성공만으로 로드·동작·성능을 판정하지 않습니다([워크플로](/workflow.md)).
+상위 개념: [Godot와 C++ 게임 개발](/game/godot-cpp.md)(버전 핀 포함). 소스 근거는 godot-cpp [`507ed9d8`](https://github.com/godotengine/godot-cpp/tree/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5)(10.0.0-stable)와 엔진 [`ed1daf0b`](https://github.com/godotengine/godot/tree/ed1daf0bf001b61586d9930840f2f1394092c079)(4.7.2-stable)의 표기한 파일입니다.
 
 ## API·ABI·툴체인 호환성
 
@@ -42,8 +42,6 @@ timestamp: 2026-10-22T00:00:00Z
 - **바이트 정체성:** 외부 소스는 버전 문자열이 아니라 출처 commit·파일 hash와 설치 바이트로 대조합니다. 예: Windows 줄바꿈 변환은 원본 byte hash를 바꾸므로 필요한 vendor 경로만 `.gitattributes`의 `-text`로 보존하고 전역 Git 설정은 바꾸지 않습니다.
 
 ## 검증 환경과 제품 실행 경로
-
-검증기가 제품의 진행을 막거나 실행 경로를 바꾸면 그 결과는 제품의 증거가 아닙니다.
 
 - `RenderingServer.frame_post_draw`를 기다린 뒤 준비를 시작하는 제품을 headless로 검사하면 headless는 창 그리기를 진행하지 않으므로, 검증 루프에서 `RenderingServer.force_draw(false)` 등으로 draw 경계를 진행시켜야 합니다. 계속 `LOADING`이고 준비 시작 계측이 0이면 timeout을 늘리거나 제품 초기화를 우회하기 전에 이 차이를 확인합니다. (엔진 `main/main.cpp` L5080-L5097, `servers/display/display_server_headless.h` L141)
 - 무거운 동기 검사를 실시간 세션의 입력 앞에 몰아 넣는 검증기는 liveness를 만료시킬 수 있으므로 코어/직렬화 회귀와 실제 입력 스모크의 실행 경계를 분리합니다.

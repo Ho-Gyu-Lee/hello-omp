@@ -12,7 +12,7 @@ timestamp: 2026-10-18T00:00:00Z
 
 ## 게임 시간 계층과 권위
 
-단위·시계 추정·RTT는 [네트워크 전달·I/O·시간 계측](/development/network.md)을 따릅니다.
+RTT 계측은 [네트워크 전달·I/O·시간 계측](/development/network.md)을 따릅니다.
 
 - 서버 기준시계와 처리한 논리 tick은 pause·부하·따라잡기 제한으로 다른 의미를 가질 수 있으므로 대응 기준점을 결과와 함께 전달하고 `floor(추정 서버시간 × tickRate)`로 실제 처리 완료 tick을 단정하지 않습니다. 클라이언트의 시계 추정·표시 보정은 서버 시계를 바꾸거나 추가 이동 시간을 승인하지 못합니다.
 - [Mirror `NetworkTime`](https://github.com/MirrorNetworking/Mirror/blob/c4f3739966e151f405be1762d33502794fd034ff/Assets/Mirror/Core/NetworkTime.cs)은 `localTime`, 서버/host의 local clock, remote client의 buffered `time`/`unscaledTime`, 별도의 `predictedTime`을 구분합니다. [time-sync 가이드](https://mirror-networking.gitbook.io/docs/manual/guides/time-sync)의 "클라이언트와 서버가 같은 값"을 같은 현재 시각으로 읽지 않습니다([인용 기준](/game/network-sync.md#mirror-인용-기준)).
@@ -20,7 +20,7 @@ timestamp: 2026-10-18T00:00:00Z
 ## 이동 속도·시간 예산 검증
 
 - 이동 시간 예산은 서버가 관측한 경과 시간으로만 늘어납니다. 클라이언트 timestamp(batch·메시지 시각)를 경과 시간의 유일한 근거로 쓰면 시계를 빠르게 보고해 속도를 낮게 계산시킬 수 있고 경과 0·NaN 표본은 검사를 건너뜁니다. 역행·비유한 값은 거부하고 같은 시각의 메시지는 경과 0으로 계산하며 서버 관측 경과에 제한된 지터 여유를 더한 범위로 clamp합니다.
-- 수락·보정한 값은 모든 소비자(보고자·관찰자·저장)에게 같은 값으로 전달합니다. 예: 클라이언트 좌표 보고를 검증하는 구조에서 보고 owner는 보통 자기 개체의 서버 복제를 무시하므로 보정을 owner에게 명시적으로 보내야 하고, 보정 세대로 옛 in-flight 보고를 적용·예산 반영 없이 버립니다. 보고자의 축별 변경 플래그를 보정 값과 그대로 중계하면 관찰자가 빠진 축을 자기 이전 표본으로 채워 보정이 사라지므로 전체 상태로 중계합니다.
+- 수락·보정한 값의 사용 범위는 [게임 보안](/security/game.md#서버-권위-원칙)이 정본입니다. 예: 클라이언트 좌표 보고를 검증하는 구조에서 보고 owner는 보통 자기 개체의 서버 복제를 무시하므로 보정을 owner에게 명시적으로 보내야 하고, 보정 세대로 옛 in-flight 보고를 적용·예산 반영 없이 버립니다. 보고자의 축별 변경 플래그를 보정 값과 그대로 중계하면 관찰자가 빠진 축을 자기 이전 표본으로 채워 보정이 사라지므로 전체 상태로 중계합니다.
 
 ## 접촉 트리거 기반 전환 요청
 

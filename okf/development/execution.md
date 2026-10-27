@@ -1,14 +1,12 @@
 ---
 type: Concept
-title: 병렬 작업과 스크립트 실행 경계
-description: 멀티스레드·병렬 처리 방향의 링크와 내장 Lua 스크립트의 count hook·선점 한계를 다룹니다.
+title: 내장 Lua 스크립트의 실행 경계
+description: 내장 Lua 스크립트의 count hook·선점 한계를 다룹니다.
 tags: [development, runtime, concurrency, scripting, lua]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-10-27T00:00:00Z
 ---
 
-# 병렬 작업과 스크립트 실행 경계
-
-멀티스레드·병렬 처리와 상태 소유 구조의 선택은 [개발 방향](/direction.md)을 따릅니다. 서버의 비동기 완료를 상태 소유자에게 적용하는 기준은 [서버 체크리스트](/development/server-checklist.md#프로토콜과-비동기-수명)에 둡니다.
+# 내장 Lua 스크립트의 실행 경계
 
 ## 타이머·이벤트·스크립트
 

@@ -1,7 +1,7 @@
 ---
 type: Checklist
 title: 게임 서버 영속화·장애 체크리스트
-description: 결과 공개와 내구성의 A/B/C 선언, 위치 저장, 파티·인스턴스 수명, 저장 대기와 복제 view의 적용 기준.
+description: 결과 공개와 내구성의 A/B/C 선언, 파티·인스턴스 수명, 저장 대기와 복제 view의 적용 기준.
 tags: [game, server, checklist, single-writer, persistence, durability, authority, failover]
 timestamp: 2026-10-18T00:00:00Z
 ---
@@ -10,9 +10,9 @@ timestamp: 2026-10-18T00:00:00Z
 
 상위 개념: [게임 서버 기능/성능 체크리스트](/game/server-checklist.md)
 
-DB 설계는 [공통 DB 설계](/database/design.md), identity·소유권 펜싱은 [공통 서비스 수명](/development/service-lifecycle.md), 콘텐츠 게시·버전 활성화는 [데이터 형식·콘텐츠 게시 계약](/development/data-formats.md)을 따른다. 이 연결이 아래 A/B/C의 공개·내구성·소유권 계약을 바꾸지는 않는다.
+DB 설계는 [공통 DB 설계](/database/design.md), identity·소유권 펜싱은 [공통 서비스 수명](/development/service-lifecycle.md), 콘텐츠 게시는 [데이터 형식·콘텐츠 게시 계약](/development/data-formats.md)을 따른다. 이 연결이 아래 A/B/C의 공개·내구성·소유권 계약을 바꾸지는 않는다.
 
-## 영속화·이동·장애
+## 영속화·장애
 
 - [ ] 메모리를 실행 상태의 기준으로 삼는 것과 경제 데이터 내구성은 별개다. 주기적 snapshot 저장을 구매·거래·보상의 내구 확정으로 보고하지 않는다. 결과를 클라이언트에 공개하는 시점은 콘텐츠별로 A/B/C 중 하나를 선언한다: (A) 메모리 권위로 공개하고 저장은 뒤에서, (B) 내구 큐·로그 확인 뒤 공개, (C) DB 커밋 뒤 공개. 모든 결과를 DB 커밋 뒤 공개로 일괄 고정하지 않으며 B·C는 I/O 확인 전까지 pending으로 둔다.
 - [ ] A는 다음을 함께 둔다.

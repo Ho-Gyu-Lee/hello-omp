@@ -19,7 +19,7 @@ OMP 18.12.1 `omp agents unpack --dir <격리 경로> --json`·`omp://models.md`�
 
 ## 현재 배정의 이유
 - 메인·계획은 Opus 5.5, 구현 `task`는 Sonnet 5.5다(구현은 사용자의 품질 우선 결정, 2026-10-10). 메인과 구현이 같은 Anthropic 한도·인증에 의존하므로 소모량은 사용량 기록으로 확인한다.
-- 정밀 검토 `slow`·화면 분석 `vision`·감시 `advisor`·탐색·커밋은 OpenAI 계열이라 기본 경로에서 메인·구현과 교차 검토가 된다. fallback은 반대 provider를 두어 한도·장애에 대응하며 품질에 따른 자동 상향이 아니다.
+- 정밀 검토 `slow`·화면 분석 `vision`·감시 `advisor`·탐색·커밋은 OpenAI 계열이라 기본 경로에서 메인·구현과 교차 검토가 된다. fallback은 반대 provider를 두어 한도·장애에 대응하며 품질에 따른 자동 상향이 아니다. Anthropic 한도·장애로 작성 모델이 OpenAI가 되면 역할표는 이를 자동 분기하지 않으므로 같은 OpenAI reviewer만으로는 충족하지 않는다. 그때는 실제 실행 모델을 확인하고 아래 「교차 모델 독립 검토」를 따른다.
 - 추론 강도는 난도별이다. 메인·계획·구현·정밀 검토는 xhigh, 디자인·화면 분석·advisor는 high, 탐색·커밋은 medium, 제목·메모리는 low다. 자동 난도 판정과 일괄 xhigh·max 강제는 도입하지 않는다. 이는 운영 판단이지 품질·비용 A/B 결과가 아니며 외부 평가도 로컬 품질 비교가 아니다([정확성](/accuracy.md)).
 - Fable 5.1은 기본 역할·fallback에 넣지 않고 고난도에만 `/switch anthropic/claude-fable-5-1:xhigh`(세션 전용)로 고른다. TUI `/model`은 인수 없이 선택기를 열고 선택자는 `/switch`가 받는다(설치본 `src/slash-commands/builtin-modes.ts`, 확인: 2026-10-18).
 - `image`는 구독 경로 `openai-codex/gpt-image-2`로 고정하고 fallback을 `[]`로 비우며 `generate_image.enabled=true`로 켠다(사용자 결정, 2026-10-26). 다른 인증이 생겨도 역할 기본 우선순위 목록의 다른 이미지 모델(API 과금 경로일 수 있음)로 자동 전환되지 않게 하려는 것이다. `[]`는 활성 모델 자신의 이미지 후보와 요청의 `model` 인자를 막지 않으므로(OMP 18.12.6, `omp://tools/generate_image.md`) API 키 OpenAI 모델로 세션을 돌리면 Codex 후보가 HTTP 오류(한도 소진 포함)로 실패할 때 그 경로가 쓰일 수 있고, 다른 이미지 인증이 생기면 `model` 지정으로 그 모델이 직접 선택될 수 있다. 경로 선택 방향은 [AI 에셋 생성](/development/ai-asset-generation.md#유료로컬-경로-선택)을 따른다.
@@ -29,15 +29,11 @@ OMP 18.12.1 `omp agents unpack --dir <격리 경로> --json`·`omp://models.md`�
 - 제목 생성 기본값은 메인 모델 fork(OMP 18.8.0~)라 `title.generator=tiny`를 명시해야 한다. `tiny` 배정만으로는 설정되지 않는다.
 - `modelRoles`·`retry.fallbackChains`·`task.agentModelOverrides` 변경은 다음 서브 실행·fallback에 재로딩되지만 실행 중인 메인·이미 시작한 서브의 모델은 바꾸지 않는다. CLI/env/overlay/resume 모델은 별도 우선순위다(`omp://settings.md`, 확인: 2026-10-18).
 - `retry.usageReservePct` 기반 자동 전환은 신뢰 가능한 coding-plan usage report에서만 동작한다(일반 API key·unknown usage·후보 불가에서는 보장 안 됨). `providers.anthropic.serverSideFallback`은 Anthropic refusal fallback beta의 옵트인이며 OMP의 오류·429·quota fallback과 다르다. 역할·fallback을 모두 쓰려면 두 provider의 유효 인증이 필요하다.
-- OMP는 `openai-codex`의 카탈로그 기본 모델을 `gpt-5.5`로 선언하고(`omp://provider-quirks.md`, 확인: 2026-10-18) GPT-5.5는 2026-10-14에 ChatGPT 로그인 Codex에서 은퇴했다(API·API 키 인증 Codex 제외, [Codex 변경 내역](https://developers.openai.com/codex/changelog), 확인: 2026-10-15). 역할을 명시하지 않는 호출 경로가 생기면 별도로 확인한다.
-
-## 현재 역할과 운영 경계
-- 기본 경로의 OpenAI reviewer는 Opus 메인·Sonnet 구현과 계열이 달라 교차 검토가 된다. Anthropic 한도·장애로 작성 모델이 OpenAI로 넘어갔다면 같은 OpenAI reviewer만으로 충족하지 않으며 역할표는 이를 자동 분기하지 않으므로, fallback 뒤에는 실제 실행 모델을 확인한다.
 
 ## 게임·서버·디자인 사용 경로
 사용자의 개발 방향은 [방향](/direction.md)을 따른다.
 - 복잡한 클라이언트·서버 구조는 Opus 메인이 요구·불변조건·경계를 정리하고 Sonnet `task`가 구현하며 작성 계열과 다른 reviewer가 검토한다. 수락 기준은 [서버](/game/server-checklist.md)·[클라이언트](/game/client-checklist.md) 체크리스트를 따른다.
-- 게임 아트·UI·레벨은 Opus 메인 또는 `@designer` 모델이 방향·대안·추천안을 정하고 Sonnet `task`가 구현하며 Astra `vision`이 실제 화면을 교차 분석한다. 일반 `task`에는 구현 목표·제약·검증 기준을 전달한다. 디자인 요청은 사용자가 세부를 모두 정해 줄 때까지 기다리지 않고 기존 요구와 레퍼런스로 추천안 하나와 이유를 제시하며, 실제 시각 자료가 없으면 관찰한 것처럼 평가하지 않는다.
+- 게임 아트·UI·레벨은 Opus 메인 또는 `@designer` 모델이 방향·대안·추천안을 정하고 Sonnet `task`가 구현하며 Astra `vision`이 실제 화면을 교차 분석한다. 일반 `task`에는 구현 목표·제약·검증 기준을 전달한다. 실제 시각 자료가 없으면 관찰한 것처럼 평가하지 않는다.
 
 ## 교차 모델 독립 검토
 독립 검토가 필요한 산출물의 실제 작성 모델이 OpenAI인 경우(fallback 포함), 작업 산출물 디렉터리에 아래 일회성 YAML을 두고 별도 fresh session의 `reviewer` 또는 `security-reviewer`를 실행한다. `--config`는 그 프로세스에만 적용된다. 검토 범위·수락 기준·변경 파일·실행 근거를 프롬프트로 전달하고 구현자의 자기평가를 주입하지 않는다.

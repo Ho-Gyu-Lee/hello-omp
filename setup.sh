@@ -79,7 +79,7 @@ echo "[1/8] applying model settings..."
 apply_settings_file "${SCRIPT_DIR}/config/settings.conf"
 
 # --- 2) global/advisor rules ---
-echo "[2/8] deploying global/advisor rules (AGENTS.md, RULES.md, WATCHDOG.md, ttsr/*.md)..."
+echo "[2/8] deploying global/advisor rules (AGENTS.md, RULES.md, WATCHDOG.md, PERSONALITY.md, TITLE_SYSTEM.md, ttsr/*.md)..."
 if [ -f "${CONFIG_DIR}/AGENTS.md" ] && [ ! -f "${CONFIG_DIR}/AGENTS.md.bak" ]; then
   cp "${CONFIG_DIR}/AGENTS.md" "${CONFIG_DIR}/AGENTS.md.bak"
 fi
@@ -91,10 +91,17 @@ if [ -f "${CONFIG_DIR}/RULES.md" ] && [ ! -f "${CONFIG_DIR}/RULES.md.bak" ]; the
 fi
 cp "${SCRIPT_DIR}/rules/RULES.md" "${CONFIG_DIR}/RULES.md"
 sed -e "s|__OKF_DIR__|${OKF_ABS}|g" -e "s|__OKF_SOURCE_DIR__|${OKF_SOURCE_ABS}|g" "${CONFIG_DIR}/RULES.md" > "${CONFIG_DIR}/RULES.md.tmp" && mv "${CONFIG_DIR}/RULES.md.tmp" "${CONFIG_DIR}/RULES.md"
-if [ -f "${CONFIG_DIR}/WATCHDOG.md" ] && [ ! -f "${CONFIG_DIR}/WATCHDOG.md.bak" ]; then
-  cp "${CONFIG_DIR}/WATCHDOG.md" "${CONFIG_DIR}/WATCHDOG.md.bak"
+# WATCHDOG.md: advisor-only guidance. PERSONALITY.md: replaces the default personality block of the main session (read from the agent dir).
+# TITLE_SYSTEM.md: prompt for automatic session titles, read from the generic config base (~/.omp/agent), which PI_CODING_AGENT_DIR does not move.
+for top in WATCHDOG.md PERSONALITY.md TITLE_SYSTEM.md; do
+  if [ -f "${CONFIG_DIR}/${top}" ] && [ ! -f "${CONFIG_DIR}/${top}.bak" ]; then
+    cp "${CONFIG_DIR}/${top}" "${CONFIG_DIR}/${top}.bak"
+  fi
+  cp "${SCRIPT_DIR}/rules/${top}" "${CONFIG_DIR}/${top}"
+done
+if [ -n "${PI_CODING_AGENT_DIR:-}" ]; then
+  echo "  WARNING: PI_CODING_AGENT_DIR is set; OMP looks up TITLE_SYSTEM.md in the generic config base, so the copy in ${CONFIG_DIR} is not used for titles" >&2
 fi
-cp "${SCRIPT_DIR}/rules/WATCHDOG.md" "${CONFIG_DIR}/WATCHDOG.md"
 # TTSR rules (reminders injected when the model's output or tool call matches) -> <configdir>/rules/, beside the okf-* rules deploy-okf generates
 n=0
 for rule in "${SCRIPT_DIR}/ttsr/"*.md; do

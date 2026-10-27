@@ -10,7 +10,7 @@ timestamp: 2026-10-18T00:00:00Z
 
 상위 개념: [게임 네트워크 동기화](/game/network-sync.md#공통-원리)
 
-메시지별 전달·HOL·모바일 복구·프레이밍·종료는 [네트워크 전달·I/O·시간 계측](/development/network.md)을 따른다. 아래는 게임 권위·복제의 추가 조건이다.
+메시지별 전달·모바일 복구·소켓 종료는 [네트워크 전달·I/O·시간 계측](/development/network.md)을 따른다. 아래는 게임 권위·복제의 추가 조건이다.
 
 ## 복구·전달 의미론
 - **op-log·baseline 복제(Mirror):** 목록·사전을 연산 로그로 복제하면 이미 반영된 연산이 신규 관찰자의 full state에도 들어가고 다음 delta에도 실려 두 번 적용된다. full state에 "반영됐지만 아직 보내지 않은 연산 수"(`changesAhead`)를 함께 보내 수신측이 건너뛰게 한다. index 기반 연산과 송신마다 baseline이 전진하는 연쇄 delta는 신뢰·순서 보장 stream에서만 성립하고, 모든 관찰자가 하나의 직렬화 baseline을 공유하면 신규 관찰자의 초기값도 현재 값이 아니라 그 baseline(마지막 직렬화 값)이어야 한다. 비신뢰 delta는 연결별 ACK baseline을 쓰거나 delta에 baseline tick을 붙여 불일치 delta를 버린다([`SyncList`](https://github.com/MirrorNetworking/Mirror/blob/c4f3739966e151f405be1762d33502794fd034ff/Assets/Mirror/Core/SyncList.cs)·`NetworkTransformReliable`·`NetworkClient`, [인용 기준](/game/network-sync.md#mirror-인용-기준), 조회 2026-10-11).

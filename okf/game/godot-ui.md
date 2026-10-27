@@ -21,7 +21,7 @@ timestamp: 2026-10-23T00:00:00Z
 
 ## 표시 경계
 
-선언된 rect·advance 폭·API 허용 길이는 실제로 그려지는 경계(ink·외곽선·그림자·crop)와 다릅니다. 표시는 구현 공식을 다시 계산하는 테스트가 아니라 실제 렌더러 픽셀과 실제 viewport rect를 독립적으로 관찰해 판정하고, 일부러 결함을 넣은 빌드에서 검사가 실패하는지 확인합니다. 예:
+선언된 rect·advance 폭·API 허용 길이는 실제로 그려지는 경계(ink·외곽선·그림자·crop)와 다릅니다. 표시는 실제 렌더러 픽셀과 viewport rect를 관찰해 판정합니다(검증 원칙은 [워크플로](/workflow.md#검증)). 예:
 
 - 글꼴 교체·`tnum`은 숫자 폭을 바꾸므로 고정 상자 글자를 허용되는 가장 긴 값까지 다시 측정합니다. 긴 이름은 `Label`의 minimum-size가 고정 HUD 프레임 밖으로 키우므로 clipping/ellipsis·`max_lines_visible=1`을 지정합니다.
 - CanvasLayer로 옮긴 full-rect HUD가 offset-only override로 0×0이 되지 않는지, 지도 마커가 TextureRect의 실제 aspect-fit/covered 사각형 기준인지, 같은 줄 컨트롤의 StyleBox가 모든 상태(normal·hover·pressed·disabled·focus)에서 같은지, `TabContainer`가 탭 전환 뒤에도 컨테이너 사각형·`get_combined_minimum_size()`를 앵커 영역 안에 두는지 확인합니다.

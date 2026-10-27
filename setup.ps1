@@ -77,7 +77,7 @@ Write-Host "[1/8] applying model settings..."
 Set-OmpSettings (Join-Path $ScriptDir 'config\settings.conf')
 
 # --- 2) global/advisor rules ---
-Write-Host "[2/8] deploying global/advisor rules (AGENTS.md, RULES.md, WATCHDOG.md, ttsr/*.md)..."
+Write-Host "[2/8] deploying global/advisor rules (AGENTS.md, RULES.md, WATCHDOG.md, PERSONALITY.md, TITLE_SYSTEM.md, ttsr/*.md)..."
 $agentsMd = Join-Path $ConfigDir 'AGENTS.md'
 if ((Test-Path $agentsMd) -and -not (Test-Path "$agentsMd.bak")) { Copy-Item $agentsMd "$agentsMd.bak" -Force }
 Copy-Item (Join-Path $ScriptDir 'rules\AGENTS.md') $agentsMd -Force
@@ -87,9 +87,16 @@ $rulesMd = Join-Path $ConfigDir 'RULES.md'
 if ((Test-Path $rulesMd) -and -not (Test-Path "$rulesMd.bak")) { Copy-Item $rulesMd "$rulesMd.bak" -Force }
 Copy-Item (Join-Path $ScriptDir 'rules\RULES.md') $rulesMd -Force
 Set-OkfPath $rulesMd
-$watchdogMd = Join-Path $ConfigDir 'WATCHDOG.md'
-if ((Test-Path $watchdogMd) -and -not (Test-Path "$watchdogMd.bak")) { Copy-Item $watchdogMd "$watchdogMd.bak" -Force }
-Copy-Item (Join-Path $ScriptDir 'rules\WATCHDOG.md') $watchdogMd -Force
+# WATCHDOG.md: advisor-only guidance. PERSONALITY.md: replaces the default personality block of the main session (read from the agent dir).
+# TITLE_SYSTEM.md: prompt for automatic session titles, read from the generic config base (~/.omp/agent), which PI_CODING_AGENT_DIR does not move.
+foreach ($top in @('WATCHDOG.md', 'PERSONALITY.md', 'TITLE_SYSTEM.md')) {
+  $topDst = Join-Path $ConfigDir $top
+  if ((Test-Path $topDst) -and -not (Test-Path "$topDst.bak")) { Copy-Item $topDst "$topDst.bak" -Force }
+  Copy-Item (Join-Path $ScriptDir "rules\$top") $topDst -Force
+}
+if ($env:PI_CODING_AGENT_DIR) {
+  Write-Warning "PI_CODING_AGENT_DIR is set; OMP looks up TITLE_SYSTEM.md in the generic config base, so the copy in $ConfigDir is not used for titles"
+}
 # TTSR rules (reminders injected when the model's output or tool call matches) -> <configdir>/rules/, beside the okf-* rules deploy-okf generates
 $ttsrDir = Join-Path $ScriptDir 'ttsr'
 $srcTtsr = @()

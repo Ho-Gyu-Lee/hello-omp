@@ -3,7 +3,7 @@ type: Concept
 title: 에셋의 AI 사용 권리와 검수·조립 원리
 description: Unity Asset Store 에셋의 AI/ML 사용 제한과 취득 채널별 권리 확인, 구매·생성 에셋 검수·조립·화풍 대조에서 최종 결과와 측정 타당성으로 판단하는 원리를 다룹니다.
 tags: [development, assets, licensing, ai, validation, composition]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-10-27T00:00:00Z
 ---
 
 # 에셋의 AI 사용 권리와 검수·조립 원리
@@ -14,7 +14,7 @@ Godot TileMap/에디터·게임 판정/예측의 정본은 [Godot 에셋·에디
 
 - 게임에 넣을 권리와 AI 참조 입력·학습(LoRA 포함)·생성물 판매·도구/모델 배포 권리는 분리해 실제 취득 채널과 적용 라이선스로 확인합니다.
 - Unity Asset Store로 취득한 에셋은 [AS Terms 3.8(v)·EULA 2.2.1.1(g)](https://unity.com/legal/as-terms)(본문 개정 2024-12-04, 확인 2026-10-15)가 `Provider and/or Unity`의 명시적 동의 없는 AI/ML 학습·데이터셋·모델 입력 사용을 제한합니다. 로컬 추론이나 API 제공자의 학습 미사용 약속을 동의의 대체물로 보지 않습니다.
-- 다른 판매 채널의 수정 허가나 제작 당시 `No AI` 표시만으로 AI 사용·재배포 허가를 추정하지 않습니다. 약관 조사는 에이전트의 업로드·학습·유료 호출에 대한 사용자 승인이 아닙니다.
+- 다른 판매 채널의 수정 허가나 제작 당시 `No AI` 표시만으로 AI 사용·재배포 허가를 추정하지 않습니다.
 
 ## 검수·조립 원리
 

@@ -9,7 +9,7 @@
 * [게임 네트워크 복구·전달 의미론](/game/network-delivery.md) - 게임 증분 복제·baseline의 Mirror 계약, 불연속 marker, 재접속·지역 전환·끊김 판정의 완료 증거와 세대 결속.
 * [게임 클라이언트 기능/성능 체크리스트](/game/client-checklist.md) - 게임 클라이언트의 정상 종료 로그아웃, 수신 처리율과 Unity Android 의존성 관리자(EDM4U→Unity EDM)의 버전 특정 계약.
 * [게임 서버 기능/성능 체크리스트](/game/server-checklist.md) - 게임 서버의 Gateway/로직 소유 단위 분리(선택한 구조의 설계 기준), 용량·AOI·복제 측정 기준. 공통 서버 운영·영속화·보안은 별도 정본에 연결한다.
-* [게임 서버 영속화·장애 체크리스트](/game/server-persistence.md) - 결과 공개와 내구성의 A/B/C 선언, 위치 저장, 파티·인스턴스 수명, 저장 대기와 복제 view의 적용 기준.
+* [게임 서버 영속화·장애 체크리스트](/game/server-persistence.md) - 결과 공개와 내구성의 A/B/C 선언, 파티·인스턴스 수명, 저장 대기와 복제 view의 적용 기준.
 
 ## Godot 엔진
 * [Godot와 C++ 게임 개발](/game/godot-cpp.md) - Godot·godot-cpp 버전 핀과 출처 간 차이, 임의 업그레이드 금지, 4.5~4.7 동작 변경의 확인 경로, 하위 개념(시뮬레이션 코어·빌드·수명·UI·에셋) 안내입니다.

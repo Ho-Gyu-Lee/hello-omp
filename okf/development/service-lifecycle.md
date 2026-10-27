@@ -3,7 +3,7 @@ type: Checklist
 title: 서비스 영속성·생존 감시·프로세스와 소유권 수명
 description: 내구 확인·grpc-go 종료 계약, identity 결속 이전, 생존 감시와 장애 반응, pidfd·컨테이너·Windows 감독의 확인된 함정, 소유권 fencing의 기준과, 대규모 상태·부하 서비스 운영 설계의 참조 사례(DeepSeek 추론 배포 Q&A)입니다.
 tags: [development, server, persistence, heartbeat, process, pidfd, container, fencing, lifecycle]
-timestamp: 2026-10-21T00:00:00Z
+timestamp: 2026-10-27T00:00:00Z
 ---
 
 # 서비스 영속성·생존 감시·프로세스와 소유권 수명
@@ -30,7 +30,7 @@ timestamp: 2026-10-21T00:00:00Z
 ## 컨테이너 이전과 실행 이미지
 - [ ] 서비스당 컨테이너로 옮기면 PID namespace가 달라져 PID·`/proc/<pid>/stat` 시작 tick에 기대는 소유권 검사가 깨진다. 상대 생존을 자기 `/proc`에서 확인하는 등록은 거절되고, 새 컨테이너의 사망 증명은 옛 프로세스를 볼 수 없어 늘 통과하므로 펜싱이 아니다. pidfd 신호도 호출자가 대상과 같은 PID namespace이거나 조상 namespace에 있어야 한다([pidfd_send_signal](https://man7.org/linux/man-pages/man2/pidfd_send_signal.2.html), 확인 2026-10-15). [Compose `pid: "service:<name>"`](https://docs.docker.com/reference/compose-file/services/#pid) 공유는 상대 컨테이너의 수명에 묶이는 임시 방편이고, 컨테이너 수준 사망 증명(그 project의 실행 중 컨테이너 없음)은 확인부터 실행 인계까지 배타성을 끊지 않아야 한다. 근본 해결은 lease·epoch 펜싱이다.
 - [ ] 비루트 사용자용 데이터 디렉터리의 소유자·모드를 이미지에 정해 두면 처음 mount하는 빈 named volume이 그것을 이어받는다. 대상 volume이 비어 있지 않거나 `volume-nocopy`면 복사하지 않는다([Docker volumes](https://docs.docker.com/engine/storage/volumes/), [moby `copyExistingContents`](https://github.com/moby/moby/blob/master/daemon/container/container_unix.go), 확인 2026-10-15).
-- [ ] `docker volume prune --all`은 컨테이너가 참조하지 않는 이름 있는 volume까지 지운다([docker volume prune](https://docs.docker.com/reference/cli/docker/volume/prune/), 확인 2026-10-18). 준비 작업 때만 mount하는 volume(예: 내부 CA 개인키)은 평소 참조가 없어 정리 한 번에 유일한 사본이 사라지고 label은 보호 장치가 아니다. 판정 기준은 실행 여부가 아니라 참조이므로 `docker stop`한 컨테이너는 참조를 유지하지만 `compose down`처럼 제거하면 서비스 volume도 대상이 된다. 초기화 뒤 준비 작업을 실행하는 절차는 초기화 전에 키가 있는지 확인한다(준비 작업이 실패하면 지운 스키마·스트림·계정을 다시 만들지 못한다). 잃으면 모든 클라이언트에 재배포가 필요한 비밀은 volume 밖의 보호된 사본을 검토한다.
+- [ ] `docker volume prune --all`은 컨테이너가 참조하지 않는 이름 있는 volume까지 지운다([docker volume prune](https://docs.docker.com/reference/cli/docker/volume/prune/), 확인 2026-10-18). 준비 작업 때만 mount하는 volume(예: 내부 CA 개인키)은 평소 참조가 없어 정리 한 번에 유일한 사본이 사라지고 label은 보호 장치가 아니다. 판정 기준은 실행 여부가 아니라 참조이므로 `docker stop`한 컨테이너는 참조를 유지하지만 `compose down`처럼 제거하면 서비스 volume도 대상이 된다.
 
 ## Windows 호스트의 상시 감독
 - [ ] 대화형 세션의 작업이 띄운 콘솔 프로그램은 기본 터미널이 'Windows가 결정'(Windows 11)이면 Windows Terminal이 콘솔을 인수한다(`OpenConsole.exe -Embedding`). `powershell -WindowStyle Hidden`으로 막히지 않고, 그 창·탭을 닫으면 같은 콘솔의 자식(compose 등)이 콘솔 닫기 신호로 끝나 작업 결과가 `0xC000013A`가 된다. `conhost.exe --headless <명령>`으로 띄우면 인수되지 않았다. 이 옵션은 문서화되지 않았으며 2026-10-15 Windows 11 build 26300·Terminal 1.24에서 일회용 작업 두 개를 비교해 관찰했다.
