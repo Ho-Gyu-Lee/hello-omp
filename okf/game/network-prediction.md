@@ -1,7 +1,7 @@
 ---
 type: Rule
 title: 게임 네트워크 예측·보간·보정
-description: 불연속 전환과 보정 수렴, 표시 시간축, 입력 처리 ACK·checkpoint, 원격 보간의 시간 도메인과 데이터 신선도 규칙.
+description: 불연속 전환과 보정 수렴, 표시 시간축, 입력 처리 ACK·checkpoint와 첫 예측 frame보다 먼저 끝난 명령, 원격 보간의 시간 도메인과 데이터 신선도 규칙.
 tags: [game, client, server, networking, synchronization, prediction, reconciliation, animation, interpolation]
 timestamp: 2026-10-18T00:00:00Z
 ---
@@ -21,6 +21,7 @@ timestamp: 2026-10-18T00:00:00Z
 ### 입력 처리 ACK와 로컬 재실행
 - 서버는 권위 상태와 그 상태까지 처리한 입력의 경계를 함께 반환한다. Gateway·TCP ACK는 게임 로직 처리 완료가 아니고, 누적 ACK와 결과 확정은 같은 세션의 연속 prefix로만 진행하며 병합·거부·중복도 완료로 닫는다. prefix를 전제하는 소비자(저장 검증·결과 발행·재개)가 있으므로 불변조건을 완화하기 전에 소비자를 모두 열거한다(예: 취소가 앞선 미실행 명령 뒤의 대상을 미리 terminal로 닫으면 권위 프로세스가 fail-stop할 수 있다).
 - 예측 복원 checkpoint는 같은 후속 입력에서 미래 동작을 결정하는 상태 전체를 담는다(예: 경로 재탐색은 동률 경로를 바꾸므로 최초 탐색 원점·목표·count/cursor·현재 leg를 보존한다).
+- 명령을 예측 frame과 따로 즉시 보내면 RTT가 고정 step보다 짧을 때 결과가 그 명령을 담을 첫 예측 frame보다 먼저 돌아온다. 재실행은 아직 frame에 없는 명령과 권위가 이미 끝낸 명령을 구분해 끝낸 명령을 결과의 처리 tick에 재생하고, 로컬에서 먼저 건 효과(취소 즉시 정지 등)를 유지할지는 frame 순번 watermark가 아니라 그 명령 자신의 상태(frame·결과·snapshot 반영 여부)로 판정한다. watermark는 먼저 끝난 명령에서 멈춰 그 효과를 이후 모든 재실행에 남긴다(권위는 걷는데 예측은 정지해 표시가 정지 자세로 보정만 따라가고, 수락된 행동이 예측 타이머에서 빠져 같은 행동이 BUSY로 다시 나감).
 - 귀환·자동 부활 같은 불연속(서버 tick이 일으키는 것 포함)에서는 명령 큐가 비었다는 사실로 입력이 정숙하다고 판단하지 말고 방향 상태·미ACK 이력·권위 대기열을 중립이게 하거나 epoch fence로 폐기하되, 중복 거절 기준(마지막 수신 sequence)과 처리 ACK는 유지해 재전송이 보류를 되살리지 못하게 한다.
 
 ### 원격 개체 보간
