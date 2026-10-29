@@ -5,7 +5,7 @@
 ## 게임 권위·네트워크·서버
 * [게임 네트워크 동기화](/game/network-sync.md) - 게임 동기화 세부 문서의 안내와 공통 원리(상태 계층·완료 경계·세대·권위 의미·시험), Mirror 인용 기준.
 * [게임 네트워크 시간·이동 검증](/game/network-time-movement.md) - 서버 승인 시간·논리 tick과 클라이언트 추정의 경계, 이동 시간 예산 검증, 접촉 트리거 전환 요청의 상태 전이와 확정 경계.
-* [게임 네트워크 예측·보간·보정](/game/network-prediction.md) - 불연속 전환과 보정 수렴, 표시 시간축, 입력 처리 ACK·checkpoint와 첫 예측 frame보다 먼저 끝난 명령, 원격 보간의 시간 도메인과 데이터 신선도 규칙.
+* [게임 네트워크 예측·보간·보정](/game/network-prediction.md) - 불연속 전환과 보정 수렴, 표시 시간축, 입력 처리 ACK·checkpoint와 첫 예측 frame보다 먼저 끝난 명령, replay step이 없는 재조정의 표시 구간, 명령 허용 판정의 권위 처리 tick, 원격 보간의 시간 도메인과 데이터 신선도 규칙.
 * [게임 네트워크 복구·전달 의미론](/game/network-delivery.md) - 게임 증분 복제·baseline의 Mirror 계약, 불연속 marker, 재접속·지역 전환·끊김 판정의 완료 증거와 세대 결속.
 * [게임 클라이언트 기능/성능 체크리스트](/game/client-checklist.md) - 게임 클라이언트의 정상 종료 로그아웃, 수신 처리율과 Unity Android 의존성 관리자(EDM4U→Unity EDM)의 버전 특정 계약.
 * [게임 서버 기능/성능 체크리스트](/game/server-checklist.md) - 게임 서버의 Gateway/로직 소유 단위 분리(선택한 구조의 설계 기준), 용량·AOI·복제 측정 기준. 공통 서버 운영·영속화·보안은 별도 정본에 연결한다.
