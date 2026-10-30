@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 코드 리뷰 보안 체크리스트
-description: 리뷰에서 놓치기 쉬운 환경·도구 특이 계약(헤더 변환 우회, 저장소 설정의 Git 실행, Windows 실행 파일 탐색, 경로 별칭). 일반 보안 항목과 게임 항목은 다루지 않는다.
+description: 리뷰에서 놓치기 쉬운 환경·도구 특이 계약(헤더 변환 우회, 저장소 설정의 Git 실행, Windows 실행 파일 탐색, 경로 별칭, 무인 설치의 비밀 키 초기화와 파일 secret 복사). 일반 보안 항목과 게임 항목은 다루지 않는다.
 tags: [security, review, checklist, server, git, windows]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-10-30T00:00:00Z
 ---
 
 # 코드 리뷰 보안 체크리스트
@@ -14,3 +14,4 @@ timestamp: 2026-10-18T00:00:00Z
 - [ ] 저장소 안의 설정 파일이 정한 경로(형제 저장소, include 패턴)로 파일을 읽거나 git을 실행하는 도구는 그 경로를 프로젝트 상대 경로와 이름을 명시한 형제 디렉터리로 제한하고 링크·junction이 경계 밖으로 나가지 않는지 실제 경로로 대조하는가. 그 디렉터리의 git은 `-c core.fsmonitor=false -c safe.bareRepository=explicit`로 실행한다. `core.fsmonitor`에 경로가 들어 있으면 git이 그 훅 명령을 실행하고 `safe.bareRepository`는 명령줄·전역·시스템 설정에서만 적용된다([git-config](https://git-scm.com/docs/git-config), 확인 2026-10-17).
 - [ ] 저장소 안에서 실행되는 도구가 외부 명령을 이름만으로 실행하지 않는가. Windows에서 Bun 1.4.3의 `Bun.spawn`은 현재 디렉터리의 `git.exe`·`git.bat`을, Node 24.17.0의 `child_process.spawnSync`는 `git.exe`를 PATH보다 먼저 실행했다(관찰 2026-10-17). PATH에서 절대 경로로 해석한 실행 파일(Bun은 `Bun.which`)이 프로젝트 밖에 있는지 확인해 실행하고 작업 디렉터리는 중립 위치로 둔다.
 - [ ] 사용자가 준 경로를 이름으로 비교해 막거나 잠금·식별 키로 쓸 때 같은 디렉터리의 다른 표기를 함께 막는가. Windows는 대소문자, 8.3 짧은 이름(`PROJEC~1`), `<이름>::$INDEX_ALLOCATION`으로 같은 디렉터리를 연다(Windows 11 build 26300·Bun 1.4.3에서 세 표기의 `lstat` `ino`가 같음, 관찰 2026-10-17). 소속 판정은 이름이 아니라 `dev`·`ino`(NTFS ID는 2^53을 넘을 수 있어 bigint)로 하되, ID가 0이나 모두 1이면 고유 ID가 없고 ReFS의 64비트 ID는 고유성이 보장되지 않으므로([BY_HANDLE_FILE_INFORMATION](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/ns-fileapi-by_handle_file_information)) 디스크 철자의 실제 경로도 대조한다. 대소문자 접은 키는 파일 시스템보다 넓게 묶고(NTFS에서 `xß`와 `xẞ`는 다른 이름인데 JavaScript `toLowerCase`는 `ẞ`를 `ß`로 바꾼다), 끝이 `.`·공백인 구간과 `:`가 든 구간은 받지 않는다([Naming Files](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file)).
+- [ ] 자체 호스팅 서비스를 무인 설치할 때 설치 화면 잠금과 암호화 키 생성을 별개 계약으로 보고, 파일로 넘긴 비밀이 생성 설정에 값으로 복사되는지 확인하는가. [Gitea 28.0.0·28.2.0 `security.go`](https://github.com/go-gitea/gitea/blob/v28.2.0/modules/setting/security.go)는 `INSTALL_LOCK`이 켜지고 `INTERNAL_TOKEN`이 비면 새로 생성해 저장하지만 `SECRET_KEY`(`SECRET_KEY_URI`)가 비면 공개 소스에 적힌 고정 기본값을 그대로 쓴다. 고유 키를 직접 주입하고 보존한다. 같은 버전의 [`config_env.go`](https://github.com/go-gitea/gitea/blob/v28.2.0/modules/setting/config_env.go)는 `GITEA__<섹션>__<키>__FILE` 환경 변수가 가리키는 파일 내용을 읽어 설정 키의 값으로 넣고, 공식 Docker 이미지는 기동마다 그 결과를 `app.ini`에 제자리로 쓴다(`config edit-ini --in-place --apply-env`). 따라서 `app.ini`와 그 영속 볼륨도 비밀 저장소다. 설정에 키를 복사하지 않으려면 `SECRET_KEY_URI=file:...`처럼 참조하되 그 파일을 계속 공급·보존한다(확인 2026-10-30).
