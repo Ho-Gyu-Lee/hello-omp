@@ -1,15 +1,15 @@
 ---
 type: Concept
-title: DB 제품별 비자명 계약(MySQL·SQLite·DynamoDB)
-description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행·REVOKE ALL의 회수자 권한 요건·caching_sha2_password 비밀번호 길이 상한, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·PutItem·Go 페이지네이터와 CloudWatch 지표 계약을 정리합니다.
-tags: [database, mysql, sqlite, dynamodb, cloudwatch, wal, verification]
+title: DB 제품별 비자명 계약(MySQL·PostgreSQL·SQLite·DynamoDB)
+description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행·REVOKE ALL의 회수자 권한 요건·caching_sha2_password 비밀번호 길이 상한, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, PostgreSQL 18 공식 Docker 이미지의 데이터 경로 변경과 NOT NULL 제약 카탈로그 변화, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·PutItem·Go 페이지네이터와 CloudWatch 지표 계약을 정리합니다.
+tags: [database, mysql, postgresql, sqlite, dynamodb, cloudwatch, wal, verification]
 apply_on_edit: ["*.sql"]
-timestamp: 2026-10-28T00:00:00Z
+timestamp: 2026-10-29T00:00:00Z
 ---
 
 # DB 제품별 비자명 계약
 
-제품·버전에 따라 결과가 달라지는 계약만 남깁니다. MySQL 8.4/InnoDB·SQLite·DynamoDB 조건을 다른 DB·엔진·격리 설정에 자동 일반화하지 않습니다. 서비스의 멱등성·소유권 펜싱은 [공통 서비스 수명](/development/service-lifecycle.md), 콘텐츠 게시·캐시 계약은 [데이터 형식·콘텐츠 게시](/development/data-formats.md), 게임의 실행 권위·내구성은 [게임 서버 영속화](/game/server-persistence.md)를 따릅니다.
+제품·버전에 따라 결과가 달라지는 계약만 남깁니다. MySQL 8.4/InnoDB·PostgreSQL 18·SQLite·DynamoDB 조건을 다른 DB·엔진·격리 설정에 자동 일반화하지 않습니다. 서비스의 멱등성·소유권 펜싱은 [공통 서비스 수명](/development/service-lifecycle.md), 콘텐츠 게시·캐시 계약은 [데이터 형식·콘텐츠 게시](/development/data-formats.md), 게임의 실행 권위·내구성은 [게임 서버 영속화](/game/server-persistence.md)를 따릅니다.
 
 ## MySQL
 
@@ -20,6 +20,11 @@ timestamp: 2026-10-28T00:00:00Z
 - 객체 수준 `REVOKE`는 회수하는 계정이 `GRANT OPTION`과 회수할 권한을 모두 가져야 하고, `REVOKE ALL PRIVILEGES, GRANT OPTION FROM …`은 전역 `CREATE USER` 또는 `mysql` 스키마 `UPDATE`가 필요합니다([REVOKE](https://dev.mysql.com/doc/refman/8.4/en/revoke.html), 8.4, 확인 2026-10-28). 그래서 `CREATE VIEW`·`SHOW VIEW` 같은 권한이 없는 제한된 관리 계정에서 `REVOKE ALL PRIVILEGES ON db.t`는 준 적 없는 권한까지 회수하려다 1142로 실패합니다. 정리 경로는 실제로 준 권한 목록을 `REVOKE IF EXISTS … IGNORE UNKNOWN USER`로 회수합니다.
 - `caching_sha2_password`는 256바이트를 넘는 평문 비밀번호를 계정 생성·변경과 인증 모두에서 거절합니다(MySQL 8.4 `include/crypt_genhash_impl.h`의 `MAX_PLAINTEXT_LENGTH 256`, `sql/auth/sha2_password.cc`, 확인 2026-10-28). 비밀번호 생성기와 비밀 파일 검증의 상한을 256바이트 이하로 둡니다.
 - MariaDB Connector/C 3.4.11은 호스트 문자열이 정확히 `127.0.0.1`·`::1`(Windows 빌드는 `localhost`도)이면 `MYSQL_OPT_SSL_VERIFY_SERVER_CERT`를 켜도 서버 인증서의 호스트 이름을 검증하지 않고, CA 신뢰도 `ssl_ca`·`ssl_capath`를 지정했을 때만 봅니다(`plugins/auth/my_auth.c` `is_local_connection`, 확인 2026-10-22). 인증서 SAN의 이름(Linux는 TCP를 강제한 `localhost`)으로 접속하거나 그 문자열을 설정 오류로 거절합니다.
+
+## PostgreSQL
+
+- 공식 Docker 이미지는 18부터 `PGDATA=/var/lib/postgresql/18/docker`, `VOLUME /var/lib/postgresql`입니다. 17 이하처럼 `/var/lib/postgresql/data`에 볼륨을 마운트하면(비어 있어도) entrypoint가 옛 위치의 데이터·마운트를 감지하고 `Error: in 18+ ...`로 종료하므로, `/var/lib/postgresql` 하나만 마운트합니다. 이미지 태그만 올려 기존 데이터 볼륨을 새 메이저에 붙이지 않고 새 볼륨에 덤프·복원(또는 두 버전 바이너리로 `pg_upgrade`)하며 원본 볼륨을 롤백용으로 보존합니다([18 Dockerfile](https://github.com/docker-library/postgres/blob/master/18/alpine3.24/Dockerfile)·[docker-entrypoint.sh](https://github.com/docker-library/postgres/blob/master/18/alpine3.24/docker-entrypoint.sh) `docker_error_old_databases`, 18.6-alpine 실측, 확인 2026-10-29).
+- PostgreSQL 18부터 열의 NOT NULL이 `pg_constraint`에 `contype = 'n'` 행으로 저장됩니다([18 릴리스 노트](https://www.postgresql.org/docs/18/release-18.html)). 17 이하에서 옮긴 DB의 제약 목록·개수를 이전 기록과 비교하면 이 유형이 새로 나타나므로 결손·추가로 판정하지 말고 NOT NULL 열 수(`pg_attribute.attnotnull`)와 대조합니다(17→18 덤프·복원 실측에서 두 수가 일치, 확인 2026-10-29).
 
 ## SQLite
 

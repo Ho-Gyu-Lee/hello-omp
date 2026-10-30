@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 서버 프로토콜·메모리·큐 운영 기준
-description: 비동기 완료의 상태 소유자 적용, 공유 상수·메시지 ID·codec 경계, 큐 소비 장벽의 처리율 상한, Mirror·Asio·OpenSSL의 버전별 함정을 다룹니다.
+description: 비동기 완료의 상태 소유자 적용, 공유 상수·메시지 ID·codec 경계, 큐 소비 장벽의 처리율 상한, Mirror·Asio·OpenSSL·RabbitMQ의 버전별 함정을 다룹니다.
 tags: [development, server, concurrency, memory, codec, queue]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-10-29T00:00:00Z
 ---
 
 # 서버 프로토콜·메모리·큐 운영 기준
@@ -18,6 +18,7 @@ timestamp: 2026-10-18T00:00:00Z
 ## 큐·입장·처리 예산
 - [ ] 연결마다 frame 하나를 application이 소비해야 다음 frame을 읽는 transport(소비 시점에 수신 정책을 바꾸는 장벽)에서는 처리율이 '루프당 소비 frame 수 ÷ 루프 주기'로 제한된다. 빈 event 뒤의 고정 sleep(1ms면 초당 약 900개 미만)이나 완결 frame이 남았는데 새 수신 통지를 기다리는 구조는 고주기 입력이 한계를 넘는 순간 지연을 끝없이 쌓는다. event 발행 시 깨우는 bounded wait를 쓰고 peek한 event는 반드시 소비한다. 클라이언트 쪽 상한은 [클라이언트 체크리스트](/game/client-checklist.md)의 수신 처리율 항목, 입력 시간 예산은 [시간·이동 검증](/game/network-time-movement.md)의 「이동 속도·시간 예산 검증」이 정본이다.
 - [ ] `accept` 실패 중 일시 네트워크 오류(pending network errors)와 `EMFILE`/`ENFILE`/`ENOBUFS`/`ENOMEM` 자원 고갈은 구분해 처리하고 이미 성립한 연결을 닫지 않는다([accept(2)](https://man7.org/linux/man-pages/man2/accept.2.html)).
+- [ ] RabbitMQ 4.3.0부터 Khepri가 유일한 메타데이터 저장소이고, transient non-exclusive 큐·`global_qos`·`x-queue-mode`(CQv1) 선언이 기본 거부된다. 4.4.x로의 롤링 업그레이드는 4.2.x·4.3.x에서만 지원되며 그 전에 모든 stable feature flag를 켜고, 업그레이드 뒤 새 flag를 `rabbitmqctl enable_feature_flag all`로 켠다. 4.4.0은 classic queue 메시지 저장 파일을 v2(`.sqs`)로 쓰기 시작하면 4.3 이하로 내릴 수 없으므로 롤백은 업그레이드 직전 데이터 디렉터리 사본으로만 한다. `definitions.local.path` 부트 가져오기는 기본값(`skip_if_unchanged=false`)에서 기동마다 실행되어 기존 사용자의 해시·태그·권한을 파일 내용으로 덮어쓴다([4.3.0](https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.0)·[4.4.0](https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.4.0) 릴리스 노트, [업그레이드 경로](https://www.rabbitmq.com/docs/upgrade), `rabbit_definitions.erl` v4.4.0, 확인 2026-10-29).
 
 ## 상시 운영 메모리와 계측
 - [ ] 무할당·총량 제한 주장은 초기화·접속/TLS 수립·정상 메시지·오류/종료 단계의 모든 소비 경로(queue node·문자열·JSON·codec parser 상태·비동기 operation·TLS 내부)를 계측한 결과로만 한다. 풀의 존재나 `reserve`는 증거가 아니다. 풀 고갈의 heap fallback과 반환 블록 보관량도 상한을 갖고, 저장소 수명은 callback 취소 요청이 아니라 마지막 사용과 deallocate까지 유지한다. 측정 범위는 [측정과 검증의 범위](/development/runtime-diagnostics.md#측정과-검증의-범위)를 따른다.
