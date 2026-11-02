@@ -28,9 +28,9 @@ if (-not (Get-Command bun -ErrorAction SilentlyContinue)) {
 }
 
 # Check the newest required setting before any managed setting is changed.
-& omp config get title.generator | Out-Null
+& omp config get task.perCallModel | Out-Null
 if ($LASTEXITCODE -ne 0) {
-  Write-Error "omp 18.8.0 or newer is required (title.generator setting missing)"
+  Write-Error "omp 18.14.2 or newer is required (task.perCallModel setting missing)"
   exit 1
 }
 

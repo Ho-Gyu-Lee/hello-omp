@@ -36,8 +36,8 @@ if ! command -v bun >/dev/null 2>&1; then
 fi
 
 # Check the newest required setting before any managed setting is changed.
-if ! omp config get title.generator >/dev/null; then
-  echo "ERROR: omp 18.8.0 or newer is required (title.generator setting missing)" >&2
+if ! omp config get task.perCallModel >/dev/null; then
+  echo "ERROR: omp 18.14.2 or newer is required (task.perCallModel setting missing)" >&2
   exit 1
 fi
 

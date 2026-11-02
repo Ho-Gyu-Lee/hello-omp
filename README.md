@@ -57,7 +57,7 @@ OMP 18.12.1에서 task 서브에이전트는 `AGENTS.md`를 상속하지 않고 
 
 ## 사용
 
-전제: **OMP 18.8.0 이상**, **Bun 1.2.21 이상**(`validate-okf.ts`가 `Bun.YAML` 사용)이 PATH에 있어야 한다. setup은 자동 업그레이드하지 않는다. 교차 provider fallback을 쓰려면 두 provider의 유효 인증이 필요하다([구독과 인증의 경계](okf/agents/guide.md#구독과-인증의-경계)).
+전제: **OMP 18.14.2 이상**, **Bun 1.2.21 이상**(`validate-okf.ts`가 `Bun.YAML` 사용)이 PATH에 있어야 한다. setup은 자동 업그레이드하지 않는다. 교차 provider fallback을 쓰려면 두 provider의 유효 인증이 필요하다([구독과 인증의 경계](okf/agents/guide.md#구독과-인증의-경계)).
 
 ```sh
 # macOS / Linux
@@ -71,7 +71,7 @@ sh setup.sh
 
 배포한 지침은 **새 세션**부터 적용된다. 이미 열린 세션은 이전 지침을 계속 쓰므로 `omp`를 다시 시작한다.
 
-역할별 모델·추론 강도·fallback은 `config/settings.conf`가 정본이다. 메인·계획·구현·정밀 검토는 `xhigh`, 디자인·화면 분석·advisor는 `high`, 탐색·커밋은 `medium`, 제목·메모리는 `low`이며 각 chat 역할에 다른 provider의 fallback을 하나 둔다. 배정 이유는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다. 적용값은 `omp config list`로 확인한다. 현재 대화의 모델만 바꿀 때는 `/switch <provider/model:effort>`를 쓴다(`/model`은 선택기라 인자를 받지 않는다).
+역할별 모델·추론 강도·fallback은 `config/settings.conf`가 정본이다. 메인·계획·정밀 검토는 `xhigh`, 구현·디자인·화면 분석·advisor는 `high`, 탐색·커밋은 `medium`, 제목·메모리·작업 위젯은 `low`이며 각 chat 역할에 다른 provider의 fallback을 하나 둔다. `premium` 역할(Fable)은 task 호출의 `model` 지정을 Fable 하나에만 허용하려고 두며 fallback이 없고, 에이전트는 사용자 승인 뒤에만 쓴다. 배정 이유는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다. 적용값은 `omp config list`로 확인한다. 현재 대화의 모델만 바꿀 때는 `/switch <provider/model:effort>`를 쓴다(`/model`은 선택기라 인자를 받지 않는다).
 
 비동기 advisor는 작업 중 위험·과잉 절차 감시용으로 켜 둔다(`advisor.enabled=true`). 독립 검토를 대신하지 않는다([워크플로](okf/workflow.md#독립-검토-시점과-최종-응답)).
 
@@ -93,7 +93,7 @@ sh setup.sh
 
 ## 배포 순서 (setup이 수행)
 
-사전 점검(하나라도 걸리면 설정을 바꾸기 전에 중단): `omp`·`bun` PATH, `title.generator` 지원, `<configdir>`가 레포 루트와 다른지, `deploy-skills.ts --check`(OKF·스킬 경로 겹침), `deploy-okf.ts --check`(로컬 지식 검증·이전 setup의 삭제 감지·레거시 이관 충돌·생성할 `okf-*` 규칙 이름이 개념끼리 겹치거나 `okf_source` 없는 사용자 규칙(`.md`·`.mdc`)과 겹치는지·`rules` 디렉터리나 `okf-*` 규칙이 링크인지).
+사전 점검(하나라도 걸리면 설정을 바꾸기 전에 중단): `omp`·`bun` PATH, `task.perCallModel` 지원(OMP 18.14.2 이상), `<configdir>`가 레포 루트와 다른지, `deploy-skills.ts --check`(OKF·스킬 경로 겹침), `deploy-okf.ts --check`(로컬 지식 검증·이전 setup의 삭제 감지·레거시 이관 충돌·생성할 `okf-*` 규칙 이름이 개념끼리 겹치거나 `okf_source` 없는 사용자 규칙(`.md`·`.mdc`)과 겹치는지·`rules` 디렉터리나 `okf-*` 규칙이 링크인지).
 
 1. **설정:** `config/settings.conf`의 키를 `omp config set`으로 적용한다.
 2. **글로벌 룰:** `rules/AGENTS.md`·`rules/RULES.md`·`rules/WATCHDOG.md`·`rules/PERSONALITY.md`·`rules/TITLE_SYSTEM.md` → `<configdir>/`(각 기존 파일은 최초 1회 `.bak`). `AGENTS.md`·`RULES.md`의 자리표시자 `__OKF_DIR__`(배포본)·`__OKF_SOURCE_DIR__`(소스)를 절대경로로 바꾼다. 다른 자리표시자는 없으므로 레포 루트가 필요하면 `__OKF_SOURCE_DIR__/..`로 쓴다. `TITLE_SYSTEM.md`는 OMP가 일반 config base(기본 `~/.omp/agent`)에서 찾고 `PI_CODING_AGENT_DIR`은 그 위치를 바꾸지 않으므로, 이 변수로 격리 배포하면 제목 프롬프트는 적용되지 않으며 setup이 경고한다(`omp://config-usage.md`). `ttsr/*.md` → `<configdir>/rules/`(같은 이름 덮어씀, `okf-*` 생성 규칙과 다른 이름).

@@ -3,14 +3,14 @@ type: Reference
 title: 서브에이전트 위임
 description: 직접 처리와 위임의 경계, 위임 계약(AGENTS.md 비상속·소유·수락 기준), 여러 안의 후보별 독립 생성, 격리·독립 clone, 번들 에이전트 도구 경계와 반환 결과 수락.
 tags: [tools, subagents, task, parallel, ownership, verification, alternatives]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-11-02T00:00:00Z
 ---
 
 # 서브에이전트 위임
 
 ## 직접 vs 위임
 - 단순 조회와 범위가 명확한 작업은 직접 처리하고 호출 횟수만으로 위임하지 않는다. 넓고 미확인인 읽기 전용 조사, 서로 독립인 실질 작업, 메인 컨텍스트를 과도하게 차지할 자료는 분리하고 병렬 위임은 같은 배치에 묶는다. 독립 검토의 필수 시점은 [워크플로](/workflow.md)를 따른다.
-- 번들 에이전트의 도구는 서로 다르다(OMP 18.12.1 `omp agents unpack --dir <별도 디렉터리> --json`, 확인: 2026-10-18). `scout`은 `read`·`find`·`grep`·`glob`·`web_search`뿐이라 명령 실행(`git diff`·`--version`·빌드)이 필요한 확인을 맡길 수 없다. `reviewer`는 `bash`·`lsp`가 있지만 `write`·`edit`가 없고 `security-reviewer`는 `bash`도 없다. 검토 결과를 파일로 보존해야 하면 통합 담당자가 반환 본문을 그대로 저장하고 저장자를 표시한다.
+- 번들 에이전트의 도구는 서로 다르다(OMP 18.15.0 `omp agents unpack --dir <별도 디렉터리> --json`, 확인: 2026-11-02). `scout`은 `read`·`find`·`grep`·`glob`·`ast_grep`·`web_search`뿐이라 명령 실행(`git diff`·`--version`·빌드)이 필요한 확인을 맡길 수 없다. `reviewer`는 `bash`·`lsp`가 있지만 `write`·`edit`가 없고 `security-reviewer`는 `bash`도 없다. 검토 결과를 파일로 보존해야 하면 통합 담당자가 반환 본문을 그대로 저장하고 저장자를 표시한다.
 
 ## 위임 계약
 - **task 서브에이전트는 `AGENTS.md`를 상속하지 않는다**(OMP 18.12.1 `omp://system-prompt-customization.md` 세션별 표: Task subagent — AGENTS.md Not inherited, 확인: 2026-10-18). 이 설정은 모든 에이전트 공통 지침을 `RULES.md`(always-apply 규칙)로 배포해 서브에이전트에도 적용하므로 위임 context에 그 공통 지침은 반복하지 않는다. context에는 작업 고유 제약·write-set 소유·수락 기준과, 메인 `AGENTS.md`나 프로젝트 `AGENTS.md`에만 있고 작업에 필요한 규칙·실행 금지·환경 제약을 필요한 만큼 명시한다. 이 문서들은 자식에게 가지 않는다.

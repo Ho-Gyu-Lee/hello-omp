@@ -3,7 +3,7 @@ type: Reference
 title: 에이전트 가이드
 description: 번들 에이전트·모델 역할의 연결과 omp 계약(역할≠에이전트·빈 tools·설정 reload), 현재 역할 배정의 이유, 교차 모델 독립 검토 overlay, 구독·인증 경계. 배정 값의 정본은 config/settings.conf.
 tags: [agents, subagents, routing, builtin]
-timestamp: 2026-10-26T00:00:00Z
+timestamp: 2026-11-02T00:00:00Z
 ---
 
 # 에이전트 가이드
@@ -13,15 +13,16 @@ timestamp: 2026-10-26T00:00:00Z
 ## 번들 에이전트와 모델 역할
 OMP 18.12.1 `omp agents unpack --dir <격리 경로> --json`·`omp://models.md`·`omp://settings.md`, 확인: 2026-10-18. 확인 목적으로 기본 에이전트 디렉터리에 풀어 번들 override를 만들지 않는다.
 - 번들은 `scout`·`reviewer`·`security-reviewer`·`task`·`sonic`·`seance` 6종이다. `scout`·`sonic`은 `@smol`(medium), `task`는 `@task`(auto), `reviewer`는 `@slow`로 해석되고, 번들 model 지정이 없는 `security-reviewer`와 이 설정의 사용자 정의 `design-reviewer`(구현 전 설계 검토 전용, `agents/design-reviewer.md`)는 `task.agentModelOverrides`로 `@slow`를 명시한다. 값에 명시한 `:level` suffix가 번들 기본 추론 강도보다 우선한다. 에이전트별 모델은 파일 복사 대신 이 override로, thinking level은 `modelRoles` suffix로 바꾼다.
-- `modelRoles`는 용도별 모델 배정이지 에이전트 등록이 아니다. 역할 이름은 `agent`에 넣을 수 없고(`Unknown agent`로 거부) `librarian`·`designer`는 번들이 아니다. `designer`는 이 프로필의 사용자 정의 chat 별칭이라 `@designer`를 고르거나 참조하는 커스텀 에이전트가 있어야 쓰인다. 미배정 `tiny`는 `@smol`, 미배정 `memory`는 `@tiny`로 해석되고, model-kind 역할(`image`·`web`·`speech`·`dictation`·`judge`)에 일반 chat 모델을 무조건 배정하지 않는다. `advisor`는 역할 배정과 별도로 `advisor.enabled`(OMP 기본 off)로 켜며 노트 출력 지침의 정본은 `rules/WATCHDOG.md`다.
+- `modelRoles`는 용도별 모델 배정이지 에이전트 등록이 아니다. 역할 이름은 `agent`에 넣을 수 없고(`Unknown agent`로 거부) `librarian`·`designer`는 번들이 아니다. `designer`는 이 프로필의 사용자 정의 chat 별칭이라 `@designer`를 고르거나 참조하는 커스텀 에이전트가 있어야 쓰인다. 미배정 `tiny`는 `@smol`, 미배정 `memory`는 `@tiny`, 미배정 `widget`(OMP 18.15.0~, 15초 넘게 도는 백그라운드 작업의 위젯·한 줄 설명 작성)은 `smol`처럼 해석되고(`omp://settings.md`), model-kind 역할(`image`·`web`·`speech`·`dictation`·`judge`)에 일반 chat 모델을 무조건 배정하지 않는다. `vision`은 `read <이미지>?q=...` 같은 이미지 질의에 쓰이고 이미지 입력을 지원하는 메인 모델이 이미지를 직접 읽는 경로는 바꾸지 않는다(`omp://models.md`). `advisor`는 역할 배정과 별도로 `advisor.enabled`(OMP 기본 off)로 켜며 노트 출력 지침의 정본은 `rules/WATCHDOG.md`다.
 - `generate_image`는 `generate_image.enabled=true`(기본 false)이고 명시적 도구 목록이 있으면 거기에 포함될 때만 등록된다. `openai-codex` 구독 경로는 백엔드가 이미지 모델을 고르므로 OMP에서 지정할 수 없다(`omp://tools/generate_image.md`, [#11322](https://github.com/can1357/oh-my-pi/issues/11322)). OMP 18.12.6에서 GPT Image 2.5를 명시적으로 지정하는 확인된 경로는 OpenAI API 키이며, 카탈로그에 행이 없어(PR #14373 미병합, 확인 2026-10-26) `models.yml`의 `providers.openai.models`에 `api: openai-images` 행을 둔다. 기본 `auth: apiKey`에서 내장 provider에 custom 행을 두면서 provider 수준 `baseUrl`·`apiKey`를 빠뜨리면 검증 실패로 `models.yml`의 custom 설정 전체가 꺼진다(18.12.6 실측). 유료·로컬 경로 선택은 [AI 에셋 생성](/development/ai-asset-generation.md#유료로컬-경로-선택)을 따른다.
 - 에이전트 정의의 `tools`를 생략하거나 YAML null로 두면 기본 내장 도구 전체가, 도구 이름이 없는 선언(`[]`·빈 CSV·잘못된 값)은 내장 도구 없음이 선택된다. 어느 쪽이든 MCP·extension·custom 도구는 additive라 `tools`는 격리 수단이 아니다(`omp://task-agent-discovery.md`). task 자식의 `lsp`는 `task.enableLsp`(기본 false)가 켜져 있을 때만 생기며, 켜면 일반 task 자식은 도구 제한 세션이 아니어서 `rename`·code action 같은 변경 동작도 열린다(OMP 18.12.6 `task/index.ts`·`sdk.ts`의 `lspReadOnly` 기본값이 `restrictToolNames`). 읽기 전용으로 둘 검토자의 `tools`에는 `lsp`를 넣지 않는다.
 
 ## 현재 배정의 이유
-- 메인·계획은 Opus 5.5, 구현 `task`는 Sonnet 5.5다(구현은 사용자의 품질 우선 결정, 2026-10-10). 메인과 구현이 같은 Anthropic 한도·인증에 의존하므로 소모량은 사용량 기록으로 확인한다.
-- 정밀 검토 `slow`·화면 분석 `vision`·감시 `advisor`·탐색·커밋은 OpenAI 계열이라 기본 경로에서 메인·구현과 교차 검토가 된다. fallback은 반대 provider를 두어 한도·장애에 대응하며 품질에 따른 자동 상향이 아니다. Anthropic 한도·장애로 작성 모델이 OpenAI가 되면 역할표는 이를 자동 분기하지 않으므로 같은 OpenAI reviewer만으로는 충족하지 않는다. 그때는 실제 실행 모델을 확인하고 아래 「교차 모델 독립 검토」를 따른다.
-- 추론 강도는 난도별이다. 메인·계획·구현·정밀 검토는 xhigh, 디자인·화면 분석·advisor는 high, 탐색·커밋은 medium, 제목·메모리는 low다. 자동 난도 판정과 일괄 xhigh·max 강제는 도입하지 않는다. 이는 운영 판단이지 품질·비용 A/B 결과가 아니며 외부 평가도 로컬 품질 비교가 아니다([정확성](/accuracy.md)).
-- Fable 5.1은 기본 역할·fallback에 넣지 않고 고난도에만 `/switch anthropic/claude-fable-5-1:xhigh`(세션 전용)로 고른다. TUI `/model`은 인수 없이 선택기를 열고 선택자는 `/switch`가 받는다(설치본 `src/slash-commands/builtin-modes.ts`, 확인: 2026-10-18).
+- 메인·계획과 구현 `task`는 모두 Opus 5.5다(구현을 Sonnet 5.5 xhigh에서 Opus 5.5 high로 바꾼 사용자 결정, 2026-11-02). 독립 평가에서 Sonnet 5.5 xhigh는 Opus 5.5 high보다 점수가 낮고 비용이 높았고(AA Intelligence Index v4.3: 52점·$2.74 대 54점·$1.82), Anthropic도 코드 작성은 Opus에 두고 조회·검색용 서브에이전트만 낮추라고 권한다([What a task costs on Opus 5.5](https://claude.dev/blog/what-a-task-costs-on-opus-5-5), 2026-09-25). 메인과 구현이 같은 Anthropic 한도·인증에 의존하므로 소모량은 사용량 기록으로 확인한다.
+- 정밀 검토 `slow`·화면 분석 `vision`·감시 `advisor`·탐색·커밋은 OpenAI 계열이라 기본 경로에서 메인·구현과 교차 검토가 된다. 교차 검토의 효과는 평균 정확도 상승보다 서로 다른 놓침을 잡는 데 있고([arXiv 2610.01471](https://arxiv.org/abs/2610.01471)), Astra 리뷰는 재현율이 높은 대신 정상 변경에도 지적을 많이 낸다(168 PR·high effort에서 정상 PR 변경 요구 Astra 47.8%·Opus 5.5 20.7%, [TLE Labs](https://cross-review.tlelabs.com/benchmark/) 2026-10-26). fallback은 반대 provider를 두어 한도·장애에 대응하며 품질에 따른 자동 상향이 아니다. Anthropic 한도·장애로 작성 모델이 OpenAI가 되면 역할표는 이를 자동 분기하지 않으므로 같은 OpenAI reviewer만으로는 충족하지 않는다. 그때는 실제 실행 모델을 확인하고 아래 「교차 모델 독립 검토」를 따른다.
+- 추론 강도는 난도별이다. 메인·계획·정밀 검토는 xhigh, 구현·디자인·화면 분석·advisor는 high, 탐색·커밋은 medium, 제목·메모리·`widget`은 low다. 자동 난도 판정과 일괄 xhigh·max 강제는 도입하지 않는다. 공식 시작점은 Opus 5.5 medium(30분 넘는 에이전트 작업은 xhigh), Sonnet 5.5 medium에서 high, Codex의 Astra low·Luna high이고 xhigh·max는 평가로 이득이 확인될 때만 쓰라고 한다([effort](https://platform.claude.com/docs/en/build-with-claude/effort), [Codex models](https://learn.chatgpt.com/docs/models), 조회 2026-11-02). max는 과잉 사고와 128K 출력 상한 도달 보고가 반복된다. 이 배정은 운영 판단이지 로컬 품질·비용 A/B 결과가 아니며 외부 평가도 로컬 품질 비교가 아니다([정확성](/accuracy.md)).
+- Fable 5.1은 기본 역할·fallback에 넣지 않는다. 할당량이 적으므로 정말 중요하거나 품질이 결정적인 작업에만 쓴다(사용자 결정, 2026-11-02). 세션 전체는 `/switch anthropic/claude-fable-5-1:xhigh`(세션 전용)로, 하위 작업 하나는 사용자 승인 뒤 task의 `model: "anthropic/claude-fable-5-1:xhigh"`로 맡기며, 메인은 Opus 5.5로 부족할 근거가 있을 때만 이를 제안한다. 공식 안내도 Opus 5.5를 높은 effort로 써도 부족할 때 Fable을 쓰라고 한다. Fable은 Max·Ultra·Team premium 좌석에서 주간 한도의 최대 50%까지 플랜에 포함되고, Pro·Team standard 좌석에서는 첫 사용부터 usage credits로만 쓰여 구독 밖 과금이다([플랜 안내](https://support.claude.com/en/articles/15424964-claude-fable-models-on-your-plan), 조회 2026-11-02). `omp usage`(`--json` 포함)의 Anthropic 보고에는 플랜·좌석 등급이 없어 `Claude 7 Day (Fable)` 칸이 보인다는 것만으로 포함 여부를 판정할 수 없으므로(OMP 18.15.0, 확인 2026-11-02), 좌석 등급이나 사용자 확인 없이 Fable 전환을 구독 안 사용으로 가정하지 않는다. TUI `/model`은 인수 없이 선택기를 열고 선택자는 `/switch`가 받는다(설치본 `src/slash-commands/builtin-modes.ts`, 확인: 2026-10-18).
+- 카탈로그의 `claude-mythos-5`·`claude-mythos-5-1`은 Fable과 같은 모델의 안전장치를 완화한 검증 프로그램 승인 조직 전용판이라 구독 계정의 후보가 아니다([Mythos 5.1](https://platform.claude.com/docs/en/models/mythos-5-1/overview), 조회 2026-11-02). 카탈로그에 있다는 것은 접근 권한의 근거가 아니다.
 - `image`는 구독 경로 `openai-codex/gpt-image-2`로 고정하고 fallback을 `[]`로 비우며 `generate_image.enabled=true`로 켠다(사용자 결정, 2026-10-26). 다른 인증이 생겨도 역할 기본 우선순위 목록의 다른 이미지 모델(API 과금 경로일 수 있음)로 자동 전환되지 않게 하려는 것이다. `[]`는 활성 모델 자신의 이미지 후보와 요청의 `model` 인자를 막지 않으므로(OMP 18.12.6, `omp://tools/generate_image.md`) API 키 OpenAI 모델로 세션을 돌리면 Codex 후보가 HTTP 오류(한도 소진 포함)로 실패할 때 그 경로가 쓰일 수 있고, 다른 이미지 인증이 생기면 `model` 지정으로 그 모델이 직접 선택될 수 있다. 경로 선택 방향은 [AI 에셋 생성](/development/ai-asset-generation.md#유료로컬-경로-선택)을 따른다.
 
 ## 설정 계약
@@ -32,8 +33,8 @@ OMP 18.12.1 `omp agents unpack --dir <격리 경로> --json`·`omp://models.md`�
 
 ## 게임·서버·디자인 사용 경로
 사용자의 개발 방향은 [방향](/direction.md)을 따른다.
-- 복잡한 클라이언트·서버 구조는 Opus 메인이 요구·불변조건·경계를 정리하고 Sonnet `task`가 구현하며 작성 계열과 다른 reviewer가 검토한다. 수락 기준은 [서버](/game/server-checklist.md)·[클라이언트](/game/client-checklist.md) 체크리스트를 따른다.
-- 게임 아트·UI·레벨은 Opus 메인 또는 `@designer` 모델이 방향·대안·추천안을 정하고 Sonnet `task`가 구현하며 Astra `vision`이 실제 화면을 교차 분석한다. 일반 `task`에는 구현 목표·제약·검증 기준을 전달한다. 실제 시각 자료가 없으면 관찰한 것처럼 평가하지 않는다.
+- 복잡한 클라이언트·서버 구조는 Opus 메인이 요구·불변조건·경계를 정리하고 `task`가 구현하며 작성 계열과 다른 reviewer가 검토한다. 수락 기준은 [서버](/game/server-checklist.md)·[클라이언트](/game/client-checklist.md) 체크리스트를 따른다.
+- 게임 아트·UI·레벨은 Opus 메인 또는 `@designer` 모델이 방향·대안·추천안을 정하고 `task`가 구현하며 Astra `vision`이 실제 화면을 교차 분석한다. 일반 `task`에는 구현 목표·제약·검증 기준을 전달한다. 실제 시각 자료가 없으면 관찰한 것처럼 평가하지 않는다.
 
 ## 교차 모델 독립 검토
 독립 검토가 필요한 산출물의 실제 작성 모델이 OpenAI인 경우(fallback 포함), 작업 산출물 디렉터리에 아래 일회성 YAML을 두고 별도 fresh session의 `reviewer` 또는 `security-reviewer`를 실행한다. `--config`는 그 프로세스에만 적용된다. 검토 범위·수락 기준·변경 파일·실행 근거를 프롬프트로 전달하고 구현자의 자기평가를 주입하지 않는다.
@@ -51,6 +52,8 @@ omp --config <작업디렉터리>/anthropic-review.yml --model @plan -p "<대상
 ```
 
 - `@plan`은 이 프로필에서 Opus xhigh다. 모델 이름의 자기보고 대신 자식 session의 provider/model 기록을 확인하며, fallback으로 다시 OpenAI가 실행되면 교차 모델 검토가 아니다.
+- task 도구 스키마에는 `model` 필드가 늘 보이지만 `task.perCallModel`(OMP 18.14.2~, 기본 `off`)이 `on`일 때만 task 호출에서 받고(`eval`이면 eval `agent()`·`workpool()`에서만), 역할에 배정된 모델만 허용되며 `task.agentModelOverrides` 항목이 있는 에이전트에는 거부된다(`omp://tools/task.md`, `omp://task-agent-discovery.md`). 지정한 모델을 쓸 수 없으면 다른 모델로 넘어가지 않고 실패한다. 이 설정은 `on`이지만 `task.perCallModelAllow`로 Fable 하나만 열었으므로(사용자 정의 역할 `premium`이 허용 근거) 교차 모델 검토를 task 호출의 `model`로 대신하지 않는다. Fable 지정은 사용자 승인 뒤에만 한다(`rules/RULES.md`, 사용자 결정 2026-11-02: 승인 창 강제 대신 지침으로 묻기).
+- 설정 없이 런타임에 서브에이전트 모델을 고르는 경로는 사용자가 메시지에 `^provider/model`을 태그하는 것이다. 태그한 모델마다 `m1`·`m2` 가명이 생기고, 이 가명을 task·eval `agent()`·`workpool()`의 `agent`로 쓰면 그 모델의 일반 task 템플릿으로 실행된다. `reviewer`·`security-reviewer` 같은 전용 템플릿은 쓰이지 않는다(OMP 18.15.0, `omp://task-agent-discovery.md`, `-p`에서도 실측 2026-11-02). 에이전트가 만든 프롬프트로는 태그를 등록할 수 없으므로 필요하면 사용자에게 태그를 요청한다.
 - `/agents`나 `omp config set task.agentModelOverrides`는 전역 영속 변경이고 record 전체 교체로 기존 security reviewer 배정을 잃을 수 있으므로 일회성 검토에 쓰지 않는다.
 
 ## 구독과 인증의 경계
