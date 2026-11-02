@@ -1,7 +1,7 @@
 ---
 type: Concept
 title: DB 제품별 비자명 계약(MySQL·PostgreSQL·SQLite·DynamoDB)
-description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행·REVOKE ALL의 회수자 권한 요건·caching_sha2_password 비밀번호 길이 상한, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, PostgreSQL 18 공식 Docker 이미지의 데이터 경로 변경과 NOT NULL 제약 카탈로그 변화, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·PutItem·Go 페이지네이터와 CloudWatch 지표 계약을 정리합니다.
+description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행·REVOKE ALL의 회수자 권한 요건·caching_sha2_password 비밀번호 길이 상한, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, PostgreSQL 18 공식 Docker 이미지의 데이터 경로 변경과 NOT NULL 제약 카탈로그 변화, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·GSI 키 속성 쓰기 제약·식의 중복 괄호 거부·PutItem·Go 페이지네이터와 CloudWatch 지표 계약을 정리합니다.
 tags: [database, mysql, postgresql, sqlite, dynamodb, cloudwatch, wal, verification]
 apply_on_edit: ["*.sql"]
 timestamp: 2026-10-29T00:00:00Z
@@ -37,6 +37,8 @@ timestamp: 2026-10-29T00:00:00Z
 
 - [GSI](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html)는 기본 테이블 쓰기를 비동기로 반영하고 최종 일관성 읽기만 지원합니다. GSI 조회로 행의 존재를 판정해 INSERT·증분하면 방금 만든 행을 못 봐 중복 행이나 증분 누락이 생기므로, 존재 판정은 기본키 대상의 조건부 쓰기로 하고 중복 키 충돌은 기존 행 갱신 재시도로 처리합니다.
 - [PutItem](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html)은 같은 기본키의 기존 항목을 통째로 교체합니다. 상수 파티션 키와 밀리초 시각 정렬 키만으로 로그·이벤트를 쓰면 같은 밀리초의 쓰기가 오류 없이 사라지므로 정렬 키에 작성자·요청 ID를 붙이거나 `attribute_not_exists` 조건 쓰기로 덮어쓰기를 막습니다.
+- 기존(ACTIVE) GSI의 키 속성에 빈 문자열을 쓰면 `The AttributeValue for a key attribute cannot contain an empty string value`, NULL 타입을 쓰면 `Type mismatch for Index Key`로 PutItem·UpdateItem이 ValidationException 거부되고, 속성을 생략하면 그 항목만 GSI에서 빠집니다. 다중 속성 정렬 키 GSI는 정렬 키 속성들의 합계가 1024바이트 한도이며 넘으면 `Aggregate size for RANGE key attributes … exceeded limit 1024`로 거부됩니다. 지수가 큰 N(예: `-2E+125`)은 전개된 자릿수 문자열로 반환되므로 문자열이 아니라 수치로 비교합니다. (ap-northeast-2 실측 2026-10-30)
+- 식의 중복 괄호(`((a OR b))`)는 `The expression has redundant parentheses` ValidationException으로 거부됩니다(Query `FilterExpression`에서 실측 2026-10-30, 다른 식 종류는 미확인). 부분식을 괄호로 감싸 OR·AND로 잇는 생성기는 항이 하나일 때도 바깥 괄호를 다시 씌우지 않습니다.
 - AWS SDK for Go v2 `service/dynamodb` v1.70.3의 `Query` 페이지네이터는 `NextPage`가 오류를 반환하면 위치를 진행하지 않고 `HasMorePages`가 계속 참입니다. 오류에서 `continue`하면 같은 페이지를 끝없이 다시 요청하므로 재시도 횟수·기한을 두고 실패를 호출자에게 반환합니다.
 - [TransactWriteItems](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TransactWriteItems.html#DDB-TransactWriteItems-request-ClientRequestToken)는 성공한 요청을 같은 유효 `ClientRequestToken`으로 재호출하면 쓰기가 아니라 읽기 용량을 반환합니다.
 - [조건부 쓰기](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithItems.html#WorkingWithItems.ConditionalWrites.ReturnConsumedCapacity)는 조건 실패에도 쓰기 용량을 소비하지만 실패 응답에 소비 용량을 반환하지 않으므로, 성공 응답에서 관측한 합만으로 전체 사용량을 단정하지 않습니다.
