@@ -41,6 +41,9 @@ timestamp: 2026-10-27T00:00:00Z
 - seed만으로는 같은 이미지가 보장되지 않습니다. [mflux Z-Image README](https://github.com/mflux-community/mflux/blob/main/src/mflux/models/z_image/README.md)에 따르면 0.20 이하는 transformer를 float32로, 이후 릴리스는 bfloat16으로 실행해 같은 seed라도 이미지가 다르며 이전 결과를 재현하려면 `--float32`가 필요합니다(확인 2026-10-14).
 - 8방향 스프라이트의 방향·포즈·프레임처럼 정확한 구조는 이미지 모델에 맡기지 않고 제어 가능한 경로(고정 정사영 카메라의 3D 렌더 + 리그 애니메이션, ControlNet 같은 구조 제어)로 정하며, 이미지 모델은 컨셉·텍스처·정체성 보정에 씁니다.
 - 픽셀화는 결정적 후처리로 합니다. 모든 방향·프레임을 같은 캔버스·발 기준·배율로 맞춰 축소하고 하나의 공유 팔레트로 양자화합니다.
+- **LoRA의 생성 해상도는 정보량이 아닙니다.** 저해상도 아트를 확대해 학습한 LoRA는 큰 크기로 생성해도 세부가 확대본 수준이고 학습 크기를 넘기면 구조가 무너집니다(FLUX.2 klein 4B, 128 px 팩을 4배 확대해 학습: 512×1024 생성물의 미세 성분이 확대 대조군의 1.06~1.24배, 같은 크기의 3D 렌더는 3.45배, 2026-11-01). HD 여부는 같은 그림을 줄였다 키운 대조군 대비 미세 성분 비로 판정하고, HD 환경은 생성 모델이 만든 재질을 3D로 굽는 경로로 만듭니다.
+- **이음매 없는 재질(DiT):** UNet용 원형 패딩 방식은 FLUX.2 klein 같은 DiT에 효과가 없고(노드 README 설명과 실측), 잠재 롤링 + 원형 패딩 VAE 디코드는 흔적 없이 동작했습니다(MIT 노드, klein 4B bf16, MPS). 코드로 가장자리를 교차 섞으면 균열 같은 구조가 이중으로 겹칩니다. 판정은 지표보다 2×2 이어 붙인 미리보기로 합니다.
+- **ComfyUI v0.43.0 호환:** mflux 0.22로 학습한 FLUX.2 klein LoRA는 이중 스트림 블록의 `attn.to_out` 텐서 10개가 `lora key not loaded`로 빠집니다(ComfyUI 매핑은 diffusers식 `attn.to_out.0`만 앎, `comfy/utils.py`). 헤더 키 이름만 바꾸면 읽힙니다. MPS는 FP8 가중치를 읽지 못하므로([#12202](https://github.com/Comfy-Org/ComfyUI/issues/12202), not planned) Mac에서는 bf16을 씁니다.
 
 ## LoRA 학습 (mflux 0.22.0)
 

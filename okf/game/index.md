@@ -17,4 +17,4 @@
 * [godot-cpp 빌드·등록·디버깅·export와 실행 검증](/game/godot-build.md) - godot-cpp v10 핀의 빌드 옵션·manifest 매칭·hot reload, 시그널 반환값과 동기 콜백 재진입, macOS export, 프로젝트 설정·vendor 바이트, headless 검증 차이와 Windows 콘솔 래퍼 실행의 자원 측정 대상을 정리합니다.
 * [Godot C++ Scene·물리·Resource 수명과 경계](/game/godot-runtime.md) - Godot 객체 소유권, 스레드 경계, 에디터 복제 flags·Resource 깊은 복제 범위·트리 밖 좌표 캐시·text Resource 숫자 정밀도·직렬화 크기의 버전 특정 계약입니다.
 * [Godot UI 입력·텍스트·HUD 표시](/game/godot-ui.md) - Godot 4.7.2 입력 전달 순서·장치 ID·Windows 휠 이벤트·한글 폰트·첫 import 오류·캡처 크기 불일치·focus 모양, godot-cpp v10 문자열 인코딩, 실제 렌더 경계 검증 원칙입니다.
-* [Godot 에셋 팩·렌더 정밀도와 에디터 미리보기](/game/godot-assets-editor.md) - 표시·충돌·정렬 계약의 분리, 4.7.2 TileMapLayer 원점·정렬 Y, Compatibility 데이터 텍스처 정밀도, 렌더 직전 콜백 스레드, 비저장 미리보기 규칙입니다.
+* [Godot 에셋 팩·렌더 정밀도와 에디터 미리보기](/game/godot-assets-editor.md) - 표시·충돌·정렬 계약의 분리(y-sort와 z_index), 4.7.2 TileMapLayer 원점·정렬 Y, Compatibility 데이터 텍스처 정밀도와 텍스처 압축·메모리 집계, 렌더 직전 콜백 스레드, 비저장 미리보기 규칙입니다.
