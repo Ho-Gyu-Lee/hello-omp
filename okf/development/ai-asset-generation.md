@@ -27,6 +27,7 @@ timestamp: 2026-10-27T00:00:00Z
 - 상업 가능(Apache-2.0·MIT)으로 확인한 예(확인 2026-10-14, 사용 전 재확인): Z-Image, FLUX.2 klein 4B(9B는 비상업), Qwen-Image-Edit-2511, Qwen3.8-27B(VLM), BiRefNet(MIT).
 - 더 큰 후보(확인 2026-10-18, 사용 전 재확인): [ERNIE-Image](https://huggingface.co/baidu/ERNIE-Image) 8B·[Qwen-Image-2512](https://huggingface.co/Qwen/Qwen-Image-2512)·[Boogu-Image-0.1-Turbo](https://huggingface.co/Boogu/Boogu-Image-0.1-Turbo)는 Apache-2.0, [Ming-Image-0.1-Design](https://huggingface.co/inclusionAI/Ming-Image-0.1-Design)은 MIT입니다. [FLUX.2 dev](https://huggingface.co/black-forest-labs/FLUX.2-dev)·[Ideogram 4](https://huggingface.co/ideogram-ai/ideogram-4-fp8)는 비상업입니다.
 - [Krea 2](https://huggingface.co/krea/Krea-2-Raw) Community License는 계열사를 합친 회사 전체의 직전 12개월 매출이 100만 달러 미만일 때만 상업 사용을 허용하고(§2.3) 콘텐츠 필터를 요구하며(§4.2) 30일 통지로 해지될 수 있습니다(§9.2, 확인 2026-10-18). 매출 조건은 사용자 회사의 사실이므로 대신 판정하지 않고 확인받습니다.
+- 조건 모델의 배포 경로도 따로 확인합니다. TRELLIS.2가 쓰는 DINOv3의 Hugging Face 원본 저장소(`facebook/dinov3-*`)는 수동 승인제이고, 보고된 대기는 십여 분부터 며칠 이상까지이며 소속·국가로 거절되기도 합니다. DINOv3 팀원은 승인을 자기 팀이 처리하지 않는다며 timm 배포본을 대안으로 안내했습니다([이슈 #367](https://github.com/facebookresearch/dinov3/issues/367), 2026-10-05). `timm/vit_large_patch16_dinov3.lvd1689m`은 승인 없이 받을 수 있고 라이선스는 같은 `dinov3-license`입니다(HF API `gated=false`, 확인 2026-11-03). timm 배포본은 가중치 이름이 달라 원본 형식을 기대하는 코드에 넣으려면 키 대응 변환이 필요합니다.
 - 라이선스를 통과해도 학습 도구 지원은 따로 확인합니다. mflux 0.22.0 학습기는 FLUX.2 klein·Z-Image·ERNIE-Image·Krea 2만 연결하고 Qwen-Image 계열은 생성만 지원합니다(설치본 `mflux/models/common/training/runner.py`).
 
 ## Apple Silicon 통합 메모리
@@ -44,6 +45,17 @@ timestamp: 2026-10-27T00:00:00Z
 - **LoRA의 생성 해상도는 정보량이 아닙니다.** 저해상도 아트를 확대해 학습한 LoRA는 큰 크기로 생성해도 세부가 확대본 수준이고 학습 크기를 넘기면 구조가 무너집니다(FLUX.2 klein 4B, 128 px 팩을 4배 확대해 학습: 512×1024 생성물의 미세 성분이 확대 대조군의 1.06~1.24배, 같은 크기의 3D 렌더는 3.45배, 2026-11-01). HD 여부는 같은 그림을 줄였다 키운 대조군 대비 미세 성분 비로 판정하고, HD 환경은 생성 모델이 만든 재질을 3D로 굽는 경로로 만듭니다.
 - **이음매 없는 재질(DiT):** UNet용 원형 패딩 방식은 FLUX.2 klein 같은 DiT에 효과가 없고(노드 README 설명과 실측), 잠재 롤링 + 원형 패딩 VAE 디코드는 흔적 없이 동작했습니다(MIT 노드, klein 4B bf16, MPS). 코드로 가장자리를 교차 섞으면 균열 같은 구조가 이중으로 겹칩니다. 판정은 지표보다 2×2 이어 붙인 미리보기로 합니다.
 - **ComfyUI v0.43.0 호환:** mflux 0.22로 학습한 FLUX.2 klein LoRA는 이중 스트림 블록의 `attn.to_out` 텐서 10개가 `lora key not loaded`로 빠집니다(ComfyUI 매핑은 diffusers식 `attn.to_out.0`만 앎, `comfy/utils.py`). 헤더 키 이름만 바꾸면 읽힙니다. MPS는 FP8 가중치를 읽지 못하므로([#12202](https://github.com/Comfy-Org/ComfyUI/issues/12202), not planned) Mac에서는 bf16을 씁니다.
+- **이미지→3D(TRELLIS.2 Mac 포트) 실측(trellis-mac `d58628f`, TRELLIS.2-4B, M4 Pro 48 GB, 2026-11-03):**
+  - Xcode 앱이 없으면 Metal 컴파일러가 없어 Metal 백엔드 빌드가 모두 실패하고, 순수 PyTorch로 돕니다. 이때 파츠 하나는 250~444초, 프로세스 최대 약 19 GiB, 파이프라인 적재는 86초였습니다.
+  - 복셀 `base_color`는 sRGB입니다(`to_glb`가 ×255를 그대로 baseColorTexture에 씁니다). 그런데 trellis-mac 기본 굽기는 1/2.2 감마를 더 걸고, UV v를 뒤집으며, 복셀 두 칸 밖 텍셀을 검정으로 남깁니다.
+  - 이 셋을 고쳐도 생성 색이 입력보다 2~3배 어둡고 색조가 빠집니다. 입력 이미지를 실루엣 IoU로 찾은 시점에서 다시 투영해 입힙니다.
+  - 몸에 입는 조끼는 속 빈 닫힌 껍질로 나옵니다. 옷 위에 맞추려면 두께를 2.3~2.9배 늘려야 해 배낭처럼 부풉니다. 이 경로는 단단한 단독 소품(보호대·권총집·주머니)에만 씁니다.
+- **생성 원화를 자체 형상에 투영할 때(Blender 5.2.2, 2026-11-03):**
+  - 실루엣 정합은 안쪽 부위를 맞추지 못합니다. 원화는 상체 장비를 실루엣 비례보다 높게 그렸습니다(가슴판이 판 높이의 약 40% 위).
+  - 부위 ID 렌더로 부위별로 처리합니다. 기본색은 부위 안쪽 중앙값으로 정하고(피부·채도 높은 강조색 제외), 세부는 원화 명도를 같은 부위 안 저주파로 나눈 값만 곱합니다. 그래야 이웃 부위 색이 번지지 않습니다.
+  - 시점을 넓은 정면도 가중으로 섞으면 서로 다른 칠이 평균되어 결 진폭이 줄어듭니다. 천은 좁게 섞습니다(정면도^32).
+  - 매끈한 셸 옷은 렌더 조명의 몸 굴곡 명암이 칠한 결과 같은 대역을 덮습니다. 천에만 칠한 텍스처를 발광으로 섞어(약 0.5) 결을 살리고, 판은 조명만 받게 둡니다.
+  - 여러 Blender 프로세스가 굽힌 텍스처를 같은 경로에 저장하면 렌더가 그 파일을 다시 읽어 결과가 섞입니다. 실행마다 텍스처 경로를 나눕니다.
 
 ## LoRA 학습 (mflux 0.22.0)
 
