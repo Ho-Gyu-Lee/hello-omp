@@ -71,7 +71,7 @@ sh setup.sh
 
 배포한 지침은 **새 세션**부터 적용된다. 이미 열린 세션은 이전 지침을 계속 쓰므로 `omp`를 다시 시작한다.
 
-역할별 모델·추론 강도·fallback은 `config/settings.conf`가 정본이다. 메인·계획·정밀 검토는 `xhigh`, 구현·디자인·화면 분석·advisor는 `high`, 탐색·커밋은 `medium`, 제목·메모리·작업 위젯은 `low`이며 각 chat 역할에 다른 provider의 fallback을 하나 둔다. `premium` 역할(Fable)은 task 호출의 `model` 지정을 Fable 하나에만 허용하려고 두며 fallback이 없고, 에이전트는 사용자 승인 뒤에만 쓴다. 배정 이유는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다. 적용값은 `omp config list`로 확인한다. 현재 대화의 모델만 바꿀 때는 `/switch <provider/model:effort>`를 쓴다(`/model`은 선택기라 인자를 받지 않는다).
+역할별 모델·추론 강도·fallback은 `config/settings.conf`가 정본이다. 메인·계획·정밀 검토는 `xhigh`, 구현·디자인·화면 분석·advisor는 `high`, 탐색·커밋은 `medium`, 제목·메모리·작업 위젯은 `low`이며 각 chat 역할에 다른 provider의 fallback을 하나 둔다. `premium` 역할(Fable)은 task 호출의 `model` 지정을 Fable 하나에만 허용하려고 두며 fallback이 없다. 메인 세션은 추론 품질이 결과를 좌우하는 하위 작업을 묻지 않고 Fable에 맡기고, Anthropic 주간 한도나 Fable 주간 칸이 80% 이상이면 승인을 받는다(기준은 `rules/RULES.md`). 배정 이유는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다. 적용값은 `omp config list`로 확인한다. 현재 대화의 모델만 바꿀 때는 `/switch <provider/model:effort>`를 쓴다(`/model`은 선택기라 인자를 받지 않는다).
 
 비동기 advisor는 작업 중 위험·과잉 절차 감시용으로 켜 둔다(`advisor.enabled=true`). 독립 검토를 대신하지 않는다([워크플로](okf/workflow.md#독립-검토-시점과-최종-응답)).
 
