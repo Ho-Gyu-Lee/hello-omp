@@ -1,9 +1,9 @@
 ---
 type: Reference
 title: MCP 정책
-description: 내장으로 안 되는 외부 연결만 MCP로 쓰는 기준, 겹치는 MCP 기능의 대체와 검색 MCP의 수직 검색 선별, gateway 간접 실행 도구의 보호 범위, 실행 경로별 backend 버전, 사양 revision과 OMP 클라이언트 호환.
+description: 내장으로 안 되는 외부 연결만 MCP로 쓰는 기준, 겹치는 MCP 기능의 대체와 검색 MCP의 수직 검색 선별, gateway 간접 실행 도구의 보호 범위, 실행 경로별 backend 버전, 사양 revision과 OMP 클라이언트 호환, OAuth 서버 첫 연결의 재인증 경로.
 tags: [tools, mcp, security]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-11-04T00:00:00Z
 ---
 
 # MCP 정책
@@ -33,3 +33,4 @@ timestamp: 2026-10-18T00:00:00Z
 
 ## 인증
 MCP 서버 설정·크리덴셜은 머신별·비밀이므로 배포 스크립트 범위 밖이다. 키·토큰은 환경 변수·OAuth로 주입하되 이는 격리가 아니므로 불필요한 환경·토큰을 외부 코드에 상속하지 않는다.
+- OMP 18.13.3은 OAuth를 요구하는 원격 MCP 서버의 첫 연결 401(`WWW-Authenticate: Bearer resource_metadata=…`)을 API 키 방식으로 분류해 로그인 창을 띄우지 않았고, `/mcp reauth <name>`으로는 OAuth가 진행됐다(VARCO 3D MCP, 확인: 2026-10-28). 로그인 창 없이 인증 실패로 끝나면 API 키를 찾기 전에 `/mcp reauth <name>`을 실행한다.
