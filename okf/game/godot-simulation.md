@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: Godot C++ 성능 중심 시뮬레이션 코어
-description: C++ 코어와 Godot 연결부의 경계, 서버 이관 범위, 4.7.2 threaded load·ResourceLoader 캐시·atlas 재import·Jolt·Web export의 버전 특정 계약입니다.
+description: C++ 코어와 Godot 연결부의 경계, 통합 기본값과 병목별 대안, 물리 backend와 C++ 로직의 구분, 서버 이관 범위, 4.7.2 threaded load·ResourceLoader 캐시·atlas 재import·Jolt·Web export의 버전 특정 계약입니다.
 tags: [game, godot, cpp, simulation, resource-loading, jolt, web-export]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-11-04T00:00:00Z
 ---
 
 # Godot C++ 성능 중심 시뮬레이션 코어
@@ -13,6 +13,8 @@ timestamp: 2026-10-18T00:00:00Z
 ## 코어와 Godot 연결부
 
 반복 계산(전투·타깃 선정·AI/경로·경제·월드 갱신)은 필요한 범위에서 엔진 비의존 C++ 데이터·함수로 두고 Node/Resource는 에디터·표시·입출력 연결부로 씁니다. entity마다 Node·가상 호출·signal·heap 객체를 만드는 모델을 강제하지 않고 작은 시스템까지 ECS·별도 프레임워크로 다시 만들지도 않으며, 코어를 스크립트로 먼저 만든 뒤 이식하거나 UI·에디터·콘텐츠 연결까지 일률적으로 C++로 옮기지도 않습니다. C++ 채택 자체는 성능 증거가 아니므로 같은 부하에서 측정하고, SceneTree 접근은 [물리·프레임·스레드 경계](/game/godot-runtime.md#물리프레임스레드-경계)를 따릅니다.
+
+기본 통합은 공개 API로 충분한 GDExtension + godot-cpp입니다. 병목이 Node 호출 비용이면 배치 처리나 필요한 서버 API로 줄이고, solver·엔진 내부가 실제 병목일 때만 설정·backend 교체·API 노출·엔진 모듈 변경의 비용을 비교합니다. 목표 장치·동시 활성 객체·밀집도·tick 예산 같은 수치는 프로젝트에서 정하고, 정해지지 않은 FPS·동시 접속자 수·성능 배수를 만들어 내지 않습니다.
 
 ## 서버 이관
 
@@ -34,6 +36,7 @@ timestamp: 2026-10-18T00:00:00Z
 
 ## 물리와 Jolt
 
+- C++ 게임 로직과 Godot 물리 backend는 별개입니다. 게임 로직을 C++로 옮겨도 물리 solver는 빨라지지 않으며, 성능 중심 방향을 물리 엔진 교체·fork의 승인으로 해석하지 않습니다.
 - 4.7 문서는 Jolt의 별도 physics thread를 **experimental**로 설명하므로 활성화 전에 대상 프로젝트에서 검증합니다. [Jolt 문서](https://docs.godotengine.org/en/4.7/tutorials/physics/using_jolt_physics.html)
 - Godot 릴리스 정책은 물리 엔진의 결정성을 보장하지 않으므로([정책](https://docs.godotengine.org/en/4.7/about/release_policy.html#what-are-the-criteria-for-compatibility-across-engine-versions)) upstream Jolt의 조건부 deterministic 설명을 Godot 통합에 옮기지 않으며, lockstep·rollback은 대상 빌드·플랫폼에서 재현을 검증합니다.
 
