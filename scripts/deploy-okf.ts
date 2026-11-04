@@ -362,7 +362,9 @@ function IsConcept(rel: string): boolean
 
 // Builds the omp rules that publish OKF concepts (rel = path inside the deployed bundle, path = file to read):
 //   okf-<concept>          rulebook rule: name, description (and apply_on_edit globs) are listed in every session's system
-//                          prompt, including subagents; the body is read through rule://
+//                          prompt, including subagents; the body is read through rule://. The description is
+//                          "<title> (/<rel>) — <description>" because the rule name flattens "/" into "-" and cannot be
+//                          mapped back to the concept's path, so the listing must carry the bundle link itself
 //   okf-<concept>-on-edit  TTSR rule for concepts with apply_on_edit: the body is injected the first time a session edits or
 //                          writes a matching file
 async function PlanKnowledgeRules(concepts: KnowledgeConcept[], okfDisplay: string): Promise<Map<string, PlannedRule>>
@@ -400,7 +402,7 @@ async function PlanKnowledgeRules(concepts: KnowledgeConcept[], okfDisplay: stri
         const header = `OKF 개념 \`${okfDisplay}/${rel}\`에서 생성한 규칙이다. 본문의 번들 링크 \`/x.md\`는 \`${okfDisplay}/x.md\`다.`;
         const body = `${header}\n\n${text.slice(frontmatter[0].length).trim()}`;
         const name = ToRuleName(rel);
-        const rulebookFields = [`description: ${JSON.stringify(`${displayTitle} — ${Collapse(description as string)}`)}`];
+        const rulebookFields = [`description: ${JSON.stringify(`${displayTitle} (/${rel}) — ${Collapse(description as string)}`)}`];
 
         if (globs.length > 0)
         {

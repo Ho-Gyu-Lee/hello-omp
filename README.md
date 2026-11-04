@@ -30,8 +30,8 @@ flowchart LR
   R[RULES.md<br/>공통 방향] -->|매 요청| M[메인 세션]
   R -->|매 요청| S[서브에이전트]
   A[AGENTS.md<br/>메인 전용] -->|세션 시작| M
-  B[rules/okf-*<br/>개념별 rulebook] -->|목록·설명 매 요청| M
-  B -->|목록·설명 매 요청| S
+  B[rules/okf-*<br/>개념별 rulebook] -->|목록·경로·설명 매 요청| M
+  B -->|목록·경로·설명 매 요청| S
   T[rules/okf-*-on-edit<br/>apply_on_edit 개념] -->|일치 파일 편집 시 본문 주입| M
   T -->|일치 파일 편집 시 본문 주입| S
   P2[PERSONALITY.md·TITLE_SYSTEM.md] -->|세션 시작| M
@@ -47,7 +47,7 @@ flowchart LR
 | `PERSONALITY.md` | omp 기본 personality(영어 단문·조각 문체)를 대신하는 한국어 완결 문장·결론 우선·처리량 기준 | 메인 세션에만. 서브에이전트는 personality가 없어 `RULES.md`의 「언어」를 따른다 |
 | `TITLE_SYSTEM.md` | 세션 제목을 한국어로 짓게 한다(`title.generator=tiny`의 제목 모델에 적용) | 제목 생성 호출에만 |
 | `okf/` | [사용자 개발 방향](okf/direction.md), 코딩 스타일, 워크플로, 도메인별 비자명 사실 | 작업에 맞는 개념의 본문을 읽음 |
-| `<configdir>/rules/okf-*` | setup·`--record`가 개념마다 생성하는 rulebook 규칙(이름·설명이 매 요청 시스템 프롬프트에 나열, 본문은 `rule://`)과, `apply_on_edit`가 있는 개념의 편집 시 자동 주입 규칙 | 품질 우선: 개념 목록을 매 요청 보인다 |
+| `<configdir>/rules/okf-*` | setup·`--record`가 개념마다 생성하는 rulebook 규칙(이름과 `제목 (/개념 경로) — 설명`이 매 요청 시스템 프롬프트에 나열, 본문은 `rule://`)과, `apply_on_edit`가 있는 개념의 편집 시 자동 주입 규칙. 규칙 이름은 `/`를 `-`로 바꿔 경로로 되돌릴 수 없으므로 설명에 개념 경로를 함께 싣는다 | 품질 우선: 개념 목록을 매 요청 보인다 |
 | `ttsr/` → `<configdir>/rules/` | 메인 세션 전용 TTSR 알림의 배포 경로. 현재 규칙은 없다. 예전 `design-review-reminder`는 첫 편집마다 출력을 끊고 설계 검토를 다시 묻게 해 과잉 절차를 부추겨 지웠고, setup의 관리 항목 정리가 배포본을 옮겨 둔다 | 규칙이 생기면 세션당 1회 |
 | 프로젝트 레포 | 그 프로젝트의 현행 지침(`AGENTS.md`)·결정 기록·용어집 | 작업 이력·검증 기록은 쓰지 않음 |
 
