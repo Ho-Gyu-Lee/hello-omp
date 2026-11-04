@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 런타임 진단·측정 범위·출하 진단
-description: 측정·검증이 증명하는 범위, 교체 allocator 앱에 결합하는 정적 라이브러리의 할당/해제 도메인, Fluent Bit 라벨/심각도·연결 종료 진단·Docker pause 관측·Windows 덤프 API의 확인된 조건입니다.
-tags: [development, diagnostics, memory, logging, crash, native-library]
-timestamp: 2026-10-18T00:00:00Z
+description: 측정·검증이 증명하는 범위, 교체 allocator 앱에 결합하는 정적 라이브러리의 할당/해제 도메인, Fluent Bit 라벨/심각도·로그 조회의 스캔 비용과 CloudWatch Logs 적재 신선도·가변 이미지 태그의 반영 시점·연결 종료 진단·Docker pause 관측·Windows 덤프 API의 확인된 조건입니다.
+tags: [development, diagnostics, memory, logging, crash, native-library, cost, cloudwatch, kubernetes]
+timestamp: 2026-11-04T00:00:00Z
 ---
 
 # 런타임 진단·측정 범위·출하 진단
@@ -26,6 +26,9 @@ timestamp: 2026-10-18T00:00:00Z
 ## 로그·실패·출하 진단
 
 - [ ] Fluent Bit v4.0.8 `stackdriver` 출력에서 `resource=k8s_container`이고 `tag_prefix`를 생략하면 기본 접두사는 `k8s_container.`입니다. 라벨을 `resource_labels`·`monitored_resource`로 주지 않고 태그 정규식 매칭도 실패하면, `local_resource_id`(없으면 태그)를 접두사 비교 없이 기본 접두사 길이만큼 건너뛴 뒤 정규식에 대입합니다. 실제 접두사가 다른데 남은 문자열이 정규식에 맞으면 `pod_name` 등이 앞부분이 잘린 값으로 추출되고, 맞지 않으면 접두사 불일치 오류가 됩니다. 두 현상을 같은 것으로 진단하지 않습니다. `severity_key`가 가리키는 필드가 레코드에 없으면 심각도가 생략되어 DEFAULT로 적재됩니다. 조회 필터·알림을 만들기 전에 원본 출력과 항목 수·라벨·심각도를 대조합니다([Stackdriver 출력](https://docs.fluentbit.io/manual/pipeline/outputs/stackdriver), [v4.0.8 `stackdriver.c`](https://github.com/fluent/fluent-bit/blob/v4.0.8/plugins/out_stackdriver/stackdriver.c), [기본 접두사](https://github.com/fluent/fluent-bit/blob/v4.0.8/plugins/out_stackdriver/stackdriver_conf.c#L548-L552), 확인 2026-10-15). 다른 버전·플러그인은 같다고 가정하지 않습니다.
+- [ ] 로그 검색·집계 비용은 시간 구간과 저장소가 가지치기하는 키(파티션·필드 인덱스)로만 줄고, `LIMIT`과 가지치기 대상이 아닌 필터는 스캔량을 줄이지 않습니다. 긴 구간을 돌리기 전에 짧은 구간 하나로 응답의 스캔량(CloudWatch Logs Insights `statistics.bytesScanned`, OpenObserve `scan_size`)을 재고 쿼리마다 누적해 보고합니다. 결과 가공이 실패해도 쿼리를 다시 실행하지 않습니다. Logs Insights는 같은 query ID로 `get-query-results`를 다시 불러도 재스캔하지 않고, 다시 조회하면 같은 비용이 드는 저장소는 처음 받은 원문 표본을 보관해 다시 파싱합니다. 관측(2026-09): OpenObserve는 `LIMIT`이 스캔량을 줄이지 않았고 활성 파티션 키 필터만 가지치기했습니다. Logs Insights 문서는 Standard 로그 클래스의 `@logStream`을 기본 필드 인덱스로 두고 `=`·`IN` 필터가 스캔량을 줄인다고 하지만([필드 인덱스](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CloudWatchLogs-Field-Indexing.html), 확인 2026-11-04), `filter @logStream = …` 쿼리가 로그 그룹 전체의 해당 구간을 스캔한 관측이 있으므로(2026-09-30, 원인 미확인) 문서상 절감도 스캔량으로 확인합니다.
+- [ ] CloudWatch Logs의 적재 신선도는 `describe-log-streams`의 `lastEventTimestamp`로 판정하지 않습니다. 이 값은 최종 일관성으로 보통 1시간 안에, 드물게 더 늦게 갱신됩니다([LogStream](https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_LogStream.html), 확인 2026-11-04). `get-log-events --no-start-from-head --limit N`으로 받은 최신 이벤트의 `timestamp`·`ingestionTime`을 현재 시각과 비교하고 원본 출력(`kubectl logs --timestamps` 등)과 대조합니다.
+- [ ] 동작이나 사용량이 어느 시점부터 바뀌었으면 코드·쿼리를 분석하기 전에 그 시점에 실행되던 바이너리(파드 시작 시각과 `status.containerStatuses[].imageID`의 digest)를 확인합니다. 가변 태그(`:latest` 등)와 `imagePullPolicy: Always`는 컨테이너가 시작될 때마다 그 시점의 태그를 다시 해석하므로, 변경은 커밋·푸시 시각이 아니라 재시작·재배치·스케일아웃 시각에 들어가고 같은 태그를 쓰는 파드·테넌트마다 반영 시각이 다릅니다. 공유 가변 태그를 덮어쓰면 다른 테넌트의 파드도 다음 시작부터 새 이미지를 실행합니다.
 - [ ] 연결·세션 종료 진단은 종료를 처음 결정한 지점에서 원인을 고정해 뒤의 송신 실패·transport 통지가 덮어쓰지 않게 합니다. 재개로 인한 대체·정상 이전 뒤 퇴역·미전송 요청 취소처럼 "끊김"으로 보이지 않는 재설정 경로까지 회계에 넣습니다. "peer 종료" 같은 transport 통지는 로컬 socket 실패도 같은 통지로 올릴 수 있으므로 그 사유만으로 외부 원인을 확정하지 않습니다.
 - [ ] Docker Desktop 29.8.2에서 pause한 컨테이너의 게시 포트는 TCP 연결을 받고 TLS handshake가 timeout으로 끝났습니다(2026-10-16 관측). 정지한 백엔드를 연결 거절로 판별한다고 가정하지 않습니다.
 - [ ] Windows `MiniDumpWriteDump`는 가능하면 별도 프로세스에서 호출하고 DbgHelp 동시 호출을 직렬화합니다. 크래시 프로세스 내부는 allocator·loader lock이 손상/교착 상태일 수 있습니다([MiniDumpWriteDump](https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/nf-minidumpapiset-minidumpwritedump)).

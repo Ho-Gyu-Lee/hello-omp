@@ -1,10 +1,10 @@
 ---
 type: Concept
 title: DB 제품별 비자명 계약(MySQL·PostgreSQL·SQLite·DynamoDB)
-description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행·REVOKE ALL의 회수자 권한 요건·caching_sha2_password 비밀번호 길이 상한, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, PostgreSQL 18 공식 Docker 이미지의 데이터 경로 변경과 NOT NULL 제약 카탈로그 변화, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·GSI 키 속성 쓰기 제약·식의 중복 괄호 거부·PutItem·Go 페이지네이터와 CloudWatch 지표 계약을 정리합니다.
+description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행·REVOKE ALL의 회수자 권한 요건·caching_sha2_password 비밀번호 길이 상한, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, PostgreSQL 18 공식 Docker 이미지의 데이터 경로 변경과 NOT NULL 제약 카탈로그 변화, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·GSI 키 속성 쓰기 제약·식의 중복 괄호 거부·PutItem·Go 페이지네이터·소비 용량 응답 필드와 CloudWatch 지표(GSI분·스로틀 단위·2주 탐색 한계) 계약을 정리합니다.
 tags: [database, mysql, postgresql, sqlite, dynamodb, cloudwatch, wal, verification]
 apply_on_edit: ["*.sql"]
-timestamp: 2026-10-29T00:00:00Z
+timestamp: 2026-11-04T00:00:00Z
 ---
 
 # DB 제품별 비자명 계약
@@ -42,6 +42,7 @@ timestamp: 2026-10-29T00:00:00Z
 - AWS SDK for Go v2 `service/dynamodb` v1.70.3의 `Query` 페이지네이터는 `NextPage`가 오류를 반환하면 위치를 진행하지 않고 `HasMorePages`가 계속 참입니다. 오류에서 `continue`하면 같은 페이지를 끝없이 다시 요청하므로 재시도 횟수·기한을 두고 실패를 호출자에게 반환합니다.
 - [TransactWriteItems](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TransactWriteItems.html#DDB-TransactWriteItems-request-ClientRequestToken)는 성공한 요청을 같은 유효 `ClientRequestToken`으로 재호출하면 쓰기가 아니라 읽기 용량을 반환합니다.
 - [조건부 쓰기](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithItems.html#WorkingWithItems.ConditionalWrites.ReturnConsumedCapacity)는 조건 실패에도 쓰기 용량을 소비하지만 실패 응답에 소비 용량을 반환하지 않으므로, 성공 응답에서 관측한 합만으로 전체 사용량을 단정하지 않습니다.
+- [`ConsumedCapacity`](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ConsumedCapacity.html)의 `CapacityUnits`·`ReadCapacityUnits`·`WriteCapacityUnits`는 모두 선택 필드이고, `ReturnConsumedCapacity=TOTAL` 응답은 집계 `CapacityUnits`만 채울 수 있습니다(실서비스 Query의 방향별 필드 누락 [aws-sdk-go#2699](https://github.com/aws/aws-sdk-go/issues/2699), DynamoDB Local은 PutItem·GetItem·Query·UpdateItem·TransactWriteItems 모두 `CapacityUnits`만 반환, 관찰 2026-07-31). 없는 방향별 필드를 0으로 누적하면 사용량이 오류 없이 빠지므로, 방향별 필드가 있으면 그 값(0 포함)을 쓰고 두 필드를 합산하지 않으며, 없으면 읽기·쓰기 방향이 확정된 호출에서만 `CapacityUnits`로 대신하고, 둘 다 없으면 측정 불가로 구분합니다. 사용량 집계는 방향별 필드가 없는 응답 형태로 시험합니다.
 - [CloudWatch 지표](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/metrics-dimensions.html)에서 `TableName` 차원만 지정한 `ConsumedReadCapacityUnits`·`ConsumedWriteCapacityUnits`·`ReadThrottleEvents`·`WriteThrottleEvents`는 테이블분만 반환하고 GSI분을 포함하지 않습니다. 전체 사용량은 `TableName`+`GlobalSecondaryIndexName` 차원의 인덱스별 값을 더해 구합니다.
-- `ReadThrottleEvents`·`WriteThrottleEvents`는 프로비저닝 용량 초과 요청의 지표이고 `Read`·`Write` 접두사의 `ProvisionedThroughput`·`KeyRangeThroughput`·`MaxOnDemandThroughput`·`AccountLimit` `ThrottleEvents`가 같은 문서에 별도 정의돼 있으며 지표마다 지원 차원이 다릅니다. 한 지표의 0을 스로틀 없음으로 단정하지 않습니다.
-- [CloudWatch SEARCH 식](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-search-expressions.html)은 최근 2주 안에 데이터를 보고한 지표만 찾습니다. 더 오래된 구간은 차원을 명시한 지표로 조회하고, 탐색 결과가 비어 있으면 측정 불가와 실제 0을 구분합니다.
+- `ReadThrottleEvents`·`WriteThrottleEvents`는 프로비저닝 용량 초과 요청의 지표이고 `Read`·`Write` 접두사의 `ProvisionedThroughput`·`KeyRangeThroughput`·`MaxOnDemandThroughput`·`AccountLimit` `ThrottleEvents`가 같은 문서에 별도 정의돼 있으며 지표마다 지원 차원이 다릅니다. 한 지표의 0을 스로틀 없음으로 단정하지 않습니다. `ThrottleEvents`는 항목·인덱스 단위 이벤트 수이고 `ThrottledRequests`(차원 `TableName`+`Operation`)는 요청 단위여서, GSI가 있는 테이블의 쓰기 한 건은 테이블·인덱스 이벤트 중 하나라도 스로틀되면 1만 늘고 `BatchGetItem`·`BatchWriteItem`은 모든 항목이 스로틀될 때만 늘어납니다. 두 지표의 건수를 같은 단위로 비교하지 않습니다(확인 2026-11-04).
+- [CloudWatch SEARCH 식](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-search-expressions.html)과 [ListMetrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_ListMetrics.html)(`aws cloudwatch list-metrics`)는 최근 2주 안에 데이터를 보고한 지표만 찾습니다. 더 오래된 구간은 차원을 명시한 지표를 `GetMetricData`로 조회하고, 탐색 결과가 비어 있으면 측정 불가와 실제 0을 구분합니다.
