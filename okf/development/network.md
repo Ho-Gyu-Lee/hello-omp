@@ -1,9 +1,9 @@
 ---
 type: Rule
 title: 네트워크 전달·I/O·시간 계측
-description: 송신 공정성·reliable 폐기·gRPC 재접속·Apple 연결 제약, IOCP 실패 완료·소켓 종료 수명, WSL localhost 중계 지연과 RTT 표본화·캡처 교란을 다룹니다.
-tags: [development, networking, transport, rpc, fairness, iocp, winsock, rtt, wsl]
-timestamp: 2026-10-18T00:00:00Z
+description: 송신 공정성·reliable 폐기·gRPC 재접속·Apple 연결 제약·macOS Go resolver와 DNS 실패 재현, IOCP 실패 완료·소켓 종료 수명, WSL localhost 중계 지연과 RTT 표본화·캡처 교란을 다룹니다.
+tags: [development, networking, transport, rpc, fairness, iocp, winsock, rtt, wsl, dns, go]
+timestamp: 2026-11-04T00:00:00Z
 ---
 
 # 네트워크 전달·I/O·시간 계측
@@ -21,6 +21,7 @@ timestamp: 2026-10-18T00:00:00Z
 
 - 자체 재연결을 하는 RPC 채널 위에 앱 수준 재접속 루프를 얹으면 재시도 소유자가 둘이 됩니다. gRPC는 기본값으로 채널이 `TRANSIENT_FAILURE`일 때 RPC를 연결을 기다리지 않고 즉시 실패시키므로([wait-for-ready](https://github.com/grpc/grpc/blob/master/doc/wait-for-ready.md)), 앱 복귀 직후 채널 재연결이 진행 중이면 앱의 시도는 연결을 열지 않고 실패하고 그동안 채널은 이미 READY가 될 수 있습니다. 즉시 재시도 경로에서는 채널 준비를 유한 기한으로 기다린 뒤(gRPC C++ `Channel::WaitForConnected` 등) 호출합니다. 호출 deadline은 호출 전체의 기한이므로([gRPC deadlines](https://grpc.io/docs/guides/deadlines/)) 장기 양방향 스트림의 연결 대기용으로 쓰지 않습니다(gRPC C++ 1.57 클라이언트 실측, 2026-10-16).
 - [Apple TN3151](https://developer.apple.com/documentation/technotes/tn3151-choosing-the-right-networking-api)은 BSD sockets 사용을 허용하지만 시스템 resolver·Happy Eyeballs·소켓별 DNS 이름 연관(`ne_socket_set_domains`)·viability 관찰을 별도 책임으로 둡니다. 수동 DNS→주소 연결은 Happy Eyeballs를 구현해도 VPN On Demand와 호환되지 않으며, domain tagging은 content filter 등에 문맥을 주는 수단이지 이 제한의 해소 근거가 아닙니다(조회 2026-10-08, 재확인 2026-10-15). 자체 TLS/CA 검증은 시스템 신뢰 평가 권고와 다른 선택이므로 OS의 신뢰·폐기·사용자/기업 anchor 정책과 동등하다고 주장하지 않습니다.
+- macOS에서 Go 프로그램은 기본으로 시스템 resolver(`getaddrinfo`)를 쓰고, `GODEBUG=netdns=go`를 주면 `/etc/resolv.conf`의 서버에 직접 묻는 Go resolver를 씁니다([net 패키지 이름 해석](https://pkg.go.dev/net#hdr-Name_Resolution), 확인 2026-11-04). Linux 서버는 보통 Go resolver가 기본입니다. DNS 실패가 원인인 재접속 폭주를 macOS에서 재현할 때 기본 resolver로는 실패가 늦게 와 재현되지 않았고 `GODEBUG=netdns=go`로 재현됐습니다(2026-10-15 관찰, 지연 원인 미확인). macOS에서 DNS 실패 경로가 재현되지 않으면 resolver를 운영 환경과 맞춘 뒤 다시 판정합니다.
 
 ## 비동기 I/O 완료와 수명
 

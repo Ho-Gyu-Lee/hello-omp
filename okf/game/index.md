@@ -11,6 +11,9 @@
 * [게임 서버 기능/성능 체크리스트](/game/server-checklist.md) - 게임 서버의 Gateway/로직 소유 단위 분리(선택한 구조의 설계 기준), 용량·AOI·복제 측정 기준. 공통 서버 운영·영속화·보안은 별도 정본에 연결한다.
 * [게임 서버 영속화·장애 체크리스트](/game/server-persistence.md) - 결과 공개와 내구성의 A/B/C 선언, 파티·인스턴스 수명, 저장 대기와 복제 view의 적용 기준.
 
+## 게임 데이터
+* [게임 정적·동적 데이터와 DB 설계](/game/data-design.md) - 게임 데이터 설계의 사용자 기본값 — 정적·동적 구분, Excel/CSV 저작에서 서버 검증·대상별 배포(클라이언트 CDN·서버 DB)까지의 흐름, 정적 테이블의 메모리 멀티 키 맵과 구간 조회의 정렬 배열, 프로토타입 서버의 SQLite 우선, 논리 응집도와 접근 패턴, DB FK 미사용과 앱 코드 트랜잭션 우선, 적용 경계. 게임 데이터나 DB 스키마를 설계·리뷰할 때 읽는다.
+
 ## Godot 엔진
 * [Godot와 C++ 게임 개발](/game/godot-cpp.md) - Godot·godot-cpp 버전 핀과 출처 간 차이, 임의 업그레이드 금지, 4.5~4.7 동작 변경의 확인 경로, 하위 개념(시뮬레이션 코어·빌드·수명·UI·에셋) 안내입니다.
 * [Godot C++ 성능 중심 시뮬레이션 코어](/game/godot-simulation.md) - C++ 코어와 Godot 연결부의 경계, 통합 기본값과 병목별 대안, 물리 backend와 C++ 로직의 구분, 서버 이관 범위, 4.7.2 threaded load·ResourceLoader 캐시·atlas 재import·Jolt·Web export의 버전 특정 계약입니다.

@@ -11,7 +11,7 @@
 ## 데이터·네트워크
 * [데이터 형식·콘텐츠 게시 계약](/development/data-formats.md) - 외부 decoder의 길이 검증 한계, 부분 생성의 보호 기준 전환, CloudFront minimum TTL의 origin 캐시 지시어 우선 예외를 다룹니다.
 * [난수·재현 계약](/development/randomness.md) - 같은 seed가 라이브러리 간 같은 결과를 보장하지 않는 조건과 시험이 주입한 시계·상태를 라이브 경로에 되돌리지 않는 기준입니다.
-* [네트워크 전달·I/O·시간 계측](/development/network.md) - 송신 공정성·reliable 폐기·gRPC 재접속·Apple 연결 제약, IOCP 실패 완료·소켓 종료 수명, WSL localhost 중계 지연과 RTT 표본화·캡처 교란을 다룹니다.
+* [네트워크 전달·I/O·시간 계측](/development/network.md) - 송신 공정성·reliable 폐기·gRPC 재접속·Apple 연결 제약·macOS Go resolver와 DNS 실패 재현, IOCP 실패 완료·소켓 종료 수명, WSL localhost 중계 지연과 RTT 표본화·캡처 교란을 다룹니다.
 
 ## UI·표현·탐색·자산
 * [UI 입력·표시 검증과 지역화](/development/ui-input.md) - 실제 창 입력 검사의 OS 포커스 충돌, 입력 소유·정리 범위와 최종 화면 검증 원리, 사용자 생성 텍스트 기계 번역의 원문 언어 지정(Google Cloud Translation Basic), Translation LLM의 v2 호출 조건과 용어집의 v3 전용 제약을 다룹니다.
