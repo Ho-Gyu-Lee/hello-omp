@@ -1,10 +1,10 @@
 ---
 type: Concept
 title: DB 제품별 비자명 계약(MySQL·PostgreSQL·SQLite·DynamoDB)
-description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행·REVOKE ALL의 회수자 권한 요건·caching_sha2_password 비밀번호 길이 상한·없는 계정 로그인의 무작위 인증 plugin과 sha256_password 경고, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, PostgreSQL 18 공식 Docker 이미지의 데이터 경로 변경과 NOT NULL 제약 카탈로그 변화, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·GSI 키 속성 쓰기 제약·식의 중복 괄호 거부·PutItem·Go 페이지네이터·소비 용량 응답 필드와 CloudWatch 지표(GSI분·스로틀 단위·2주 탐색 한계) 계약을 정리합니다.
+description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행·REVOKE ALL의 회수자 권한 요건·caching_sha2_password 비밀번호 길이 상한·없는 계정 로그인의 무작위 인증 plugin과 sha256_password 경고·host가 맞는 계정이 없을 때 greeting 대신 오는 1130 오류, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, PostgreSQL 18 공식 Docker 이미지의 데이터 경로 변경과 NOT NULL 제약 카탈로그 변화, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·GSI 키 속성 쓰기 제약·식의 중복 괄호 거부·PutItem·Go 페이지네이터·소비 용량 응답 필드와 CloudWatch 지표(GSI분·스로틀 단위·2주 탐색 한계) 계약을 정리합니다.
 tags: [database, mysql, postgresql, sqlite, dynamodb, cloudwatch, wal, verification]
 apply_on_edit: ["*.sql"]
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-07T00:00:00Z
 ---
 
 # DB 제품별 비자명 계약
@@ -19,7 +19,7 @@ timestamp: 2026-11-05T00:00:00Z
 - 권한은 계정이 아니라 권한 표의 (User, Host) 행으로 맞춰집니다: `DROP DATABASE`는 그 DB의 DB·표 수준 권한을 지우지 않아 같은 이름으로 다시 만든 DB가 옛 권한을 물려받고, User가 빈 `mysql.db` 행은 모든 계정에 적용되며, 계정 없는 `user@'172.%'` 같은 행도 접속 호스트가 맞으면 적용되는데 어느 쪽도 그 계정의 `SHOW GRANTS`에 나오지 않습니다(MySQL 8.4 `sql_auth_cache.cc` `acl_get`, [DROP DATABASE](https://dev.mysql.com/doc/refman/8.4/en/drop-database.html), 확인 2026-10-21). DB를 지우는 경로는 먼저 REVOKE하고, 권한 검증은 루트로 빈 User·계정 없는 행을 함께 봅니다.
 - 객체 수준 `REVOKE`는 회수하는 계정이 `GRANT OPTION`과 회수할 권한을 모두 가져야 하고, `REVOKE ALL PRIVILEGES, GRANT OPTION FROM …`은 전역 `CREATE USER` 또는 `mysql` 스키마 `UPDATE`가 필요합니다([REVOKE](https://dev.mysql.com/doc/refman/8.4/en/revoke.html), 8.4, 확인 2026-10-28). 그래서 `CREATE VIEW`·`SHOW VIEW` 같은 권한이 없는 제한된 관리 계정에서 `REVOKE ALL PRIVILEGES ON db.t`는 준 적 없는 권한까지 회수하려다 1142로 실패합니다. 정리 경로는 실제로 준 권한 목록을 `REVOKE IF EXISTS … IGNORE UNKNOWN USER`로 회수합니다.
 - `caching_sha2_password`는 256바이트를 넘는 평문 비밀번호를 계정 생성·변경과 인증 모두에서 거절합니다(MySQL 8.4 `include/crypt_genhash_impl.h`의 `MAX_PLAINTEXT_LENGTH 256`, `sql/auth/sha2_password.cc`, 확인 2026-10-28). 비밀번호 생성기와 비밀 파일 검증의 상한을 256바이트 이하로 둡니다.
-- 계정이 없는 사용자 이름의 로그인은 계정 존재를 숨기려고 무작위로 고른 인증 plugin의 가짜 계정으로 진행한 뒤 거절됩니다. 고른 plugin이 `sha256_password`이면 시도마다 `[MY-013360] 'sha256_password' is deprecated` 경고가 오류 로그에 남으므로, 모든 계정이 `caching_sha2_password`인데 이 경고가 쌓이면 계정·기본 plugin을 바꾸지 말고 없는 계정으로 접속하는 주체를 찾습니다([lefred](https://lefred.be/content/mysql-whos-filling-my-error-log/); 8.4.13에서 없는 이름 5개를 20회씩 시도해 4개는 매번 경고, 1개는 경고 없음, 확인 2026-11-05). 흔한 원인은 자격 증명 없는 `mysqladmin ping` 상태 검사입니다: 사용자를 주지 않으면 OS 사용자 이름(컨테이너에서는 `root`)으로 로그인하고, `skip_name_resolve`에서 TCP `127.0.0.1` 접속은 `root@localhost`와 맞지 않습니다. 로그인이 필요 없는 상태 검사는 TCP로 서버 greeting만 읽습니다(다섯째 바이트가 protocol version 10, 오류 packet은 0xff).
+- 계정이 없는 사용자 이름의 로그인은 계정 존재를 숨기려고 무작위로 고른 인증 plugin의 가짜 계정으로 진행한 뒤 거절됩니다. 고른 plugin이 `sha256_password`이면 시도마다 `[MY-013360] 'sha256_password' is deprecated` 경고가 오류 로그에 남으므로, 모든 계정이 `caching_sha2_password`인데 이 경고가 쌓이면 계정·기본 plugin을 바꾸지 말고 없는 계정으로 접속하는 주체를 찾습니다([lefred](https://lefred.be/content/mysql-whos-filling-my-error-log/); 8.4.13에서 없는 이름 5개를 20회씩 시도해 4개는 매번 경고, 1개는 경고 없음, 확인 2026-11-05). 흔한 원인은 자격 증명 없는 `mysqladmin ping` 상태 검사입니다: 사용자를 주지 않으면 OS 사용자 이름(컨테이너에서는 `root`)으로 로그인하고, `skip_name_resolve`에서 TCP `127.0.0.1` 접속은 `root@localhost`와 맞지 않습니다. 로그인이 필요 없는 상태 검사는 TCP로 서버 greeting만 읽을 수 있지만(다섯째 바이트가 protocol version 10, 오류 packet은 0xff), 서버는 접속한 주소와 host가 맞는 계정이 하나도 없으면 greeting 대신 `ER_HOST_NOT_PRIVILEGED`(1130, `Host '127.0.0.1' is not allowed to connect`) 오류 packet을 먼저 보냅니다(Oracle `mysql/community-server` 8.4.13 이미지, `--skip-name-resolve`·새 데이터 디렉터리에 `root@localhost`만 있을 때 컨테이너 안 TCP `127.0.0.1`로 관찰, 확인 2026-11-07). 그래서 `'%'` 계정을 상태 검사 통과 뒤에 만드는 준비 순서는 새 볼륨에서 영원히 기다리므로, 1130 오류 packet도 서버가 TCP로 응답한 것으로 받거나 계정을 만든 뒤에 검사합니다.
 - MariaDB Connector/C 3.4.11은 호스트 문자열이 정확히 `127.0.0.1`·`::1`(Windows 빌드는 `localhost`도)이면 `MYSQL_OPT_SSL_VERIFY_SERVER_CERT`를 켜도 서버 인증서의 호스트 이름을 검증하지 않고, CA 신뢰도 `ssl_ca`·`ssl_capath`를 지정했을 때만 봅니다(`plugins/auth/my_auth.c` `is_local_connection`, 확인 2026-10-22). 인증서 SAN의 이름(Linux는 TCP를 강제한 `localhost`)으로 접속하거나 그 문자열을 설정 오류로 거절합니다.
 
 ## PostgreSQL
