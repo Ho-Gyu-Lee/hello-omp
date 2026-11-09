@@ -1,9 +1,9 @@
 ---
 type: Reference
 title: omp 기본 도구
-description: 내장 도구 우선과 비자명 계약(AST 기본값·브라우저·Windows 서비스 실행 셸), 실행·관측 주체 구분, 긴 작업의 실패 판정, 원본 보존, 작업용 스크립트의 TypeScript+Bun.
+description: 내장 도구 우선과 비자명 계약(AST 기본값·브라우저·Windows bash 도구의 서비스 실행 셸과 `/dev/null`), 실행·관측 주체 구분, 긴 작업의 실패 판정, 원본 보존, 작업용 스크립트의 TypeScript+Bun.
 tags: [tools, builtin, lsp, ast, browser, background, typescript, bun]
-timestamp: 2026-11-01T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # omp 기본 도구
@@ -20,6 +20,7 @@ omp는 배터리 포함이다. 기본으로 되는 일에 MCP를 두지 않으�
   - 같은 `eval` 커널의 동기 호출(`Bun.spawnSync`)은 그 커널의 비동기 관측 루프(로그 tail·주기 표본)도 멈춘다. 시각을 재는 하위 프로세스는 `Bun.spawn`이나 별도 프로세스로 실행하고 관측 시각 차이를 지연 근거로 쓰지 않는다.
   - 별도 셸의 `export`는 IDE에서 시작한 빌드에 전달되지 않는다. Visual Studio의 [CMake preset](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs)은 변수 확장 뒤 CMake를 호출하므로 target 의존 경로는 target 환경이나 toolchain 진입 파일에서 정한다.
   - bash 도구의 일반 호출은 내장 brush 셸에서 돌지만 `name`(서비스)·`pty` 실행은 외부 셸(`shellPath`, 없으면 기본 탐색)에서 돈다. Windows에서 `shellPath`를 두지 않았고 PATH의 첫 `bash`가 WSL `C:\Windows\System32\bash.exe`이면 서비스는 WSL `/bin/bash`(cwd `/mnt/c/...`)에서 실행된다. WSL은 기본값으로 Windows PATH를 `/mnt/c/...` 형태로 덧붙이지만([`interop.appendWindowsPath`](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#interop-settings)) 확장자를 보충하지 않으므로 Windows 실행 파일은 `bun.exe`처럼 확장자까지 붙여 부르고(`bun`은 찾지 못하고 `bun.exe`는 찾음, OMP 18.14.2 실측: 2026-11-01), 그래도 찾지 못하면 `C:/` 경로가 아니라 `/mnt/c/...` 절대 경로로 부른다. 이렇게 띄운 Windows 프로세스에는 서비스 pty로 보낸 Ctrl+C(`\x03`)가 전달되지 않으므로(실측: 2026-10-26) 자기 것임을 확인한 프로세스에 종료 신호를 보내는 다른 경로로 멈추고, 종료 로그와 남은 프로세스로 종료를 확인한다.
+- Windows에서 bash 도구의 일반 호출(내장 brush 셸)은 `/dev/null`을 열지 못한다. `cmd 2>/dev/null`은 `/dev/null: 지정된 경로를 찾을 수 없습니다`를 내고 `cmd`를 실행하지 않은 채 상태 1로 끝나므로, `x=$(cmd 2>/dev/null)`은 빈 값이 되어 "일치 없음" 같은 거짓 음성 판정을 만든다. 버릴 출력은 `2>NUL`로 보내거나 작업 디렉터리의 로그 파일에 남긴다(OMP 18.18.2, `BASH_VERSION` 5.3.0, Windows 실측: 2026-11-09).
 - 신호로 종료된 `Bun.Subprocess`는 `exited`를 기다린 뒤에도 `exitCode`가 `null`이고 `signalCode`가 채워질 수 있다. `exitCode === null`만으로 실행 중이라 판정하지 않고 강제 종료를 정상 exit 0으로 바꾸지 않는다([Bun](https://bun.com/docs/runtime/child-process#exit-handling), 확인: 2026-10-18).
 - Bun Shell(`$` 템플릿)은 `cmd > ${log} 2>&1`을 "expected a command or assignment but got: Redirect"로 거부하므로 표준 출력·오류를 한 파일로 모을 때는 `cmd &> ${log}`를 쓴다. 인수 배열은 `` $`${tool} ${args}` ``처럼 넘기면 원소마다 따로 인용된다. `.nothrow()`를 쓰면 이런 실패가 종료 코드로만 드러나므로 로그 파일이 실제로 채워지는지 함께 본다(Bun 1.4.3 확인: 2026-10-18).
 - 하위 프로세스의 로그와 종료 코드는 실패를 그대로 드러내지 않을 수 있다. `Bun.spawn`의 `stdout`·`stderr`에 `Bun.file(path)`를 주면 기존 파일을 비우지 않고 앞에서부터 덮어써, 더 짧은 실행 뒤에 이전 로그의 꼬리가 남는다. 실행 전에 `await Bun.write(path, "")`로 비운다(Bun 1.4.3 macOS 실측: 2026-10-23). Blender `-b -P script.py`는 스크립트가 예외로 끝나도 종료 코드 0을 내므로 실패를 종료 코드로 잡으려면 `-P` 앞에 `--python-exit-code 1`을 둔다(Blender 5.2.2 `--help`와 실측: 2026-10-23).
