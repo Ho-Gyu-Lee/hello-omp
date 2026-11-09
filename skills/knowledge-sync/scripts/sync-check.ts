@@ -308,7 +308,10 @@ async function CheckLinks(okfDir: string): Promise<boolean>
 
     for (const [rel, body] of bodies)
     {
-        for (const [, target] of body.matchAll(/\]\((\/[^)\s]*)\)/g))
+        // Inline code spans hold literal examples such as `[title](/path.md)`, not links.
+        const prose = body.replace(/(`+).*?\1/g, "");
+
+        for (const [, target] of prose.matchAll(/\]\((\/[^)\s]*)\)/g))
         {
             count++;
             const [path, anchor] = target.split("#");
