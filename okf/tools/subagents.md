@@ -26,6 +26,7 @@ timestamp: 2026-11-02T00:00:00Z
 - **병렬 작업은 쓰기 소유권과 격리 범위를 먼저 정하고 격리 밖 자원과 자동 적용을 조정한다.** `isolated` 성공 결과는 완료 시 부모 트리에 자동 적용된다(`task.isolation.apply` 기본 `true`, `false`면 patch 보관). 다른 소유자의 호출부 수정이 필요한 변경은 부모 트리 빌드를 깨뜨리고 다른 작업자가 원인을 오인하게 하므로, 부모 트리가 빌드 가능한 범위로 끊거나 patch만 산출하게 하고 적용 뒤 부모 트리 전체 빌드로 확인한다. 다른 작업자의 변경을 함께 되돌리지 않는다.
 - 격리 백엔드가 submodule 내용이나 다른 OS 빌드 환경(예: WSL)을 재현하는지 확인되지 않은 병렬 C++ 작업은 작업자마다 독립 clone을 주고 그 clone에서만 빌드·테스트·커밋한다(push·부모 gitlink 스테이징 금지). 상대 URL submodule은 로컬 정본 checkout 경로로 바꿔 초기화한다. 통합 담당자는 cherry-pick 뒤 통합 트리 전체를 다시 빌드·테스트하고, 빌드 병렬도는 코어·메모리에 맞추며 빌드 중에는 FPS·지연·용량 관측 검증을 하지 않는다(겹쳤으면 contended로 표시).
 - 공유 checkout의 동시 작업자가 `git stash`·`reset --hard`·덮어쓰는 checkout을 실행하지 못하게 하는 `bash.gitGuard`(기본 off)는 임베디드 셸의 `git` 내장만 막고 `pty`·서비스·경로로 직접 실행한 git은 제외된다(`omp://settings.md`, OMP 18.12.1 확인: 2026-10-18).
+- 이 설정의 `extensions/dangerous-tool-guard.js`는 `rm` 등을 사용자 확인으로 막고, UI가 없거나 응답이 없으면 fail-closed로 차단한다(OMP 18.18.1, 확인: 2026-11-08). 에이전트 작업 순서는 단일 통합 담당자가 메시지로 조정하고, 파일의 `HELD`·`RELEASED` 같은 값은 상태 표시로만 쓴다. 읽은 뒤 덮어쓰는 파일을 원자적 잠금으로 간주하지 않으며 차단된 삭제를 우회하지 않는다.
 - 기본 서브에이전트는 자체 빌드·테스트·스모크를 건너뛰고 검증을 메인에 맡기므로(OMP 18.4.12 [변경 내역](https://github.com/can1357/oh-my-pi/blob/main/packages/coding-agent/CHANGELOG.md), 확인: 2026-10-18) 작업자 빌드가 필요하면 위임 context에 명시한다.
 
 ## 반환 결과
