@@ -1,7 +1,7 @@
 ---
 type: Concept
 title: Godot C++ Scene·물리·Resource 수명과 경계
-description: Godot 객체 소유권, 스레드 경계, 에디터 복제 flags·Resource 깊은 복제 범위·트리 밖 좌표 캐시·text Resource 숫자 정밀도·직렬화 크기의 버전 특정 계약입니다.
+description: Godot 객체 소유권, 스레드 경계, 에디터 복제 flags·Resource 깊은 복제 범위·트리 밖 좌표 캐시·text Resource 숫자 정밀도·JSON 값의 컨테이너 비교·직렬화 크기의 버전 특정 계약입니다.
 tags: [game, godot, cpp, ownership, threading, resource, serialization]
 timestamp: 2026-10-23T00:00:00Z
 ---
@@ -27,4 +27,5 @@ timestamp: 2026-10-23T00:00:00Z
 - **`Resource.duplicate(true)` (4.5+):** 그 리소스 파일 안의 내장 하위 리소스만 복제하고 `resource_path`가 있는 외부 리소스는 원본을 공유합니다(4.4는 외부까지 복제). 외부까지 독립 사본이 필요하면 `duplicate_deep(Resource.DEEP_DUPLICATE_ALL)`을 씁니다([4.5 업그레이드](https://docs.godotengine.org/en/4.7/tutorials/migrating/upgrading_to_godot_4.5.html), 4.7.2 headless 실행 확인 2026-10-23).
 - **트리 밖 좌표:** 분리된 Node2D의 읽어 둔 `global_transform`/`global_position`은 조상 편집 뒤 갱신된다고 가정하지 않으며, 공통 루트 기준 좌표는 [`get_relative_transform_to_parent()`](https://docs.godotengine.org/en/4.7/classes/class_node2d.html#class-node2d-method-get-relative-transform-to-parent) 등 현재 local transform의 합성으로 구합니다.
 - **text Resource의 숫자:** JSON 숫자를 그대로 text Resource에 넣으면 정수 식별자가 FLOAT로 저장되거나 float32 shortest 출력 때문에 round-trip 값과 raw Variant hash가 달라질 수 있습니다. 검증된 정수 ID/seed는 int로 저장하고 소수 설정은 full-precision JSON 같은 손실 없는 정본 하나에 둡니다.
+- **JSON 값과 컨테이너 비교 (4.7.2 실측):** `JSON.parse_string`은 숫자를 모두 float로 돌려주며, 스칼라 `10 == 10.0`은 참이지만 Dictionary·Array의 `==`는 int와 float 원소를 다르게 봐서 JSON으로 저장한 기준과 live 값을 비교하면 내용이 같아도 거짓입니다. 양쪽을 같은 JSON 왕복으로 정규화한 뒤 비교합니다.
 - **직렬화 크기:** 반복 metadata가 많은 장면 전체를 하나의 중첩 Variant로 직렬화하지 않고 subtree별 digest를 부모에 순서대로 넣으며, `encode_variant`의 길이 인자가 `int`이므로(엔진 `core/io/marshalls.h`) 최대 입력으로 실제 저장 경로를 검증합니다.
