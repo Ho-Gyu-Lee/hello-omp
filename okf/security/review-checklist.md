@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 코드 리뷰 보안 체크리스트
-description: 리뷰에서 놓치기 쉬운 환경·도구 특이 계약(헤더 변환 우회, 출발지 IP 허용 목록이 보는 주소, 저장소 설정의 Git 실행, Windows 실행 파일 탐색, 경로 별칭, 무인 설치의 비밀 키 초기화와 파일 secret 복사). 일반 보안 항목과 게임 항목은 다루지 않는다.
+description: 리뷰에서 놓치기 쉬운 환경·도구 특이 계약(헤더 변환 우회, 게이트웨이 신원 헤더의 제거와 우회 경로, 출발지 IP 허용 목록이 보는 주소, 저장소 설정의 Git 실행, Windows 실행 파일 탐색, 경로 별칭, 무인 설치의 비밀 키 초기화와 파일 secret 복사). 일반 보안 항목과 게임 항목은 다루지 않는다.
 tags: [security, review, checklist, server, git, windows]
-timestamp: 2026-11-03T00:00:00Z
+timestamp: 2026-11-10T00:00:00Z
 ---
 
 # 코드 리뷰 보안 체크리스트
@@ -11,6 +11,7 @@ timestamp: 2026-11-03T00:00:00Z
 일반 웹·서버 보안(입력 검증·SQL 바인딩·XSS·CSRF·인증/인가·BOLA·HTTPS·에러 노출)은 기본으로 점검하며 옮기지 않는다. 게임 항목은 [게임 보안](/security/game.md), 즉시 경고·자격증명은 [보안 개요](/security/overview.md)를 따른다.
 
 - [ ] 게이트웨이·프록시가 HTTP 헤더를 내부 메타데이터로 변환할 때 신원·권한 키를 허용 목록으로만 전달하는가. 이름 비교 차단 목록은 라이브러리 기본 매핑의 접두사·대소문자 변환으로 우회될 수 있다. 예: [grpc-gateway `DefaultHeaderMatcher`](https://pkg.go.dev/github.com/grpc-ecosystem/grpc-gateway/v2/runtime#DefaultHeaderMatcher)는 v2.32.0까지 `Grpc-Metadata-` 접두사를 떼어 gRPC 메타데이터로 전달했다([v2.31.0](https://github.com/grpc-ecosystem/grpc-gateway/releases/tag/v2.31.0)은 `Grpc-Metadata-grpcgateway-*`, [v2.32.0](https://github.com/grpc-ecosystem/grpc-gateway/releases/tag/v2.32.0)은 `Grpc-Metadata-X-Forwarded-*`만 거부). [v2.33.0](https://github.com/grpc-ecosystem/grpc-gateway/releases/tag/v2.33.0)(2026-10-27)부터는 기본으로 `Grpc-Metadata-*`를 전달하지 않고 `WithLegacyHeaderMatching`으로만 되살린다(확인 2026-11-03). 그래서 v2.32.0 이하에서는 직접 만든 매처가 `X-Super-Access`처럼 이름만 막아도 `Grpc-Metadata-X-Super-Access`로 우회된다. 권한 수준·신원은 클라이언트가 보낸 값이 아니라 검증된 자격(토큰 검증 결과·수신 리스너·서명)으로 서버가 설정하고 같은 키의 클라이언트 값은 수신 단계에서 먼저 제거한다.
+- [ ] 하류 서비스가 게이트웨이 인증 미들웨어가 설정한 신원 헤더에 의존할 때, 그 미들웨어가 같은 이름의 클라이언트 헤더를 먼저 지우는지와 게이트웨이를 거치지 않는 경로가 막혀 있는지 확인했는가. Traefik v3.6.7 forwardAuth는 `authResponseHeaders`에 적은 헤더를 요청에서 먼저 지운 뒤 인증 응답 값으로 넣는다([`forward.go`](https://github.com/traefik/traefik/blob/v3.6.7/pkg/middlewares/auth/forward.go), 확인 2026-11-10). 하류 서비스가 그 헤더를 검증 없이 믿으면 클러스터 안에서 서비스로 직접 호출해 우회할 수 있으므로 메시 인가 정책이나 서비스 간 인증으로 진입 경로를 제한한다. 앱 미들웨어가 신원 헤더를 인증 성공 때만 덮어쓰면 인증 전·거절 경로의 로그와 코드는 클라이언트가 보낸 값을 본다.
 - [ ] 출발지 IP 허용 목록(인그레스·프록시의 IP 필터)을 걸 때 판정 지점이 보는 주소가 실제 클라이언트 주소인지 포트·경로마다 확인했는가. AWS NLB의 IP 대상 TCP·TLS 대상 그룹은 클라이언트 IP 보존이 기본 꺼져 있어 출발지가 LB 노드의 사설 IP가 되고([NLB 대상 그룹 속성](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/edit-target-group-attributes.html), 확인 2026-11-03), 같은 LB라도 리스너마다 설정이 다를 수 있다. 인그레스 파드의 서비스 메시 사이드카가 inbound를 가로채면 출발지가 파드 자신의 IP로 바뀐다(Linkerd edge-26.4.3 + Traefik v3.6.7 관찰 2026-11-03, 해당 포트를 `config.linkerd.io/skip-inbound-ports`로 빼야 실제 주소가 보임). 허용 대역이 VPC·파드 대역을 포함하면 이런 경로의 요청은 모두 통과하므로, 적용 뒤 허용 대역 밖의 주소에서 실제 요청이 거부되는지와 접근 로그의 출발지 주소를 함께 확인한다. 허용 경로를 클러스터 안 시험 파드로 확인할 때는 그 파드를 인그레스 파드와 다른 노드에 둔다. 클라이언트 IP 보존이 켜진 NLB에 대상과 같은 노드의 파드가 접속하면 응답이 노드 안에서 바로 돌아가 연결이 간헐적으로 끊기며(AWS 문서의 hairpin 제약과 같은 원리, 관찰 2026-11-03), 이를 allowlist 차단으로 오인하기 쉽다.
 - [ ] 저장소 안의 설정 파일이 정한 경로(형제 저장소, include 패턴)로 파일을 읽거나 git을 실행하는 도구는 그 경로를 프로젝트 상대 경로와 이름을 명시한 형제 디렉터리로 제한하고 링크·junction이 경계 밖으로 나가지 않는지 실제 경로로 대조하는가. 그 디렉터리의 git은 `-c core.fsmonitor=false -c safe.bareRepository=explicit`로 실행한다. `core.fsmonitor`에 경로가 들어 있으면 git이 그 훅 명령을 실행하고 `safe.bareRepository`는 명령줄·전역·시스템 설정에서만 적용된다([git-config](https://git-scm.com/docs/git-config), 확인 2026-10-17).
 - [ ] 저장소 안에서 실행되는 도구가 외부 명령을 이름만으로 실행하지 않는가. Windows에서 Bun 1.4.3의 `Bun.spawn`은 현재 디렉터리의 `git.exe`·`git.bat`을, Node 24.17.0의 `child_process.spawnSync`는 `git.exe`를 PATH보다 먼저 실행했다(관찰 2026-10-17). PATH에서 절대 경로로 해석한 실행 파일(Bun은 `Bun.which`)이 프로젝트 밖에 있는지 확인해 실행하고 작업 디렉터리는 중립 위치로 둔다.

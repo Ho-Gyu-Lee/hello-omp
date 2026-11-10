@@ -1,10 +1,10 @@
 ---
 type: Concept
 title: DB 제품별 비자명 계약(MySQL·PostgreSQL·SQLite·DynamoDB)
-description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행·REVOKE ALL의 회수자 권한 요건·caching_sha2_password 비밀번호 길이 상한·없는 계정 로그인의 무작위 인증 plugin과 sha256_password 경고·host가 맞는 계정이 없을 때 greeting 대신 오는 1130 오류, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, PostgreSQL 18 공식 Docker 이미지의 데이터 경로 변경과 NOT NULL 제약 카탈로그 변화, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·GSI 키 속성 쓰기 제약·식의 중복 괄호 거부·PutItem·Go 페이지네이터·소비 용량 응답 필드와 CloudWatch 지표(GSI분·스로틀 단위·2주 탐색 한계) 계약을 정리합니다.
+description: MySQL FK 재활성화·matched/changed rows·ODKU 대입 순서·DB 삭제 뒤 남는 권한 행·REVOKE ALL의 회수자 권한 요건·caching_sha2_password 비밀번호 길이 상한·없는 계정 로그인의 무작위 인증 plugin과 sha256_password 경고·host가 맞는 계정이 없을 때 greeting 대신 오는 1130 오류, MariaDB Connector/C 로컬 호스트의 TLS 호스트 검증 생략, PostgreSQL 18 공식 Docker 이미지의 데이터 경로 변경과 NOT NULL 제약 카탈로그 변화, SQLite prepared statement reset과 WAL checkpoint, DynamoDB GSI·GSI 키 속성 쓰기 제약·식의 중복 괄호 거부·맵 속성 빈 키 거부·PutItem·Go 페이지네이터·소비 용량 응답 필드와 CloudWatch 지표(GSI분·스로틀 단위·2주 탐색 한계) 계약을 정리합니다.
 tags: [database, mysql, postgresql, sqlite, dynamodb, cloudwatch, wal, verification]
 apply_on_edit: ["*.sql"]
-timestamp: 2026-11-07T00:00:00Z
+timestamp: 2026-11-10T00:00:00Z
 ---
 
 # DB 제품별 비자명 계약
@@ -40,6 +40,7 @@ timestamp: 2026-11-07T00:00:00Z
 - [PutItem](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html)은 같은 기본키의 기존 항목을 통째로 교체합니다. 상수 파티션 키와 밀리초 시각 정렬 키만으로 로그·이벤트를 쓰면 같은 밀리초의 쓰기가 오류 없이 사라지므로 정렬 키에 작성자·요청 ID를 붙이거나 `attribute_not_exists` 조건 쓰기로 덮어쓰기를 막습니다.
 - 기존(ACTIVE) GSI의 키 속성에 빈 문자열을 쓰면 `The AttributeValue for a key attribute cannot contain an empty string value`, NULL 타입을 쓰면 `Type mismatch for Index Key`로 PutItem·UpdateItem이 ValidationException 거부되고, 속성을 생략하면 그 항목만 GSI에서 빠집니다. 다중 속성 정렬 키 GSI는 정렬 키 속성들의 합계가 1024바이트 한도이며 넘으면 `Aggregate size for RANGE key attributes … exceeded limit 1024`로 거부됩니다. 지수가 큰 N(예: `-2E+125`)은 전개된 자릿수 문자열로 반환되므로 문자열이 아니라 수치로 비교합니다. (ap-northeast-2 실측 2026-10-30)
 - 식의 중복 괄호(`((a OR b))`)는 `The expression has redundant parentheses` ValidationException으로 거부됩니다(Query `FilterExpression`에서 실측 2026-10-30, 다른 식 종류는 미확인). 부분식을 괄호로 감싸 OR·AND로 잇는 생성기는 항이 하나일 때도 바깥 괄호를 다시 씌우지 않습니다.
+- 맵 속성의 빈 키는 `ValidationException: Empty attribute name`으로 항목 쓰기 전체가 거부됩니다(빈 문자열 값과 빈 맵은 허용, 관찰 2026-11-06). 사용자가 준 메타데이터 키를 맵 속성 이름으로 그대로 저장하면 빈 키 하나로 그 항목이 저장되지 않으므로, 쓰기 오류를 무시하는 로그 경로에서는 전달은 되고 기록만 조용히 빠집니다. 입력 단계에서 막거나 저장할 때 빈 키를 빼고, 저장 오류를 버리지 않습니다.
 - AWS SDK for Go v2 `service/dynamodb` v1.70.3의 `Query` 페이지네이터는 `NextPage`가 오류를 반환하면 위치를 진행하지 않고 `HasMorePages`가 계속 참입니다. 오류에서 `continue`하면 같은 페이지를 끝없이 다시 요청하므로 재시도 횟수·기한을 두고 실패를 호출자에게 반환합니다.
 - [TransactWriteItems](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TransactWriteItems.html#DDB-TransactWriteItems-request-ClientRequestToken)는 성공한 요청을 같은 유효 `ClientRequestToken`으로 재호출하면 쓰기가 아니라 읽기 용량을 반환합니다.
 - [조건부 쓰기](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithItems.html#WorkingWithItems.ConditionalWrites.ReturnConsumedCapacity)는 조건 실패에도 쓰기 용량을 소비하지만 실패 응답에 소비 용량을 반환하지 않으므로, 성공 응답에서 관측한 합만으로 전체 사용량을 단정하지 않습니다.

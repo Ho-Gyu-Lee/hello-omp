@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: UI 입력·표시 검증과 지역화
-description: 실제 창 입력 검사의 OS 포커스 충돌, 입력 소유·정리 범위와 최종 화면 검증 원리, 사용자 생성 텍스트 기계 번역의 원문 언어 지정(Google Cloud Translation Basic), Translation LLM의 v2 호출 조건과 용어집의 v3 전용 제약을 다룹니다.
+description: 실제 창 입력 검사의 OS 포커스 충돌, 입력 소유·정리 범위와 최종 화면 검증 원리, 사용자 생성 텍스트 기계 번역의 원문 언어 지정(Google Cloud Translation Basic), Translation LLM의 v2 호출 조건과 용어집의 v3 전용 제약·크기 한도를 다룹니다.
 tags: [development, ui, input, verification, localization, translation]
-timestamp: 2026-11-04T00:00:00Z
+timestamp: 2026-11-10T00:00:00Z
 ---
 
 # UI 입력·표시 검증과 지역화
@@ -23,4 +23,4 @@ Godot 구현·고정 버전 관찰은 [Godot UI](/game/godot-ui.md)를 따릅니
 
 ## 기계 번역 모델과 용어집
 
-- Google Cloud Translation의 Translation LLM은 Basic(v2)에서도 `model`에 `projects/<프로젝트>/locations/<지역>/models/general/translation-llm` 전체 리소스 이름을 넣어 호출할 수 있지만, v2 호출은 API 키 인증만 됩니다. 용어집은 Advanced(v3)의 `translateText`에서만 쓰고, 문맥을 반영하는 용어집 적용(`contextual_translation_enabled`)은 Translation LLM만 지원합니다([TLLM](https://docs.cloud.google.com/translate/docs/translation-llm), [용어집](https://docs.cloud.google.com/translate/docs/advanced/glossary), 확인 2026-11-04). 게임 용어 고정이 요구에 있으면 v3 전환과 그 인증 방식을 함께 설계합니다.
+- Google Cloud Translation의 Translation LLM은 Basic(v2)에서도 `model`에 `projects/<프로젝트>/locations/<지역>/models/general/translation-llm` 전체 리소스 이름을 넣어 호출할 수 있지만, v2 호출은 API 키 인증만 됩니다. 용어집은 Advanced(v3)의 `translateText`에서만 쓰고, 문맥을 반영하는 용어집 적용(`contextual_translation_enabled`)은 Translation LLM만 지원합니다([TLLM](https://docs.cloud.google.com/translate/docs/translation-llm), [용어집](https://docs.cloud.google.com/translate/docs/advanced/glossary), 확인 2026-11-04). 용어집 크기는 합계 10,485,760 UTF-8 바이트, 용어 하나 1,024바이트가 한도이고 한도를 넘는 용어는 오류 없이 무시됩니다(확인 2026-10-01). 게임 용어 고정이 요구에 있으면 v3 전환과 그 인증 방식을 함께 설계합니다.

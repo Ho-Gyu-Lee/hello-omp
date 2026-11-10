@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: 데이터 형식·콘텐츠 게시 계약
-description: 외부 decoder의 길이 검증 한계, 부분 생성의 보호 기준 전환, CloudFront minimum TTL의 origin 캐시 지시어 우선 예외를 다룹니다.
+description: 외부 decoder의 길이 검증 한계, 런타임마다 다른 protobuf 문자열의 UTF-8 위반 처리, 부분 생성의 보호 기준 전환, CloudFront minimum TTL의 origin 캐시 지시어 우선 예외를 다룹니다.
 tags: [development, serialization, content, cdn, cache, editor]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-11-10T00:00:00Z
 ---
 
 # 데이터 형식·콘텐츠 게시 계약
@@ -13,6 +13,10 @@ timestamp: 2026-10-18T00:00:00Z
 ## 외부 decoder와 길이 검증
 
 - 외부 decoder·생성 런타임이 실패를 bool·오류 코드로 반환한다는 사실은 길이 필드를 안전하게 검사한다는 증거가 아닙니다. 부호 없는 길이를 범위 확인 없이 부호 있는 정수로 바꾼 뒤 `pos + len <= end`만 비교하면 음수 길이가 통과해 읽기 위치가 뒤로 가거나 그 값이 크기 인수로 쓰여 거대한 할당이 일어날 수 있고, 덧셈 overflow도 같은 비교를 무력화합니다. 채택 전에 음수로 해석되는 값·최대값·남은 크기 초과·잘린 입력이 거부되는지 확인하고, CDN·사용자 파일처럼 경로를 신뢰할 수 없는 데이터는 무결성 검증 뒤 decode합니다.
+
+## 직렬화의 UTF-8 계약
+
+- protobuf `string` 필드는 UTF-8이어야 하지만 런타임마다 위반을 다르게 처리합니다. Google.Protobuf(C#) 3.19.4는 쌍 없는 서로게이트를 예외 없이 U+FFFD로 바꿔 직렬화합니다(.NET 8 관찰). protobuf-go v1.36.12는 잘못된 UTF-8 `string`을 Unmarshal 오류로 거부하고, `proto.Marshal`은 오류와 함께 그 필드 앞까지의 바이트를 반환하므로 오류를 무시하고 보내면 뒤 필드가 빠진 메시지가 나갑니다(관찰 2026-10-23). 수신 측이 Unmarshal 오류를 응답 없이 버리면 송신 측에는 시간 초과만 보입니다. 문자열을 가공하는 코드(필터·치환·잘라내기)는 출력이 유효한 UTF-8인지 시험하고 Marshal 오류를 버리지 않습니다.
 
 ## 부분 생성의 보호와 게시
 

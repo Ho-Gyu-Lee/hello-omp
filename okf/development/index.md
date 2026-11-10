@@ -4,17 +4,17 @@
 
 ## 실행·진단·서버 운영
 * [내장 Lua 스크립트의 실행 경계](/development/execution.md) - 내장 Lua 스크립트의 count hook·선점 한계를 다룹니다.
-* [런타임 진단·측정 범위·출하 진단](/development/runtime-diagnostics.md) - 측정·검증이 증명하는 범위, 교체 allocator 앱에 결합하는 정적 라이브러리의 할당/해제 도메인, Fluent Bit 라벨/심각도·로그 조회의 스캔 비용과 CloudWatch Logs 적재 신선도·가변 이미지 태그의 반영 시점·연결 종료 진단·Docker pause 관측·Windows 덤프 API의 확인된 조건입니다.
+* [런타임 진단·측정 범위·출하 진단](/development/runtime-diagnostics.md) - 측정·검증이 증명하는 범위, 교체 allocator 앱에 결합하는 정적 라이브러리의 할당/해제 도메인, Fluent Bit 라벨/심각도·로그 조회의 스캔 비용과 Logs Insights 결과 투영·CloudWatch Logs 적재 신선도·OpenObserve 알림 API·RDS 확장 모니터링 프로세스 목록으로 하는 DB 클라이언트 귀속·가변 이미지 태그의 반영 시점·끝나지 않은 요청의 CPU 점유 진단·연결 종료 진단·Docker pause 관측·Windows 덤프 API의 확인된 조건입니다.
 * [서버 프로토콜·메모리·큐 운영 기준](/development/server-checklist.md) - 비동기 완료의 상태 소유자 적용, 공유 상수·메시지 ID·codec 경계, 큐 소비 장벽의 처리율 상한, Mirror·Asio·OpenSSL·RabbitMQ의 버전별 함정을 다룹니다.
 * [서비스 영속성·생존 감시·프로세스와 소유권 수명](/development/service-lifecycle.md) - 내구 확인·grpc-go 종료 계약, identity 결속 이전, 생존 감시와 장애 반응, pidfd·flock 잠금 파일·컨테이너·Windows 감독의 확인된 함정, 소유권 fencing의 기준과, 대규모 상태·부하 서비스 운영 설계의 참조 사례(DeepSeek 추론 배포 Q&A)입니다.
 
 ## 데이터·네트워크
-* [데이터 형식·콘텐츠 게시 계약](/development/data-formats.md) - 외부 decoder의 길이 검증 한계, 부분 생성의 보호 기준 전환, CloudFront minimum TTL의 origin 캐시 지시어 우선 예외를 다룹니다.
+* [데이터 형식·콘텐츠 게시 계약](/development/data-formats.md) - 외부 decoder의 길이 검증 한계, 런타임마다 다른 protobuf 문자열의 UTF-8 위반 처리, 부분 생성의 보호 기준 전환, CloudFront minimum TTL의 origin 캐시 지시어 우선 예외를 다룹니다.
 * [난수·재현 계약](/development/randomness.md) - 같은 seed가 라이브러리 간 같은 결과를 보장하지 않는 조건과 시험이 주입한 시계·상태를 라이브 경로에 되돌리지 않는 기준입니다.
 * [네트워크 전달·I/O·시간 계측](/development/network.md) - 송신 공정성·reliable 폐기·gRPC 재접속·Apple 연결 제약·macOS Go resolver와 DNS 실패 재현, IOCP 실패 완료·소켓 종료 수명, WSL localhost 중계 지연과 RTT 표본화·캡처 교란을 다룹니다.
 
 ## UI·표현·탐색·자산
-* [UI 입력·표시 검증과 지역화](/development/ui-input.md) - 실제 창 입력 검사의 OS 포커스 충돌, 입력 소유·정리 범위와 최종 화면 검증 원리, 사용자 생성 텍스트 기계 번역의 원문 언어 지정(Google Cloud Translation Basic), Translation LLM의 v2 호출 조건과 용어집의 v3 전용 제약을 다룹니다.
+* [UI 입력·표시 검증과 지역화](/development/ui-input.md) - 실제 창 입력 검사의 OS 포커스 충돌, 입력 소유·정리 범위와 최종 화면 검증 원리, 사용자 생성 텍스트 기계 번역의 원문 언어 지정(Google Cloud Translation Basic), Translation LLM의 v2 호출 조건과 용어집의 v3 전용 제약·크기 한도를 다룹니다.
 * [수치 결정성과 충돌 판정 계약](/development/numerics-spatial.md) - 서버·클라이언트 비트 일치 계산의 libm·FMA·툴체인 조건과 golden test, Box2D 센서의 CCD 미지원, 동일성 비교 경로의 표현·decode 통일과 경계 위 값 생성 금지 원리를 다룹니다.
 * [렌더링·애니메이션 표현 계약](/development/rendering-animation.md) - D3D12 장치 제거 시 fence 신호, 필터·고정 표시 프로필·이동 클립 갱신에서 실제 데이터와 최종 표시로 판단하는 원리, 스프라이트 크기의 시트 칸·화면 표시 구분, 투영된 방향 스프라이트의 행을 지면 각도로 고르는 기준, 반복 클립의 루프 이음 판정, 애니메이션 시트를 프레임마다 고치는 보정의 프레임 사이 일관성 판정, 3D 렌더로 만드는 층 스프라이트의 가림·지면 고정·체형 변경·의상 이식·IK 자세 판정과 구매 스프라이트의 카메라 내려다보는 각 추정, Unity 에디터 오프라인 렌더의 Humanoid 자세 샘플링·패키지 반입 함정을 다룹니다.
 * [상태 기계·탐색의 수명과 작업 예산](/development/ai-navigation.md) - 상태 실행 세대, 반복 재계획이 진행을 되감지 않는 조건, 탐색 실패와 불가능성·충돌 요구의 구분, 부분 경로·예산 고갈과 목표 완료의 구분을 다룹니다.
