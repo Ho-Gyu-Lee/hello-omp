@@ -16,7 +16,7 @@ timestamp: 2026-11-10T00:00:00Z
 
 ## 직렬화의 UTF-8 계약
 
-- protobuf `string` 필드는 UTF-8이어야 하지만 런타임마다 위반을 다르게 처리합니다. Google.Protobuf(C#) 3.19.4는 쌍 없는 서로게이트를 예외 없이 U+FFFD로 바꿔 직렬화합니다(.NET 8 관찰). protobuf-go v1.36.12는 잘못된 UTF-8 `string`을 Unmarshal 오류로 거부하고, `proto.Marshal`은 오류와 함께 그 필드 앞까지의 바이트를 반환하므로 오류를 무시하고 보내면 뒤 필드가 빠진 메시지가 나갑니다(관찰 2026-10-23). 수신 측이 Unmarshal 오류를 응답 없이 버리면 송신 측에는 시간 초과만 보입니다. 문자열을 가공하는 코드(필터·치환·잘라내기)는 출력이 유효한 UTF-8인지 시험하고 Marshal 오류를 버리지 않습니다.
+- protobuf `string` 필드는 UTF-8이어야 하지만 런타임마다 위반을 다르게 처리합니다. Google.Protobuf(C#) 3.19.4는 쌍 없는 서로게이트를 예외 없이 U+FFFD로 바꿔 직렬화합니다(.NET 8 관찰). protobuf-go v1.36.12는 잘못된 UTF-8 `string`을 Unmarshal 오류로 거부하고(관찰 2026-10-23), `proto.Marshal`은 오류와 함께 불완전한 바이트를 반환할 수 있습니다. 이 버전은 잘못된 필드의 태그와 문자열까지 쓴 뒤 멈추므로 그 필드는 포함되고 뒤 필드는 빠집니다([`codec_gen.go`](https://github.com/protocolbuffers/protobuf-go/blob/v1.36.12/internal/impl/codec_gen.go)의 `appendStringValidateUTF8`, [`encode.go`](https://github.com/protocolbuffers/protobuf-go/blob/v1.36.12/internal/impl/encode.go), 확인 2026-11-10). 반환 경계는 버전·필드 종류에 따라 다를 수 있으므로 Marshal 오류가 나면 받은 바이트를 보내지 않습니다. 수신 측이 Unmarshal 오류를 응답 없이 버리면 송신 측에는 시간 초과만 보입니다. 문자열을 가공하는 코드(필터·치환·잘라내기)는 출력이 유효한 UTF-8인지 시험합니다.
 
 ## 부분 생성의 보호와 게시
 
