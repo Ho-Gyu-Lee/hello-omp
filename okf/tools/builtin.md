@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: omp 기본 도구
-description: 내장 도구 우선과 비자명 계약(AST 기본값·브라우저·Windows bash 도구의 서비스 실행 셸과 `/dev/null`), 실행·관측 주체 구분, 긴 작업의 실패 판정, 원본 보존, 작업용 스크립트의 TypeScript+Bun.
+description: 내장 도구 우선과 비자명 계약(AST 기본값·브라우저·Windows bash 도구의 서비스 실행 셸과 `/dev/null`), 실행·관측 주체 구분, 실행 중인 작업이 읽는 파일의 분할 편집 금지, 긴 작업의 실패 판정, 원본 보존, 작업용 스크립트의 TypeScript+Bun.
 tags: [tools, builtin, lsp, ast, browser, background, typescript, bun]
 timestamp: 2026-11-09T00:00:00Z
 ---
@@ -25,6 +25,7 @@ omp는 배터리 포함이다. 기본으로 되는 일에 MCP를 두지 않으�
 - Bun Shell(`$` 템플릿)은 `cmd > ${log} 2>&1`을 "expected a command or assignment but got: Redirect"로 거부하므로 표준 출력·오류를 한 파일로 모을 때는 `cmd &> ${log}`를 쓴다. 인수 배열은 `` $`${tool} ${args}` ``처럼 넘기면 원소마다 따로 인용된다. `.nothrow()`를 쓰면 이런 실패가 종료 코드로만 드러나므로 로그 파일이 실제로 채워지는지 함께 본다(Bun 1.4.3 확인: 2026-10-18).
 - 하위 프로세스의 로그와 종료 코드는 실패를 그대로 드러내지 않을 수 있다. `Bun.spawn`의 `stdout`·`stderr`에 `Bun.file(path)`를 주면 기존 파일을 비우지 않고 앞에서부터 덮어써, 더 짧은 실행 뒤에 이전 로그의 꼬리가 남는다. 실행 전에 `await Bun.write(path, "")`로 비운다(Bun 1.4.3 macOS 실측: 2026-10-23). Blender `-b -P script.py`는 스크립트가 예외로 끝나도 종료 코드 0을 내므로 실패를 종료 코드로 잡으려면 `-P` 앞에 `--python-exit-code 1`을 둔다(Blender 5.2.2 `--help`와 실측: 2026-10-23).
 - `eval`의 `browser` facade는 활성화된 경우에만 있으며 API는 `xd://eval/browser`를 읽는다. 정적 URL은 `read`가 우선이고, 로그인 벽·JS 챌린지에 막히면 막혔다고 결론 내기 전에 관리 Chromium(relay 아님)으로 연다. 위임 조사에도 이 경로를 지정한다. relay/CDP는 사용자의 실제 로그인 세션이므로 사용자가 연 페이지만 `browser.targets()`로 확인해 `app.target`을 지정하고 요청 없이 보이는 탭을 탐색하지 않는다. `allow_file_access`는 launch flag라 실행 중인 공유 브라우저에 적용되지 않으므로 `file://` 문서가 다른 로컬 파일을 읽어야 할 때만 `app.path` 전용 브라우저에서 켜고 그 결과를 기본 조건의 증거로 쓰지 않는다(`xd://eval/browser`, 확인: 2026-10-18).
+- 스케줄러·서비스가 실행 중에 직접 읽는 스크립트·설정은 `edit`로 여러 번 나눠 고치지 않는다. `edit`는 호출마다 파일을 저장하므로 그 사이의 실행이 반쯤 고친 파일을 읽고 실패하며, 그 회차의 동작(감시·복구 등)이 빠진다(launchd 주기 작업에서 `ReferenceError`로 한 회차가 빠진 실측: 2026-11-11). 먼저 작업을 멈추거나, 사본을 고쳐 검사한 뒤 `mv`로 한 번에 바꾼다.
 
 ## 긴 작업과 대기
 - 정상 작업은 중간에 멈추거나 승인을 구하지 않고 끝까지 완료한다. 실패는 경과 시간이나 변하지 않는 로그가 아니라 프로세스 종료·오류 출력·교착·충족 불가 조건 같은 실제 근거로 판정하고(긴 링크·컴파일은 정상 중에도 진행 표시가 그대로다), 원인 확인 전에 같은 조건으로 재시도하지 않는다.
