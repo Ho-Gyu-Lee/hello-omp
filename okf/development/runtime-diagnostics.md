@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 런타임 진단·측정 범위·출하 진단
-description: 측정·검증이 증명하는 범위, 교체 allocator 앱에 결합하는 정적 라이브러리의 할당/해제 도메인, Fluent Bit 라벨/심각도·로그 조회의 스캔 비용과 Logs Insights 결과 투영·CloudWatch Logs 적재 신선도·OpenObserve 알림 API·RDS 확장 모니터링 프로세스 목록으로 하는 DB 클라이언트 귀속·가변 이미지 태그의 반영 시점·끝나지 않은 요청의 CPU 점유 진단·연결 종료 진단·Docker pause 관측·Windows 덤프 API의 확인된 조건입니다.
+description: 측정·검증이 증명하는 범위, 교체 allocator 앱에 결합하는 정적 라이브러리의 할당/해제 도메인, Fluent Bit 라벨/심각도·로그 조회의 스캔 비용과 Logs Insights 결과 투영·CloudWatch Logs 적재 신선도·OpenObserve 알림 API·RDS 확장 모니터링 프로세스 목록으로 하는 DB 클라이언트 귀속·가변 이미지 태그의 반영 시점·끝나지 않은 요청의 CPU 점유 진단·Service 주소로 수집한 카운터와 Traefik gRPC 상태 레이블의 해석·연결 종료 진단·Docker pause 관측·Windows 덤프 API의 확인된 조건입니다.
 tags: [development, diagnostics, memory, logging, crash, native-library, cost, cloudwatch, kubernetes]
-timestamp: 2026-11-10T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # 런타임 진단·측정 범위·출하 진단
@@ -33,6 +33,7 @@ timestamp: 2026-11-10T00:00:00Z
 - [ ] RDS PostgreSQL에서 `log_connections`가 꺼져 접속 기록이 없어도, 확장 모니터링이 켜져 있으면 CloudWatch Logs `RDSOSMetrics` 그룹의 인스턴스 스트림(`db-<리소스 ID>`) 샘플마다 `processList`에 클라이언트 backend가 `postgres: <user> <db> <host>(<port>) <state>` 이름으로 남습니다. 그 로그 그룹의 보존 기간 동안 DB 클라이언트 주소·사용자를 분 단위로 귀속할 수 있으므로 "접속 기록 없음"으로 판정하기 전에 확인합니다. 표본 간격보다 짧은 세션은 빠지므로 부재 주장은 그 간격 이상 세션으로 한정합니다(2026-11 관측: 1분 간격, 30일 보존, `get-log-events`는 Logs Insights 스캔 비용이 없음).
 - [ ] 동작이나 사용량이 어느 시점부터 바뀌었으면 코드·쿼리를 분석하기 전에 그 시점에 실행되던 바이너리(파드 시작 시각과 `status.containerStatuses[].imageID`의 digest)를 확인합니다. 가변 태그(`:latest` 등)와 `imagePullPolicy: Always`는 컨테이너가 시작될 때마다 그 시점의 태그를 다시 해석하므로, 변경은 커밋·푸시 시각이 아니라 재시작·재배치·스케일아웃 시각에 들어가고 같은 태그를 쓰는 파드·테넌트마다 반영 시각이 다릅니다. 공유 가변 태그를 덮어쓰면 다른 테넌트의 파드도 다음 시작부터 새 이미지를 실행합니다.
 - [ ] 요청량이 적은데 컨테이너 CPU가 limit에 붙어 있으면 시작·완료 로그를 요청 ID로 짝지어 끝나지 않은 요청부터 찾습니다. 입력을 소비하지 않고 도는 루프(파서가 모르는 토큰에서 전진하지 않는 경우 등)는 로그 없이 실행 단위 하나당 CPU를 계속 쓰고, 요청 context 취소를 확인하지 않으므로 프로세스 재시작 전까지 남습니다. CPU가 limit에 붙은 시점은 지표 이력이 있으면 `container_cpu_usage_seconds_total`의 구간별 증가율로 찾습니다. 이력이 없으면 노드 프록시(`kubectl get --raw /api/v1/nodes/<node>/proxy/metrics/cadvisor`)의 누적값을 간격을 두고 두 번 읽어 지금 limit에 붙어 있는지만 확인합니다. 누적 CPU초와 `container_cpu_cfs_throttled_periods_total`(횟수)은 컨테이너 시작 이후의 합계라 포화 시작 시각을 복원하지 못하므로, 시작 시각은 끝나지 않은 요청의 수신 로그 시각으로 정하거나 미확정으로 둡니다. 노드 프록시 경로는 지표 서버에 이력이 없거나 파드 프록시가 앱 지표 포트에 닿지 않아도 됩니다(관찰 2026-11-09).
+- [ ] Prometheus가 파드가 아니라 부하 분산되는 Service 주소를 수집하면 수집마다 임의 파드 하나의 값이 들어와 한 시계열에 여러 파드의 누적 카운터가 섞입니다(Prometheus 3.2.1, 관찰 2026-11-11). 그 시계열로 `increase`·`rate`를 내지 않고 같은 시각의 `process_start_time_seconds`로 파드를 갈라 집계하며, 한 번도 수집되지 않은 파드 몫은 빠진다고 적습니다. Traefik의 gRPC 요청 지표에서 `code` 레이블은 HTTP 상태가 아니라 gRPC 상태이고(성공 `0`), 라우터에 맞지 않은 gRPC 요청도 `2`로 집계되므로 요청 수를 정상 처리 수로 읽지 않습니다(관찰 2026-11-11).
 - [ ] 연결·세션 종료 진단은 종료를 처음 결정한 지점에서 원인을 고정해 뒤의 송신 실패·transport 통지가 덮어쓰지 않게 합니다. 재개로 인한 대체·정상 이전 뒤 퇴역·미전송 요청 취소처럼 "끊김"으로 보이지 않는 재설정 경로까지 회계에 넣습니다. "peer 종료" 같은 transport 통지는 로컬 socket 실패도 같은 통지로 올릴 수 있으므로 그 사유만으로 외부 원인을 확정하지 않습니다.
 - [ ] Docker Desktop 29.8.2에서 pause한 컨테이너의 게시 포트는 TCP 연결을 받고 TLS handshake가 timeout으로 끝났습니다(2026-10-16 관측). 정지한 백엔드를 연결 거절로 판별한다고 가정하지 않습니다.
 - [ ] Windows `MiniDumpWriteDump`는 가능하면 별도 프로세스에서 호출하고 DbgHelp 동시 호출을 직렬화합니다. 크래시 프로세스 내부는 allocator·loader lock이 손상/교착 상태일 수 있습니다([MiniDumpWriteDump](https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/nf-minidumpapiset-minidumpwritedump)).
