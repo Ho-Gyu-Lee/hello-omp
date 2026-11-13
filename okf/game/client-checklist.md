@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 게임 클라이언트 기능/성능 체크리스트
-description: 게임 클라이언트의 정상 종료 로그아웃, 수신 처리율과 Unity Android 의존성 관리자(EDM4U→Unity EDM)의 버전 특정 계약.
-tags: [game, client, networking, checklist, unity, android, edm4u, unity-edm]
-timestamp: 2026-10-18T00:00:00Z
+description: 게임 클라이언트의 정상 종료 로그아웃, 수신 처리율과 Unreal Engine 모바일의 게임 스레드 정지 조건(iOS 일시 비활성·UE 5.3 설정 판정·Android pause), Unity Android 의존성 관리자(EDM4U→Unity EDM)의 버전 특정 계약.
+tags: [game, client, networking, checklist, unity, unreal, ios, android, edm4u, unity-edm]
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # 게임 클라이언트 기능/성능 체크리스트
@@ -12,6 +12,7 @@ timestamp: 2026-10-18T00:00:00Z
 
 - [ ] 정상 종료(창 닫기·Alt+F4·Android Back)에서 명시 로그아웃을 보내지 않으면 서버는 연결 손실로 보고 재접속 유예 동안 캐릭터를 붙잡아 같은 계정의 즉시 재접속을 거절한다. 엔진의 자동 종료를 가로채 세션이 묶인 상태에서만 로그아웃을 한 번 보내고, 메인 스레드에서 transport를 pump하며 서버의 연결 종료나 짧은 상한(수 초)까지 기다린 뒤 종료한다. 로그아웃 뒤에는 다른 송신과 상태를 바꾸는 진입점을 막고, 지역 이전 확정과 겹치면 새 binding으로 한 번 더 보낸다. 연결 종료는 서버의 소유 반환 완료 증거가 아니며 검증은 종료 직후 같은 계정의 즉시 재접속으로 한다. Godot는 `auto_accept_quit`·`quit_on_go_back`을 끄고 `NOTIFICATION_WM_CLOSE_REQUEST`와 Android 전용 `NOTIFICATION_WM_GO_BACK_REQUEST`를 처리한다([SceneTree](https://docs.godotengine.org/en/stable/classes/class_scenetree.html), 확인 2026-10-15).
 - [ ] 수신을 프레임마다 소비하고 transport가 소비 전까지 다음 frame을 읽지 않는 구조라면 수신 처리율이 FPS에 묶인다([서버 큐 운영](/development/server-checklist.md#큐입장처리-예산)과 같은 원리). 초당 정상 하향 frame 수가 최저 지원 FPS보다 낮은지, 로딩·장시간 정지 뒤 밀린 수신을 따라잡는지 확인한다.
+- [ ] 수신 스레드가 게임 스레드와 따로 도는 SDK는 게임 스레드가 멈춘 동안 받은 이벤트를 쌓는다. Unreal Engine 모바일의 게임 스레드 정지 조건(UE 4.27·5.3 엔진 소스 확인, 2026-10-15): iOS는 `applicationWillResignActive`에서 게임 스레드가 `GEngineLoop.Tick()` 대신 `FAppEntry::SuspendTick()`(0.1초 sleep)만 돌아 제어 센터·알림 센터·시스템 권한 팝업 같은 일시 비활성에서도 멈춘다. UE 4.27은 항상 멈추고, UE 5.3은 `GConfig->GetBool`의 반환값(키 존재 여부)을 설정값으로 써서 엔진 ini에 `/Script/IOSRuntimeSettings.IOSRuntimeSettings`의 `bSupportsBackgroundAudio` 키가 없을 때만 멈춘다(값이 False여도 키가 있으면 멈추지 않는다). Android는 `APP_CMD_PAUSE`(onPause)와 `APP_CMD_TERM_WINDOW`에서 멈추고 포커스 상실만으로는 멈추지 않는다. 수신 버퍼를 고정 크기 풀에서 검사 없이 꺼내 쓰지 않고, 정지 동안 쌓일 양의 상한과 초과 시 동작(재접속 등)을 정해 그 조건에서 시험한다.
 
 ## Unity Android 의존성 배포 검증
 

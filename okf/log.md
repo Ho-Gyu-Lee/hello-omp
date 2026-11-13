@@ -4,6 +4,9 @@
 
 2026-10-18 이전의 상세 이력(학습 항목별 계기·정정 포함)은 `git show f380421:okf/log.md`로 본다.
 
+## 2026-11-13
+* **신설:** [문서 사이트의 짝 문서 일치와 Docusaurus 버전·번역·빌드 계약](/development/docs-site.md). 로컬 `learned/`의 개발 문서 작업 기록에서 제품 고유 요소를 걷어 낸 일반 계약(플랫폼별·언어별 짝 문서의 일치와 대조, Docusaurus 2.4.3의 공개 폴더·버전 스냅샷의 번역 복사·번역 짝·링크·draft·MDX 1·생성 폴더 공유)을 옮겼다. 같은 날 로컬의 일반 사실을 [워크플로](/workflow.md)·[코딩 스타일](/coding-style.md)·[난수·재현 계약](/development/randomness.md)·[게임 클라이언트 체크리스트](/game/client-checklist.md)에 더하고 로컬에서는 고유 사실만 남겼다.
+
 ## 2026-11-10
 * **신설:** [클라우드 침해 조사의 로그 공백·신원 판별·노출 범위 (AWS·GCP)](/security/cloud-incident-forensics.md). 로컬 `learned/`의 침해 대응 기록에서 직장·계정 고유 요소를 걷어 낸 일반 계약(CloudTrail 리전·트레일 중지·요청 본문 은닉, EKS 토큰 검증과 Lambda 환경 변수 복호화 흔적, 노출 범위, GCP 데이터 접근 로그 공백과 대체 근거, 출발지 제한 수단의 한계)을 옮겼다. 같은 날 로컬의 일반 사실을 [런타임 진단](/development/runtime-diagnostics.md)·[코드 리뷰 보안 체크리스트](/security/review-checklist.md)·[DB 제품별 비자명 계약](/database/design.md)·[데이터 형식](/development/data-formats.md)·[UI 입력·지역화](/development/ui-input.md)에 더하고 로컬에서는 고유 사실만 남겼다.
 
