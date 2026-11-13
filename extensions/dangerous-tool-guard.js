@@ -9,6 +9,12 @@ const BROWSER_PRELUDE_RE = /\b(?:browser|tab|page)\s*\.\s*\w/;
 const SHELL_RUNNER_RE = /(?:subprocess\.|child_process|execFile|spawn\s*\(|exec\s*\(|Bun\.\$|os\.system\s*\()/i;
 const EVAL_DIRECT_REMOVE_RE = /(?:shutil\.rmtree\s*\(|(?:\bfs(?:\.promises)?|fsp)\s*\.\s*rm(?:dir)?(?:Sync)?\s*\(|\bos\.(?:remove|unlink|rmdir)\s*\()/i;
 const EVAL_SHELL_RM_RE = /(?:rm\s+-[\w-]*r|\brm\s+)/i;
+// Eval shell paths that never emit a bash tool_call: the `sh` helper (OMP 18.18.3+) and the Python `!cmd` / `%%bash` magics.
+const EVAL_SH_HELPER_RE = /(?<![\w.$])sh\s*[(`]/g;
+const EVAL_SH_LITERAL_RE = /(?<![\w.$])sh\s*(?:\(\s*[A-Za-z]{0,2})?(?:"""([\s\S]*?)"""|'''([\s\S]*?)'''|"((?:[^"\\\n]|\\.)*)"|'((?:[^'\\\n]|\\.)*)'|`((?:[^`\\]|\\.)*)`)/g;
+const PY_LANGUAGE_RE = /^py(?:thon)?$/i;
+const PY_BANG_COMMAND_RE = /^[ \t]*(?:[A-Za-z_][\w.\[\]"']*[ \t]*=[ \t]*)?!(?!=)(.+)$/gm;
+const PY_BASH_CELL_RE = /^[ \t]*%%bash\b[^\n]*\n([\s\S]*)$/m;
 const DESTRUCTIVE_MCP_NAME_RE = /(?:^|[_-])(?:delete|drop|destroy|terminate|purge|truncate|reset|remove)(?:$|[_-])/i;
 
 const DB_COMMANDS = new Set([
@@ -103,8 +109,49 @@ function inspectEval(code, language) {
     return finding("destructive file removal detected in eval code", code);
   }
 
+  const shellFinding = inspectEvalShell(code, language);
+  if (shellFinding) {
+    return shellFinding;
+  }
+
   if (BROWSER_PRELUDE_RE.test(code) && BROWSER_DELETE_RE.test(code)) {
     return finding("HTTP DELETE detected in browser automation code", code);
+  }
+
+  return undefined;
+}
+
+function inspectEvalShell(code, language) {
+  const commands = [];
+  let literalCalls = 0;
+
+  for (const match of code.matchAll(EVAL_SH_LITERAL_RE)) {
+    literalCalls += 1;
+    commands.push(match[1] ?? match[2] ?? match[3] ?? match[4] ?? match[5] ?? "");
+  }
+
+  if (PY_LANGUAGE_RE.test(language)) {
+    for (const match of code.matchAll(PY_BANG_COMMAND_RE)) {
+      commands.push(match[1]);
+    }
+
+    const cell = PY_BASH_CELL_RE.exec(code);
+    if (cell) {
+      commands.push(cell[1]);
+    }
+  }
+
+  for (const command of commands) {
+    const commandFinding = inspectShellScript(command);
+    if (commandFinding) {
+      return finding(`${commandFinding.reason} in eval shell command`, code);
+    }
+  }
+
+  // A command built outside the call (`sh(cmd)`) cannot be parsed here, so fall back to the coarse removal check.
+  const helperCalls = code.match(EVAL_SH_HELPER_RE)?.length ?? 0;
+  if (helperCalls > literalCalls && EVAL_SHELL_RM_RE.test(code)) {
+    return finding("destructive file removal detected in eval code", code);
   }
 
   return undefined;
