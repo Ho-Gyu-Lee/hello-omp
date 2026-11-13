@@ -1,9 +1,9 @@
 ---
 type: Reference
 title: omp 기본 도구
-description: 내장 도구 우선과 비자명 계약(AST 기본값·브라우저·Windows bash 도구의 서비스 실행 셸과 `/dev/null`), 실행·관측 주체 구분, 실행 중인 작업이 읽는 파일의 분할 편집 금지, 긴 작업의 실패 판정, 원본 보존, 작업용 스크립트의 TypeScript+Bun.
+description: 내장 도구 우선과 비자명 계약(AST 기본값·브라우저·bash 서비스 셸·Windows `/dev/null`·`omp` CLI 인자·`omp://` 문서 지연), 실행·관측 주체 구분, 실행 중 파일의 분할 편집 금지, 긴 작업의 실패 판정, 원본 보존, TypeScript+Bun 작업 스크립트. 셸·eval·브라우저로 실행·관측하거나 작업 스크립트를 쓸 때 읽는다.
 tags: [tools, builtin, lsp, ast, browser, background, typescript, bun]
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # omp 기본 도구
@@ -12,20 +12,22 @@ omp는 배터리 포함이다. 기본으로 되는 일에 MCP를 두지 않으�
 
 ## 코드 분석·탐색
 - `lsp`가 가용하면 의미 분석에 우선 쓰고 텍스트 검색으로 대신하지 않는다. 쓸 수 없으면 검색의 한계를 밝히고 실제 코드·런타임으로 보완한다.
-- `astGrep.enabled` 기본값은 `false`, `astEdit.enabled` 기본값은 `true`다(OMP 18.12.1 `src/tools/settings.ts`, 확인: 2026-10-18).
+- `astGrep.enabled` 기본값은 `false`, `astEdit.enabled` 기본값은 `true`다(OMP 18.20.0 `omp config list --json`, 확인: 2026-11-13).
 
 ## 실행·관측
 - **실행·환경·관측의 주체를 맞춘다.** 다른 주체(별도 셸, 이전 모듈 인스턴스, 블로킹된 같은 커널)에서 얻은 결과를 대상 주체의 증거로 쓰지 않는다. 예:
   - 상태가 유지되는 `eval`에서 소스를 갱신한 뒤 이전 모듈의 객체와 새 모듈의 함수를 섞지 않는다(`WeakMap`·클래스 identity는 모듈 인스턴스의 계약). 검증은 새 프로세스의 정식 진입점에서 하며 검증을 완화해 섞인 객체를 받아주지 않는다.
   - 같은 `eval` 커널의 동기 호출(`Bun.spawnSync`)은 그 커널의 비동기 관측 루프(로그 tail·주기 표본)도 멈춘다. 시각을 재는 하위 프로세스는 `Bun.spawn`이나 별도 프로세스로 실행하고 관측 시각 차이를 지연 근거로 쓰지 않는다.
   - 별도 셸의 `export`는 IDE에서 시작한 빌드에 전달되지 않는다. Visual Studio의 [CMake preset](https://learn.microsoft.com/en-us/cpp/build/cmake-presets-vs)은 변수 확장 뒤 CMake를 호출하므로 target 의존 경로는 target 환경이나 toolchain 진입 파일에서 정한다.
-  - bash 도구의 일반 호출은 내장 brush 셸에서 돌지만 `name`(서비스)·`pty` 실행은 외부 셸(`shellPath`, 없으면 기본 탐색)에서 돈다. Windows에서 `shellPath`를 두지 않았고 PATH의 첫 `bash`가 WSL `C:\Windows\System32\bash.exe`이면 서비스는 WSL `/bin/bash`(cwd `/mnt/c/...`)에서 실행된다. WSL은 기본값으로 Windows PATH를 `/mnt/c/...` 형태로 덧붙이지만([`interop.appendWindowsPath`](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#interop-settings)) 확장자를 보충하지 않으므로 Windows 실행 파일은 `bun.exe`처럼 확장자까지 붙여 부르고(`bun`은 찾지 못하고 `bun.exe`는 찾음, OMP 18.14.2 실측: 2026-11-01), 그래도 찾지 못하면 `C:/` 경로가 아니라 `/mnt/c/...` 절대 경로로 부른다. 이렇게 띄운 Windows 프로세스에는 서비스 pty로 보낸 Ctrl+C(`\x03`)가 전달되지 않으므로(실측: 2026-10-26) 자기 것임을 확인한 프로세스에 종료 신호를 보내는 다른 경로로 멈추고, 종료 로그와 남은 프로세스로 종료를 확인한다.
-- Windows에서 bash 도구의 일반 호출(내장 brush 셸)은 `/dev/null`을 열지 못한다. `cmd 2>/dev/null`은 `/dev/null: 지정된 경로를 찾을 수 없습니다`를 내고 `cmd`를 실행하지 않은 채 상태 1로 끝나므로, `x=$(cmd 2>/dev/null)`은 빈 값이 되어 "일치 없음" 같은 거짓 음성 판정을 만든다. 버릴 출력은 `2>NUL`로 보내거나 작업 디렉터리의 로그 파일에 남긴다(OMP 18.18.2, `BASH_VERSION` 5.3.0, Windows 실측: 2026-11-09).
+  - bash 도구의 일반 호출은 내장 bash 엔진에서 돌지만 `name`(서비스)·`pty` 실행은 외부 셸(`shellPath`, 없으면 기본 탐색)에서 돈다(`omp://tools/bash.md`, OMP 18.20.0 확인: 2026-11-13). Windows에서 `shellPath`를 두지 않았고 PATH의 첫 `bash`가 WSL `C:\Windows\System32\bash.exe`이면 서비스는 WSL `/bin/bash`(cwd `/mnt/c/...`)에서 실행된다. WSL은 기본값으로 Windows PATH를 `/mnt/c/...` 형태로 덧붙이지만([`interop.appendWindowsPath`](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#interop-settings)) 확장자를 보충하지 않으므로 Windows 실행 파일은 `bun.exe`처럼 확장자까지 붙여 부르고(`bun`은 찾지 못하고 `bun.exe`는 찾음, OMP 18.14.2 실측: 2026-11-01), 그래도 찾지 못하면 `C:/` 경로가 아니라 `/mnt/c/...` 절대 경로로 부른다. 이렇게 띄운 Windows 프로세스에는 서비스 pty로 보낸 Ctrl+C(`\x03`)가 전달되지 않으므로(실측: 2026-10-26) 자기 것임을 확인한 프로세스에 종료 신호를 보내는 다른 경로로 멈추고, 종료 로그와 남은 프로세스로 종료를 확인한다.
+- OMP 18.18.2 이하의 Windows에서 bash 도구의 일반 호출은 `/dev/null`을 열지 못한다. `cmd 2>/dev/null`이 `cmd`를 실행하지 않은 채 상태 1로 끝나 `x=$(cmd 2>/dev/null)`이 빈 값이 되고 "일치 없음" 같은 거짓 음성 판정을 만든다(18.18.2 Windows 실측: 2026-11-09). 18.18.3에서 고쳐졌으므로([변경 내역](https://github.com/can1357/oh-my-pi/blob/main/packages/coding-agent/CHANGELOG.md), 확인: 2026-11-13, Windows 재실측은 하지 않음) 이 증상이 보이면 `omp --version`을 확인하고, 그 미만 버전에서는 버릴 출력을 `2>NUL`로 보내거나 작업 디렉터리의 로그 파일에 남긴다.
 - 신호로 종료된 `Bun.Subprocess`는 `exited`를 기다린 뒤에도 `exitCode`가 `null`이고 `signalCode`가 채워질 수 있다. `exitCode === null`만으로 실행 중이라 판정하지 않고 강제 종료를 정상 exit 0으로 바꾸지 않는다([Bun](https://bun.com/docs/runtime/child-process#exit-handling), 확인: 2026-10-18).
 - Bun Shell(`$` 템플릿)은 `cmd > ${log} 2>&1`을 "expected a command or assignment but got: Redirect"로 거부하므로 표준 출력·오류를 한 파일로 모을 때는 `cmd &> ${log}`를 쓴다. 인수 배열은 `` $`${tool} ${args}` ``처럼 넘기면 원소마다 따로 인용된다. `.nothrow()`를 쓰면 이런 실패가 종료 코드로만 드러나므로 로그 파일이 실제로 채워지는지 함께 본다(Bun 1.4.3 확인: 2026-10-18).
 - 하위 프로세스의 로그와 종료 코드는 실패를 그대로 드러내지 않을 수 있다. `Bun.spawn`의 `stdout`·`stderr`에 `Bun.file(path)`를 주면 기존 파일을 비우지 않고 앞에서부터 덮어써, 더 짧은 실행 뒤에 이전 로그의 꼬리가 남는다. 실행 전에 `await Bun.write(path, "")`로 비운다(Bun 1.4.3 macOS 실측: 2026-10-23). Blender `-b -P script.py`는 스크립트가 예외로 끝나도 종료 코드 0을 내므로 실패를 종료 코드로 잡으려면 `-P` 앞에 `--python-exit-code 1`을 둔다(Blender 5.2.2 `--help`와 실측: 2026-10-23).
-- `eval`의 `browser` facade는 활성화된 경우에만 있으며 API는 `xd://eval/browser`를 읽는다. 정적 URL은 `read`가 우선이고, 로그인 벽·JS 챌린지에 막히면 막혔다고 결론 내기 전에 관리 Chromium(relay 아님)으로 연다. 위임 조사에도 이 경로를 지정한다. relay/CDP는 사용자의 실제 로그인 세션이므로 사용자가 연 페이지만 `browser.targets()`로 확인해 `app.target`을 지정하고 요청 없이 보이는 탭을 탐색하지 않는다. `allow_file_access`는 launch flag라 실행 중인 공유 브라우저에 적용되지 않으므로 `file://` 문서가 다른 로컬 파일을 읽어야 할 때만 `app.path` 전용 브라우저에서 켜고 그 결과를 기본 조건의 증거로 쓰지 않는다(`xd://eval/browser`, 확인: 2026-10-18).
+- `eval`의 `browser` facade는 활성화된 경우에만 있으며 API는 `xd://eval/browser`를 읽는다. 정적 URL은 `read`가 우선이고, 로그인 벽·JS 챌린지에 막히면 막혔다고 결론 내기 전에 omp 자체 브라우저(relay 아님)로 연다. 위임 조사에도 이 경로를 지정한다. OMP 18.19.0부터 자체 브라우저는 ABKit(WebKit) 엔진이 설치돼 있으면 headless WebKit, 없으면 관리 Chromium이고, WebKit 탭에서는 응답 본문을 읽을 수 없으므로 필요하면 `app: "chromium"`으로 연다. relay/CDP는 사용자의 실제 로그인 세션이므로 사용자가 연 페이지만 `browser.targets()`로 확인해 `target`을 지정하고 요청 없이 보이는 탭을 탐색하지 않는다. 18.19.0에서 `open`의 `app`은 문자열 하나(`"relay"`·`"chromium"`·CDP 주소·실행 파일 경로 등)가 되고 `app.target`은 최상위 `target`으로 옮겨졌으며, `allow_file_access`가 없어져 `file:` 페이지가 다른 로컬 파일을 읽을 수 있다. 출처를 모르는 HTML을 `file:`로 열지 않고, `file:`에서 된 로컬 파일 읽기를 웹으로 제공할 때의 증거로 쓰지 않는다(`omp://tools/browser.md`·[변경 내역](https://github.com/can1357/oh-my-pi/blob/main/packages/coding-agent/CHANGELOG.md), OMP 18.20.0 확인: 2026-11-13).
 - 스케줄러·서비스가 실행 중에 직접 읽는 스크립트·설정은 `edit`로 여러 번 나눠 고치지 않는다. `edit`는 호출마다 파일을 저장하므로 그 사이의 실행이 반쯤 고친 파일을 읽고 실패하며, 그 회차의 동작(감시·복구 등)이 빠진다(launchd 주기 작업에서 `ReferenceError`로 한 회차가 빠진 실측: 2026-11-11). 먼저 작업을 멈추거나, 사본을 고쳐 검사한 뒤 `mv`로 한 번에 바꾼다.
+- `omp` CLI는 모르는 첫 단어를 하위 명령 오류로 거부하지 않고 메시지로 받아 모델을 호출한다(`omp --help`의 `MESSAGES` 인자, OMP 18.20.0에서 `omp docs`가 모델 호출 한 번을 썼다, 확인: 2026-11-13). 하위 명령은 `omp --help`로 이름을 확인한 뒤 실행한다.
+- 설치본 `omp://` 문서는 소스·변경 내역보다 늦을 수 있다. 18.20.0의 `omp://config-usage.md`는 18.18.8에서 바뀐 `PI_CODING_AGENT_DIR` 아래 `TITLE_SYSTEM.md`·사용자 agents·commands 탐색을 이전 동작으로 적고 있었다(확인: 2026-11-13). 문서와 변경 내역이 어긋나면 설치본 소스나 격리한 설정 폴더의 프로브로 판정한다.
 
 ## 긴 작업과 대기
 - 정상 작업은 중간에 멈추거나 승인을 구하지 않고 끝까지 완료한다. 실패는 경과 시간이나 변하지 않는 로그가 아니라 프로세스 종료·오류 출력·교착·충족 불가 조건 같은 실제 근거로 판정하고(긴 링크·컴파일은 정상 중에도 진행 표시가 그대로다), 원인 확인 전에 같은 조건으로 재시도하지 않는다.

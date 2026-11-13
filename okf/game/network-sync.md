@@ -3,7 +3,7 @@ type: Rule
 title: 게임 네트워크 동기화
 description: 게임 동기화 세부 문서의 안내와 공통 원리(상태 계층·완료 경계·세대·권위 의미·시험), Mirror 인용 기준.
 tags: [game, client, server, networking, synchronization, prediction, reconciliation, animation]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # 게임 네트워크 동기화
@@ -18,5 +18,4 @@ timestamp: 2026-10-18T00:00:00Z
 - **시험:** harness는 제품의 보간·codec 코드와 설정 경로를 그대로 구동하고, 전제(위치·생존·계정 상태)는 새 상태(새 DB)에서도 실제 게임 경로로 만들며 DB를 직접 고치지 않는다. 관심 상태(보간·외삽·보정·teleport)가 실제로 발생했는지 단언하고, 다른 시간축·완료 경계를 하나의 지표로 대체하지 않는다. 예: 권위 tick과 이동량은 독립된 단조 경과시간에도 대조하고(거리/tick만 보면 tick 가속을 놓친다), RTT 정상화와 입력 처리 나이(입력 생성~서버 처리 지연) 회복은 별도 지표다. 같은 생성/소비율의 입력 이력은 유한 정체 뒤에도 처리 지연을 유지하므로 명시적으로 복구하되 권위 이동 시간 예산을 늘리거나 완료 식별자 있는 명령을 조용히 버리지 않는다.
 
 ## Mirror 인용 기준
-- 게임 문서가 인용하는 Mirror 동작은 고정 revision `c4f3739`(2026-09-19 커밋, 최신 릴리스 v96.11.3 이후)의 `NetworkTime`·`SnapshotInterpolation`·`SyncList`·`NetworkTransformReliable`·`NetworkClient`·`NetworkServer`·`KcpPeer` 기준이며 2026-10-15에 master HEAD와 같았다. 이후 revision에서 달라질 수 있으므로 쓸 때 적용 revision의 코드를 다시 확인한다.
-- 지터 버퍼는 기준 시각에 따라 다르게 정한다. 송신자 현재 시각에서 고정 offset을 빼면 offset이 편도 지연 분포의 상위 분위수 + 송신 간격 + 연속 유실 여유를 덮어야 하고, [`SnapshotInterpolation.InsertAndAdjust`](https://github.com/MirrorNetworking/Mirror/blob/c4f3739966e151f405be1762d33502794fd034ff/Assets/Mirror/Core/SnapshotInterpolation/SnapshotInterpolation.cs)처럼 최신 표본의 원격 시각에서 버퍼를 빼면(`snapshot.remoteTime - bufferTime`) 편도 지연이 이미 표본 나이에 들어 있으므로 버퍼는 도착 간격·지터·유실 여유만 덮고 지연을 다시 더하지 않는다.
+- 게임 문서가 인용하는 Mirror 동작은 고정 revision `c4f3739`(2026-09-19 커밋)의 `NetworkTime`·`SnapshotInterpolation`·`SyncList`·`NetworkTransformReliable`·`NetworkClient`·`NetworkServer`·`KcpPeer` 기준이다. 최신 릴리스 v96.11.4(2026-11-07, master HEAD)까지 이 가운데 `NetworkTransformReliable`(Update 계열 메서드의 `protected virtual` 전환)과 `NetworkClient`(재초기화·종료 때 unbatcher 비우기)만 바뀌었고 인용한 동작은 같다([비교](https://github.com/MirrorNetworking/Mirror/compare/c4f3739966e151f405be1762d33502794fd034ff...v96.11.4), 확인 2026-11-13). 이후 revision에서 달라질 수 있으므로 쓸 때 적용 revision의 코드를 다시 확인한다.

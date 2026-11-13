@@ -3,7 +3,7 @@ type: Rule
 title: 프로젝트 지도와 작업 동기화
 description: "`프로젝트 지도: 유지` 선언 프로젝트에서 코드·설정·문서를 바꿀 때 읽는 계약 — 비차단 변경 위치 공유, 지속 프로젝트 지도의 적용·중지·삭제, 문서 배치·목차·상태·계획, Archify 기술 계약, 작업 트리 근거·신선도, 검증 후 게시 절차와 완료 보고. 화면 기준은 프로젝트 지도 화면 설계가 정본이다."
 tags: [workflow, project-map, communication, documentation, architecture, archify, evidence, planning, template]
-timestamp: 2026-10-21T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # 목적
@@ -43,7 +43,7 @@ timestamp: 2026-10-21T00:00:00Z
 
 - 호출·이벤트·데이터 읽기/쓰기·소유/수명·설정/배포·지침 참조는 라벨로 구분한다. 이름·디렉터리 위치만으로 호출선을 만들지 않고 실제 호출부·등록·조건까지 읽으며 동적 연결은 등록 지점과 확인 한계를 표시한다.
 - 코드 위치는 `파일 · 심볼명`으로 쓰고 줄 번호를 넣지 않는다(포맷 수정만으로 틀어진다). 줄 단위 근거는 fingerprint로 고정된 근거 기록에만 둔다. 조사 에이전트가 반환한 인용은 게시 전 grep/read로 재대조한다. 행별 검증 근거가 기본 근거와 다르면 그 행의 근거 링크가 해당 기록을 가리키게 하고 실행 기록을 화면 문장에 풀어 쓰지 않는다([화면 설계](/project-map-design.md#읽는-화면과-근거-기록)).
-- 현재 구현과 제안/계획을 같은 확정 선으로 섞지 않는다. 구현 상태(`미착수/진행/구현/차단`)와 검증 상태(`미실행/통과/실패/부분/재검증 필요`)를 별도 표지로 두고 범위·환경·명령·관찰 결과가 근거 기록에 없는 "완료"를 쓰지 않는다. 백분율·진행 막대·일정은 쓰지 않고 진척은 열별 카드 수로만 보인다([칸반 보드](/project-map-design.md#칸반-보드)).
+- 현재 구현과 제안/계획을 같은 확정 선으로 섞지 않는다. 구현 상태(`미착수/진행/구현/차단`)와 검증 상태(`미실행/통과/실패/부분/재검증 필요`)를 별도 표지로 두고 범위·환경·명령·관찰 결과가 근거 기록에 없는 "완료"를 쓰지 않는다.
 - HTML은 정적 스냅샷이다. 진입점에 근거 snapshot ID와 적용 범위를 표시하고 열기만 하면 현재 소스와 동기화된다는 인상을 주지 않는다(`/project-map status`가 소스 변화를 다시 대조한다). 검증 근거는 그것을 만든 환경·snapshot에만 귀속하며 과거 요약·다른 작업·다른 PC의 영수증을 현재 "통과"로 옮기지 않는다.
 
 ## 할 일과 계획도 같은 화면에서 확인
@@ -63,7 +63,7 @@ timestamp: 2026-10-21T00:00:00Z
 
 ### 커밋 근거 지도 — 구별해서 사용
 
-Archify 3.0.1의 native source 검증은 고정 commit의 Git blob을 읽으며 dirty 파일이나 `local-only`를 작업 트리 snapshot으로 인정하지 않는다. 이 모드에서는 실제 revision·검토한 소스 범위와 `--repo-root`를 사용하고 미커밋 변경은 별도 미반영 사항으로 표시한다. 문서화를 위해 커밋을 강제하거나 자동 생성하지 않는다. `local-only`도 저장소 URL/경로를 HTML에 포함하므로 비공개 정보의 공개 허가가 아니다. Archify 카드 문자열은 링크가 아니고 native 상태/함수 목록 필드도 없으므로 없는 schema 필드를 추가하지 말고 진입점 목차와 지도 label/card를 쓴다([repository-authoring](https://github.com/tt-a1i/archify/blob/v3.0.1/archify/references/repository-authoring.md), [schema](https://github.com/tt-a1i/archify/blob/v3.0.1/archify/schemas/architecture.schema.json), 확인 2026-10-15). 이 레포의 번들은 3.0.1로 고정돼 있고 위 Archify 동작 서술은 3.0.1에만 해당한다. 업스트림에 [v3.1.0](https://github.com/tt-a1i/archify/releases/tag/v3.1.0)이 있어도 문서 최신화를 이유로 번들을 갱신하지 않는다.
+Archify 3.0.1의 native source 검증은 고정 commit의 Git blob을 읽으며 dirty 파일이나 `local-only`를 작업 트리 snapshot으로 인정하지 않는다. 이 모드에서는 실제 revision·검토한 소스 범위와 `--repo-root`를 사용하고 미커밋 변경은 별도 미반영 사항으로 표시한다. 문서화를 위해 커밋을 강제하거나 자동 생성하지 않는다. `local-only`도 저장소 URL/경로를 HTML에 포함하므로 비공개 정보의 공개 허가가 아니다. Archify 카드 문자열은 링크가 아니고 native 상태/함수 목록 필드도 없으므로 없는 schema 필드를 추가하지 말고 진입점 목차와 지도 label/card를 쓴다([repository-authoring](https://github.com/tt-a1i/archify/blob/v3.0.1/archify/references/repository-authoring.md), [schema](https://github.com/tt-a1i/archify/blob/v3.0.1/archify/schemas/architecture.schema.json), 확인 2026-10-15). 이 레포의 번들은 3.0.1로 고정돼 있고 위 Archify 동작 서술은 3.0.1에만 해당한다. 업스트림에 더 새 릴리스(v3.1.0, [v3.2.0](https://github.com/tt-a1i/archify/releases/tag/v3.2.0) 2026-10-19 공개, 확인 2026-11-13)가 있어도 문서 최신화를 이유로 번들을 갱신하지 않는다.
 
 ## 작업·갱신·게시 절차
 

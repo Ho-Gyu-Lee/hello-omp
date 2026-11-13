@@ -1,9 +1,9 @@
 ---
 type: Rule
 title: 버그 수정 원칙
-description: 결함 클래스 수정, 계약 경계에서 자른 영향 범위, 이전 수정과 새 케이스의 동시 만족(롤백 금지), 참조 구현 수정의 이식 판정, 소비자 계약 회귀 방지, YAGNI 경계.
+description: 결함 클래스 수정, 계약 경계에서 자른 영향 범위, 이전 수정과 새 케이스의 동시 만족(롤백 금지), 참조 구현 수정의 이식 판정, 소비자 계약 회귀 방지, YAGNI 경계. 버그를 고치거나 수정안을 검토하기 전에 읽는다.
 tags: [rule, bugfix, root-cause, impact-analysis, regression, invariant]
-timestamp: 2026-10-28T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # 버그 수정 원칙

@@ -3,7 +3,7 @@ type: Concept
 title: godot-cpp 빌드·등록·디버깅·export와 실행 검증
 description: godot-cpp v10 핀의 빌드 옵션·manifest 매칭·hot reload, 시그널 반환값과 동기 콜백 재진입, macOS export, 프로젝트 설정·vendor 바이트, headless 검증 차이와 Windows 콘솔 래퍼 실행의 자원 측정 대상을 정리합니다.
 tags: [game, godot, cpp, gdextension, build, scons, export, headless]
-timestamp: 2026-10-22T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # godot-cpp 빌드·등록·디버깅·export와 실행 검증
@@ -12,7 +12,7 @@ timestamp: 2026-10-22T00:00:00Z
 
 ## API·ABI·툴체인 호환성
 
-- **v10 API 선택:** `scons api_version=4.7`처럼 명시하거나 프로젝트의 `SConscript("godot-cpp/SConstruct", {"api_version": "4.7"})`에서 지정하며, 바인딩 버전 `10.0.0`을 `api_version`에 넣지 않습니다. (`README.md`)
+- **v10 API 선택:** `scons api_version=4.7`처럼 명시하거나 프로젝트의 `SConscript("godot-cpp/SConstruct", {"api_version": "4.7"})`에서 지정하며, 바인딩 버전 `10.0.0`을 `api_version`에 넣지 않습니다. 이 핀이 받는 값은 `4.3`~`4.7`이고 `custom_api_file`도 없이 생략하면 `'api_version' must be provided` 오류로 빌드가 멈춥니다. (`README.md`, `tools/godotcpp.py`)
 - **커스텀 엔진:** 대상 editor의 `godot --dump-extension-api`로 만든 JSON을 `custom_api_file`로 지정하며 이 옵션이 `api_version`보다 우선합니다(`tools/godotcpp.py`). SCons 문서는 JSON이 실행 파일 디렉터리에 생성된다고 적지만 [4.7 CLI 참조](https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html)는 현재 디렉터리라고 적으므로 실제 위치를 확인해 절대 경로로 넘깁니다.
 - **C++:** 이 핀은 C++17 플래그를 설정하고 예외 처리를 기본 비활성화합니다. (`tools/common_compiler_flags.py`)
 
@@ -46,4 +46,4 @@ timestamp: 2026-10-22T00:00:00Z
 - `RenderingServer.frame_post_draw`를 기다린 뒤 준비를 시작하는 제품을 headless로 검사하면 headless는 창 그리기를 진행하지 않으므로, 검증 루프에서 `RenderingServer.force_draw(false)` 등으로 draw 경계를 진행시켜야 합니다. 계속 `LOADING`이고 준비 시작 계측이 0이면 timeout을 늘리거나 제품 초기화를 우회하기 전에 이 차이를 확인합니다. (엔진 `main/main.cpp` L5080-L5097, `servers/display/display_server_headless.h` L141)
 - 무거운 동기 검사를 실시간 세션의 입력 앞에 몰아 넣는 검증기는 liveness를 만료시킬 수 있으므로 코어/직렬화 회귀와 실제 입력 스모크의 실행 경계를 분리합니다.
 - **Windows `*_console.exe` (4.7.2):** 게임은 같은 폴더의 GUI exe가 콘솔 런처의 자식 프로세스로 실행하므로(런처가 `CreateProcessW`로 띄워 Job Object에 넣음) 런처 PID의 CPU·메모리는 게임 수치가 아닙니다. 프로세스 자원은 `ParentProcessId`가 런처 PID인 자식 Godot 프로세스에서 잽니다. (엔진 [`platform/windows/console_wrapper_windows.cpp`](https://github.com/godotengine/godot/blob/4.7.2-stable/platform/windows/console_wrapper_windows.cpp) L103-L158)
-- **macOS Movie Maker 캡처 (4.7.2):** 제목 줄이 있는 창은 1920×1080을 요청해도 1920×1018이 되어 `aspect=expand`에서 보이는 영역이 2036×1080으로 넓어지고 화면 배율이 약 1.06배 달라집니다(줌 3.5가 3.71로 찍힘). 배율이 기준인 캡처는 프로젝트 설정 `window/size/borderless=true`로 찍고(CLI `--borderless`로는 고쳐지지 않음) 로그로 보이는 영역을 확인하며, `--write-movie` 경로는 절대 경로로 줍니다. Movie Maker는 실제 시간을 기다리지 않고 프레임을 최대한 빨리 만듭니다(`--fixed-fps 5 --max-fps 5 --quit-after 300`이 8.5초에 끝남). 그래서 네트워크·서버 시계처럼 실제 시간으로 진행하는 제품은 캡처 구간이 실제로는 몇 초뿐이라 로딩 화면에서 끝납니다. 이런 제품의 화면 증거는 실제 시간 타이머로 `root.get_texture().get_image()`를 저장하는 관찰 스크립트로 얻습니다.
+- **macOS Movie Maker 캡처 (4.7.2):** 제목 줄이 있는 창은 1920×1080을 요청해도 1920×1018이 되어 `aspect=expand`에서 보이는 영역이 2036×1080으로 넓어지고 화면 배율이 약 1.06배 달라집니다. 배율이 기준인 캡처는 프로젝트 설정 `window/size/borderless=true`로 찍고(CLI `--borderless`로는 고쳐지지 않음) 로그로 보이는 영역을 확인하며, `--write-movie` 경로는 절대 경로로 줍니다. Movie Maker는 실제 시간을 기다리지 않고 프레임을 최대한 빨리 만듭니다(`--fixed-fps 5 --max-fps 5 --quit-after 300`이 8.5초에 끝남). 그래서 네트워크·서버 시계처럼 실제 시간으로 진행하는 제품은 캡처 구간이 실제로는 몇 초뿐이라 로딩 화면에서 끝납니다. 이런 제품의 화면 증거는 실제 시간 타이머로 `root.get_texture().get_image()`를 저장하는 관찰 스크립트로 얻습니다.

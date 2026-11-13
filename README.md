@@ -51,7 +51,7 @@ flowchart LR
 | `ttsr/` → `<configdir>/rules/` | 메인 세션 전용 TTSR 알림의 배포 경로. 현재 규칙은 없다. 예전 `design-review-reminder`는 첫 편집마다 출력을 끊고 설계 검토를 다시 묻게 해 과잉 절차를 부추겨 지웠고, setup의 관리 항목 정리가 배포본을 옮겨 둔다 | 규칙이 생기면 세션당 1회 |
 | 프로젝트 레포 | 그 프로젝트의 현행 지침(`AGENTS.md`)·결정 기록·용어집 | 작업 이력·검증 기록은 쓰지 않음 |
 
-OMP 18.12.1에서 task 서브에이전트는 `AGENTS.md`를 상속하지 않고 rule(`RULES.md`·`rules/*` 포함)은 받는다(`omp://system-prompt-customization.md`, `omp://rulebook-matching-pipeline.md`). 그래서 서브에이전트에도 필요한 방향은 `RULES.md`에 두고, OKF 개념은 `okf-*` 규칙으로 서브에이전트에도 보인다.
+OMP 18.20.0에서 task 서브에이전트는 `AGENTS.md`를 상속하지 않고 rule(`RULES.md`·`rules/*` 포함)은 받는다(`omp://system-prompt-customization.md`, `omp://rulebook-matching-pipeline.md`, 확인 2026-11-13). 그래서 서브에이전트에도 필요한 방향은 `RULES.md`에 두고, OKF 개념은 `okf-*` 규칙으로 서브에이전트에도 보인다.
 
 기록 기준은 [OKF 학습 축적](okf/learning/accumulation.md)이 정본이다. 후보마다 "이 문장이 없으면 모델이 다르게 행동하는가 / 다시 쓰이는가 / 기존 원리로 설명되지 않는가"를 묻고 셋 다 통과한 사용자 방향과 비자명 사실만 기록한다. 실수는 사건이 아니라 위반한 원리로 기록한다. 개념의 frontmatter `description`이 `index.md` 항목 설명의 정본이며, 고친 뒤 `bun scripts/validate-okf.ts --fix okf`가 항목 문구를 맞춘다.
 
@@ -96,7 +96,7 @@ sh setup.sh
 사전 점검(하나라도 걸리면 설정을 바꾸기 전에 중단): `omp`·`bun` PATH, `task.perCallModel` 지원(OMP 18.14.2 이상), `<configdir>`가 레포 루트와 다른지, `deploy-skills.ts --check`(OKF·스킬 경로 겹침), `deploy-okf.ts --check`(로컬 지식 검증·이전 setup의 삭제 감지·레거시 이관 충돌·생성할 `okf-*` 규칙 이름이 개념끼리 겹치거나 `okf_source` 없는 사용자 규칙(`.md`·`.mdc`)과 겹치는지·`rules` 디렉터리나 `okf-*` 규칙이 링크인지).
 
 1. **설정:** `config/settings.conf`의 키를 `omp config set`으로 적용한다.
-2. **글로벌 룰:** `rules/AGENTS.md`·`rules/RULES.md`·`rules/WATCHDOG.md`·`rules/PERSONALITY.md`·`rules/TITLE_SYSTEM.md` → `<configdir>/`(각 기존 파일은 최초 1회 `.bak`). `AGENTS.md`·`RULES.md`의 자리표시자 `__OKF_DIR__`(배포본)·`__OKF_SOURCE_DIR__`(소스)를 절대경로로 바꾼다. 다른 자리표시자는 없으므로 레포 루트가 필요하면 `__OKF_SOURCE_DIR__/..`로 쓴다. `TITLE_SYSTEM.md`는 OMP가 일반 config base(기본 `~/.omp/agent`)에서 찾고 `PI_CODING_AGENT_DIR`은 그 위치를 바꾸지 않으므로, 이 변수로 격리 배포하면 제목 프롬프트는 적용되지 않으며 setup이 경고한다(`omp://config-usage.md`). `ttsr/*.md` → `<configdir>/rules/`(같은 이름 덮어씀, `okf-*` 생성 규칙과 다른 이름).
+2. **글로벌 룰:** `rules/AGENTS.md`·`rules/RULES.md`·`rules/WATCHDOG.md`·`rules/PERSONALITY.md`·`rules/TITLE_SYSTEM.md` → `<configdir>/`(각 기존 파일은 최초 1회 `.bak`). `AGENTS.md`·`RULES.md`의 자리표시자 `__OKF_DIR__`(배포본)·`__OKF_SOURCE_DIR__`(소스)를 절대경로로 바꾼다. 다른 자리표시자는 없으므로 레포 루트가 필요하면 `__OKF_SOURCE_DIR__/..`로 쓴다. `TITLE_SYSTEM.md`는 OMP가 일반 config base(기본 `~/.omp/agent`)에서 찾는다. OMP 18.18.7 이하에서는 `PI_CODING_AGENT_DIR`이 그 위치를 바꾸지 않아 이 변수로 격리 배포하면 제목 프롬프트가 적용되지 않고, 18.18.8부터는 그 위치도 이 변수를 따른다(설치본 `src/config.ts`와 18.20.0 실측, 확인 2026-11-13. `omp://config-usage.md`에는 이전 동작이 남아 있다). setup은 이 변수가 있으면 버전과 무관하게 경고한다. `ttsr/*.md` → `<configdir>/rules/`(같은 이름 덮어씀, `okf-*` 생성 규칙과 다른 이름).
 3. **OKF:** `validate-okf.ts`로 소스를 검사한 뒤(concept frontmatter, `index.md`의 섹션 제목과 항목 title·description 일치, 루트 index에서의 도달성, `log.md` 날짜 제목 형식·최신순) `deploy-okf.ts`가 공개 번들을 `<configdir>/okf/`에 제자리 갱신한다. 레포에서 사라진 공개 파일은 지우고 `<configdir>/okf/learned/`의 로컬 concept은 건드리지 않는다. `learned/index.md`만 레포 틀과 로컬 concept의 frontmatter로 다시 만든다. 이어서 배포본의 모든 개념을 `<configdir>/rules/okf-*.md` 규칙으로 생성하고 사라진 개념의 규칙은 지운다. `okf_source`가 없는 사용자 규칙은 건드리지 않으며, 같은 이름이면 중단한다.
 4. **확장:** `extensions/*.{js,ts}` → `<configdir>/extensions/`.
 5. **에이전트(있을 때만):** `agents/*.md` → `<configdir>/agents/`.
@@ -115,7 +115,7 @@ sh setup.sh
 
 ## 안전한 테스트 (실제 설정 미변경)
 
-`OMP_PROFILE=default`와 `PI_CODING_AGENT_DIR`을 이 레포의 `.omp-artifacts/<작업-ID>/config`로 지정해 격리 배포한다. 이름 있는 프로필은 `PI_CODING_AGENT_DIR`을 무시하므로 `omp config path`가 격리 경로인지 먼저 확인하고 다르면 중단한다. 검증 배포본은 자동 삭제하지 않는다. 메인 clone에서 실행하면 clone의 `okf/learned/`에 남은 레거시 파일이 격리 설정 폴더로 복사될 수 있다(실제 설정 폴더는 바뀌지 않음). 격리 경로에 복사한 custom agent는 OMP의 agent 탐색 경로가 달라 발견·실행 검증이 되지 않는다.
+`OMP_PROFILE=default`와 `PI_CODING_AGENT_DIR`을 이 레포의 `.omp-artifacts/<작업-ID>/config`로 지정해 격리 배포한다. 이름 있는 프로필은 `PI_CODING_AGENT_DIR`을 무시하므로 `omp config path`가 격리 경로인지 먼저 확인하고 다르면 중단한다. 검증 배포본은 자동 삭제하지 않는다. 메인 clone에서 실행하면 clone의 `okf/learned/`에 남은 레거시 파일이 격리 설정 폴더로 복사될 수 있다(실제 설정 폴더는 바뀌지 않음). OMP 18.18.7 이하에서는 격리 경로에 복사한 custom agent가 발견되지 않아 실행 검증이 되지 않는다(18.18.8부터 사용자 수준 agents·commands 탐색이 `PI_CODING_AGENT_DIR`을 따른다, 확인 2026-11-13).
 
 ```sh
 # macOS / Linux

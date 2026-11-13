@@ -3,7 +3,7 @@ type: Concept
 title: Godot C++ 성능 중심 시뮬레이션 코어
 description: C++ 코어와 Godot 연결부의 경계, 통합 기본값과 병목별 대안, 물리 backend와 C++ 로직의 구분, 서버 이관 범위, 4.7.2 threaded load·ResourceLoader 캐시·atlas 재import·Jolt·Web export의 버전 특정 계약입니다.
 tags: [game, godot, cpp, simulation, resource-loading, jolt, web-export]
-timestamp: 2026-11-04T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # Godot C++ 성능 중심 시뮬레이션 코어
@@ -37,13 +37,13 @@ timestamp: 2026-11-04T00:00:00Z
 ## 물리와 Jolt
 
 - C++ 게임 로직과 Godot 물리 backend는 별개입니다. 게임 로직을 C++로 옮겨도 물리 solver는 빨라지지 않으며, 성능 중심 방향을 물리 엔진 교체·fork의 승인으로 해석하지 않습니다.
-- 4.7 문서는 Jolt의 별도 physics thread를 **experimental**로 설명하므로 활성화 전에 대상 프로젝트에서 검증합니다. [Jolt 문서](https://docs.godotengine.org/en/4.7/tutorials/physics/using_jolt_physics.html)
+- 4.7 문서는 Jolt의 별도 physics thread를 **experimental**로 설명하므로 활성화 전에 대상 프로젝트에서 검증합니다. [Jolt 문서](https://docs.godotengine.org/en/4.7/tutorials/physics/using_jolt_physics.html)(확인 2026-11-13)
 - Godot 릴리스 정책은 물리 엔진의 결정성을 보장하지 않으므로([정책](https://docs.godotengine.org/en/4.7/about/release_policy.html#what-are-the-criteria-for-compatibility-across-engine-versions)) upstream Jolt의 조건부 deterministic 설명을 Godot 통합에 옮기지 않으며, lockstep·rollback은 대상 빌드·플랫폼에서 재현을 검증합니다.
 
 ## Web export 제약
 
-4.7 문서 기준(확인 2026-10-15): [Exporting for the Web](https://docs.godotengine.org/en/4.7/tutorials/export/exporting_for_web.html).
+4.7 문서 기준(확인 2026-11-13): [Exporting for the Web](https://docs.godotengine.org/en/4.7/tutorials/export/exporting_for_web.html).
 
-- 저수준 네트워킹이 없고 HTTP·WebSocket 클라이언트·WebRTC만 쓸 수 있어 UDP를 가정하지 않으며, 비신뢰·비순서 전달은 WebRTC data channel을 검토합니다. WebSocket은 순서 보장 stream이라 head-of-line 지연이 생길 수 있고, 상태 대체(snapshot 병합) 때의 불연속 marker 승계는 [복구·전달 의미론](/game/network-delivery.md)을 따릅니다. 탭이 비활성화되면 `_process`·`_physics_process`가 멈춰 장시간이면 연결이 끊길 수 있으므로 복귀는 재개·full-state로 복구합니다.
+- 저수준 네트워킹이 없고 HTTP·WebSocket 클라이언트·WebRTC만 쓸 수 있어 UDP를 가정하지 않으며, 비신뢰·비순서 전달이 필요하면 WebRTC data channel을 검토합니다. 상태 대체(snapshot 병합) 때의 불연속 marker 승계는 [복구·전달 의미론](/game/network-delivery.md)을 따릅니다. 탭이 비활성화되면 `_process`·`_physics_process`가 멈춰 장시간이면 연결이 끊길 수 있으므로 복귀는 재개·full-state로 복구합니다.
 - [`WebSocketPeer.connect_to_url`](https://docs.godotengine.org/en/4.7/classes/class_websocketpeer.html#class-websocketpeer-method-connect-to-url): mixed content를 피하려면 `wss://`와 서버 TLS 인증서에 맞는 FQDN을 쓰고 IP로 직접 접속하지 않습니다(브라우저가 신뢰하는 인증서 필요). `handshake_headers`는 Web export에서 지원되지 않으므로 인증 값을 그 헤더로 전달하지 않습니다.
 - 단일 스레드 export는 4.3부터 지원되며 4.7 문서가 선호·기본으로 설명하지만 스레드를 쓸 수 없습니다. **Thread Support** export는 HTTPS와 `Cross-Origin-Opener-Policy: same-origin`·`Cross-Origin-Embedder-Policy: require-corp` 헤더(못 붙이면 PWA service worker 우회)가 없으면 실행되지 않고, GDExtension은 **Extensions Support**와 Web용 별도 컴파일이 필요하며 같은 isolation 헤더가 필요합니다. [Thread and extension support](https://docs.godotengine.org/en/4.7/tutorials/export/exporting_for_web.html#thread-and-extension-support)

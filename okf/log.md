@@ -6,6 +6,9 @@
 
 ## 2026-11-13
 * **신설:** [문서 사이트의 짝 문서 일치와 Docusaurus 버전·번역·빌드 계약](/development/docs-site.md). 로컬 `learned/`의 개발 문서 작업 기록에서 제품 고유 요소를 걷어 낸 일반 계약(플랫폼별·언어별 짝 문서의 일치와 대조, Docusaurus 2.4.3의 공개 폴더·버전 스냅샷의 번역 복사·번역 짝·링크·draft·MDX 1·생성 폴더 공유)을 옮겼다. 같은 날 로컬의 일반 사실을 [워크플로](/workflow.md)·[코딩 스타일](/coding-style.md)·[난수·재현 계약](/development/randomness.md)·[게임 클라이언트 체크리스트](/game/client-checklist.md)에 더하고 로컬에서는 고유 사실만 남겼다.
+* **기록 기준 보강:** description을 150~200자 안팎의 한 문장(다루는 대상과 읽을 시점)으로 쓰고 본문의 절·함정을 나열하지 않게 했다. 모든 개념의 설명이 매 요청 프롬프트에 실려 시스템 프롬프트의 42%를 차지했고, 짧은 설명으로도 선택이 유지됐다(OMP 18.20.0 실측). `apply_on_edit` 주입의 한계(세션당 한 번, 셸 리디렉션·`ast_edit` 미적용)와 `.omp/rules`로 규칙을 가려 배포본 없이 시험하는 방법도 더했다. 정본은 [OKF 학습 축적](/learning/accumulation.md)이다.
+* **이름 변경:** `security/review-checklist.md`의 제목을 "코드 리뷰 보안 체크리스트"에서 [보안 검토 체크리스트 (환경·도구 특이 계약)](/security/review-checklist.md)로 바꿨다. 본문 대부분이 인프라 설정 계약이라 코드 리뷰가 아닌 보안 설정 작업에서 건너뛰지 않게 하려는 것이다.
+* **전체 정비:** OMP 18.20.0과 2026-11-13 기준 웹 출처로 버전·도구 사실을 갱신하고, 개념 사이의 중복을 정본 링크로 바꾸고, 공개 개념에서 직장 사건을 특정할 수 있는 날짜·수치를 걷어 냈다. 공개 개념 10개와 로컬 개념 12개의 나열형 description을 줄이고, 읽을 시점이 없던 개념에 시점 구절을 더했다. 개념의 추가·삭제·병합은 없다.
 
 ## 2026-11-10
 * **신설:** [클라우드 침해 조사의 로그 공백·신원 판별·노출 범위 (AWS·GCP)](/security/cloud-incident-forensics.md). 로컬 `learned/`의 침해 대응 기록에서 직장·계정 고유 요소를 걷어 낸 일반 계약(CloudTrail 리전·트레일 중지·요청 본문 은닉, EKS 토큰 검증과 Lambda 환경 변수 복호화 흔적, 노출 범위, GCP 데이터 접근 로그 공백과 대체 근거, 출발지 제한 수단의 한계)을 옮겼다. 같은 날 로컬의 일반 사실을 [런타임 진단](/development/runtime-diagnostics.md)·[코드 리뷰 보안 체크리스트](/security/review-checklist.md)·[DB 제품별 비자명 계약](/database/design.md)·[데이터 형식](/development/data-formats.md)·[UI 입력·지역화](/development/ui-input.md)에 더하고 로컬에서는 고유 사실만 남겼다.

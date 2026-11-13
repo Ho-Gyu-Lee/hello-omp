@@ -1,19 +1,19 @@
 ---
 type: Reference
 title: 서브에이전트 위임
-description: 직접 처리와 위임의 경계, 위임 계약(AGENTS.md 비상속·소유·수락 기준), 여러 안의 후보별 독립 생성, 격리·독립 clone, 번들 에이전트 도구 경계와 반환 결과 수락.
+description: 직접 처리와 위임의 경계, 위임 계약(AGENTS.md 비상속·소유·수락 기준), 여러 안의 후보별 독립 생성, 격리·독립 clone, 번들 에이전트 도구 경계와 반환 결과 수락. task로 작업을 위임하거나 반환 결과를 수락하기 전에 읽는다.
 tags: [tools, subagents, task, parallel, ownership, verification, alternatives]
-timestamp: 2026-11-02T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # 서브에이전트 위임
 
 ## 직접 vs 위임
 - 단순 조회와 범위가 명확한 작업은 직접 처리하고 호출 횟수만으로 위임하지 않는다. 넓고 미확인인 읽기 전용 조사, 서로 독립인 실질 작업, 메인 컨텍스트를 과도하게 차지할 자료는 분리하고 병렬 위임은 같은 배치에 묶는다. 독립 검토의 필수 시점은 [워크플로](/workflow.md)를 따른다.
-- 번들 에이전트의 도구는 서로 다르다(OMP 18.15.0 `omp agents unpack --dir <별도 디렉터리> --json`, 확인: 2026-11-02). `scout`은 `read`·`find`·`grep`·`glob`·`ast_grep`·`web_search`뿐이라 명령 실행(`git diff`·`--version`·빌드)이 필요한 확인을 맡길 수 없다. `reviewer`는 `bash`·`lsp`가 있지만 `write`·`edit`가 없고 `security-reviewer`는 `bash`도 없다. 검토 결과를 파일로 보존해야 하면 통합 담당자가 반환 본문을 그대로 저장하고 저장자를 표시한다.
+- 번들 에이전트의 도구는 서로 다르다(OMP 18.20.0 `omp agents unpack --dir <별도 디렉터리> --json`, 확인: 2026-11-13). `scout`은 `read`·`find`·`grep`·`glob`·`ast_grep`·`web_search`뿐이라 명령 실행(`git diff`·`--version`·빌드)이 필요한 확인을 맡길 수 없다. `reviewer`는 `bash`·`lsp`가 있지만 `write`·`edit`가 없고 `security-reviewer`는 `bash`도 없다. 검토 결과를 파일로 보존해야 하면 통합 담당자가 반환 본문을 그대로 저장하고 저장자를 표시한다.
 
 ## 위임 계약
-- **task 서브에이전트는 `AGENTS.md`를 상속하지 않는다**(OMP 18.12.1 `omp://system-prompt-customization.md` 세션별 표: Task subagent — AGENTS.md Not inherited, 확인: 2026-10-18). 이 설정은 모든 에이전트 공통 지침을 `RULES.md`(always-apply 규칙)로 배포해 서브에이전트에도 적용하므로 위임 context에 그 공통 지침은 반복하지 않는다. context에는 작업 고유 제약·write-set 소유·수락 기준과, 메인 `AGENTS.md`나 프로젝트 `AGENTS.md`에만 있고 작업에 필요한 규칙·실행 금지·환경 제약을 필요한 만큼 명시한다. 이 문서들은 자식에게 가지 않는다.
+- **task 서브에이전트는 `AGENTS.md`를 상속하지 않는다**(OMP 18.20.0 `omp://system-prompt-customization.md` 세션별 표: Task subagent — AGENTS.md Not inherited, 확인: 2026-11-13). 이 설정은 모든 에이전트 공통 지침을 `RULES.md`(always-apply 규칙)로 배포해 서브에이전트에도 적용하므로 위임 context에 그 공통 지침은 반복하지 않는다. context에는 작업 고유 제약·write-set 소유·수락 기준과, 메인 `AGENTS.md`나 프로젝트 `AGENTS.md`에만 있고 작업에 필요한 규칙·실행 금지·환경 제약을 필요한 만큼 명시한다. 이 문서들은 자식에게 가지 않는다.
 - 지시가 금지된 실행을 유도하지 않는지 보내기 전에 대조한다. "예를 들어"로 든 도구도 작업자는 그대로 실행하고 '기능 확인만' 같은 단서는 금지를 풀지 않으므로 같은 목적은 허용된 검사로 지정한다.
 - fan-out 전에 공유 인터페이스·데이터 형식·완료 기준과 write-set 소유권을 고정하고 작업 루트·작업-ID는 [워크플로](/workflow.md)대로 전달한다. 의존성이 없고 write-set이 겹치지 않는 작업만 병렬로 돌리고 겹치면 한 소유자에게 합치거나 순차화한다. 수락 증거는 자식의 완료 보고가 아니라 부모가 직접 확인한 변경 파일·실행 증거이며 `reviewer`·advisor의 판단은 이를 대체하지 않는다.
 
@@ -22,16 +22,16 @@ timestamp: 2026-11-02T00:00:00Z
 - 후보 작성자들은 서로의 결과를 보지 않고 같은 입력(내용·제약·평가 기준)과 서로 다른 출발점(참고 견본·방향·우선순위)만 받는다. 비교는 같은 기준표로 하고, 수락 기준을 통과하지 못한 후보는 표시하되 부모가 대신 고치지 않는다. 고른 안의 정본 적용은 통합 담당자 한 명이 맡는다.
 
 ## 병렬·격리
-- 코드 변경이 포함된 병렬 작업은 `isolated`를 명시한다. 이 필드는 `task.isolation.enabled`가 켜져 있고 plan mode가 아닐 때만 노출되며(`omp://tools/task.md`, 확인: 2026-10-18) 외부 캐시·서비스는 격리하지 않으므로 충돌 가능 리소스는 따로 분리한다.
+- 코드 변경이 포함된 병렬 작업은 `isolated`를 명시한다. 이 필드는 `task.isolation.enabled`가 켜져 있고 plan mode가 아닐 때만 노출되며 외부 캐시·서비스는 격리하지 않으므로 충돌 가능 리소스는 따로 분리한다. `isolation.backend=auto`(이 설정)는 `ovnfs` 실행 파일이 발견되면 격리 task를 ovnfs checkout에서 돌리고, 그때는 ovnfs가 실패해도 네이티브 백엔드로 되돌아가지 않고 task가 실패한다(OMP 18.17.0~, `omp://tools/task.md`, 18.20.0 확인: 2026-11-13).
 - **병렬 작업은 쓰기 소유권과 격리 범위를 먼저 정하고 격리 밖 자원과 자동 적용을 조정한다.** `isolated` 성공 결과는 완료 시 부모 트리에 자동 적용된다(`task.isolation.apply` 기본 `true`, `false`면 patch 보관). 다른 소유자의 호출부 수정이 필요한 변경은 부모 트리 빌드를 깨뜨리고 다른 작업자가 원인을 오인하게 하므로, 부모 트리가 빌드 가능한 범위로 끊거나 patch만 산출하게 하고 적용 뒤 부모 트리 전체 빌드로 확인한다. 다른 작업자의 변경을 함께 되돌리지 않는다.
 - 격리 백엔드가 submodule 내용이나 다른 OS 빌드 환경(예: WSL)을 재현하는지 확인되지 않은 병렬 C++ 작업은 작업자마다 독립 clone을 주고 그 clone에서만 빌드·테스트·커밋한다(push·부모 gitlink 스테이징 금지). 상대 URL submodule은 로컬 정본 checkout 경로로 바꿔 초기화한다. 통합 담당자는 cherry-pick 뒤 통합 트리 전체를 다시 빌드·테스트하고, 빌드 병렬도는 코어·메모리에 맞추며 빌드 중에는 FPS·지연·용량 관측 검증을 하지 않는다(겹쳤으면 contended로 표시).
-- 공유 checkout의 동시 작업자가 `git stash`·`reset --hard`·덮어쓰는 checkout을 실행하지 못하게 하는 `bash.gitGuard`(기본 off)는 임베디드 셸의 `git` 내장만 막고 `pty`·서비스·경로로 직접 실행한 git은 제외된다(`omp://settings.md`, OMP 18.12.1 확인: 2026-10-18).
-- 이 설정의 `extensions/dangerous-tool-guard.js`는 `rm` 등을 사용자 확인으로 막고, UI가 없거나 응답이 없으면 fail-closed로 차단한다(OMP 18.18.1, 확인: 2026-11-08). 에이전트 작업 순서는 단일 통합 담당자가 메시지로 조정하고, 파일의 `HELD`·`RELEASED` 같은 값은 상태 표시로만 쓴다. 읽은 뒤 덮어쓰는 파일을 원자적 잠금으로 간주하지 않으며 차단된 삭제를 우회하지 않는다.
-- 기본 서브에이전트는 자체 빌드·테스트·스모크를 건너뛰고 검증을 메인에 맡기므로(OMP 18.4.12 [변경 내역](https://github.com/can1357/oh-my-pi/blob/main/packages/coding-agent/CHANGELOG.md), 확인: 2026-10-18) 작업자 빌드가 필요하면 위임 context에 명시한다.
+- 공유 checkout의 동시 작업자가 `git stash`·`reset --hard`·덮어쓰는 checkout을 실행하지 못하게 하는 `bash.gitGuard`(기본 off)는 임베디드 셸의 `git` 내장만 막고 `pty`·서비스·경로로 직접 실행한 git은 제외된다(`omp://settings.md`, OMP 18.20.0 확인: 2026-11-13).
+- 이 설정의 `extensions/dangerous-tool-guard.js`는 `rm` 등을 사용자 확인으로 막고, UI가 없거나 응답이 없으면 fail-closed로 차단한다(OMP 18.20.0 확장 API 확인: 2026-11-13). `bash` 도구를 거치지 않는 eval의 셸 경로(`sh` 헬퍼, Python `!cmd`·`%%bash`)도 같은 검사를 받는다. 에이전트 작업 순서는 단일 통합 담당자가 메시지로 조정하고, 파일의 `HELD`·`RELEASED` 같은 값은 상태 표시로만 쓴다. 읽은 뒤 덮어쓰는 파일을 원자적 잠금으로 간주하지 않으며 차단된 삭제를 우회하지 않는다.
+- 기본 서브에이전트는 자체 빌드·테스트·스모크를 건너뛰고 검증을 메인에 맡기므로(번들 시스템 프롬프트가 서브에이전트의 검증 의무를 메인으로의 인계로 바꿈, `omp://system-prompt-customization.md`, OMP 18.20.0 확인: 2026-11-13) 작업자 빌드가 필요하면 위임 context에 명시한다.
 
 ## 반환 결과
-- task 서브에이전트는 기본(`task.structured=false`)에서 `yield`·스키마 없이 최종 메시지를 일반 텍스트로 반환하므로 본문 전체를 확인한다. `yield` payload는 `task.structured`를 켰거나 에이전트 정의가 `structured: true`이거나 eval `agent()`·`workpool()` 스폰에서만 쓰인다(`omp://task-agent-discovery.md`, 확인: 2026-10-18).
-- 번들 `reviewer`는 지적을 증분 `yield`로 보내고 최종 payload의 `findings`는 비어 있을 수 있다(번들 정의, 확인: 2026-10-18). 설명의 지적 수와 payload 항목 수가 다르면 세션 기록에서 각 지적 본문을 확인한 뒤 반영 여부를 판단한다.
+- task 서브에이전트는 기본(`task.structured=false`)에서 `yield`·스키마 없이 최종 메시지를 일반 텍스트로 반환하므로 본문 전체를 확인한다. `yield` payload는 `task.structured`를 켰거나 에이전트 정의가 `structured: true`이거나 eval `agent()`·`workpool()` 스폰에서만 쓰인다(`omp://task-agent-discovery.md`, OMP 18.20.0 확인: 2026-11-13).
+- 번들 `reviewer`는 지적을 증분 `yield`로 보내고 최종 payload의 `findings`는 비어 있을 수 있다(OMP 18.20.0 번들 정의, 확인: 2026-11-13). 설명의 지적 수와 payload 항목 수가 다르면 세션 기록에서 각 지적 본문을 확인한 뒤 반영 여부를 판단한다.
 
 ## 에이전트 선택
 현재 세션의 가용 에이전트 목록에서 이름을 고르며, 역할별 에이전트와 모델 배정은 [에이전트 가이드](/agents/guide.md)가 정본이다.

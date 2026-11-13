@@ -1,7 +1,7 @@
 ---
 type: Rule
 title: 코딩 스타일
-description: 요청 범위·계약·비용 보존, 구현 결정 사다리, 반복 실수를 일반화한 근본 원리, 공개 API와 선제적 확장점 금지, 다음 변경이 쉬운 구조(깊은 모듈), 서버 타입 접미사 어휘와 스타일 정본 연결.
+description: 구현 범위와 설계 판단의 기준(표기·배치는 언어 공통 코딩 스타일) — 요청 범위·계약·비용 보존, 구현 결정 사다리, 반복 실수의 근본 원리, 공개 API와 선제적 확장점 금지, 깊은 모듈, 서버 타입 접미사 어휘. 구현 방식을 고르거나 설계·리팩터링을 제안할 때 읽는다.
 tags: [rule, coding-style, behavior-preservation, architecture, api-design, server]
 timestamp: 2026-11-13T00:00:00Z
 ---

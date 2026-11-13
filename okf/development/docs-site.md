@@ -1,7 +1,7 @@
 ---
 type: Checklist
 title: 문서 사이트의 짝 문서 일치와 Docusaurus 버전·번역·빌드 계약
-description: 플랫폼별·언어별로 나뉜 문서 세트를 함께 고치고 대조하는 기준과, Docusaurus 2.4.3에서 공개되는 폴더 확인, 버전 스냅샷이 번역 current를 복사하는 동작, 번역 파일 짝 맞추기(Windows 대소문자 경로 포함), write-translations 부수 효과, 버전 없는 절대 링크와 앵커 미검사, draft 숨김 확인, MDX 1 주석 빌드 실패, build와 start의 생성 폴더 공유를 다룹니다. Docusaurus 문서를 고치거나 버전·번역을 만들 때 읽습니다.
+description: 플랫폼별·언어별로 나뉜 문서 세트를 함께 고치고 대조하는 기준과 Docusaurus 2.4.3의 버전 스냅샷·번역 파일·링크와 앵커·draft·MDX 1·빌드 계약을 다루며, Docusaurus 문서를 고치거나 버전·번역을 만들 때 읽습니다.
 tags: [documentation, docusaurus, i18n, versioning, build]
 apply_on_edit: ["docusaurus.config*.js", "docusaurus.config*.ts", "_category_.json"]
 timestamp: 2026-11-13T00:00:00Z
@@ -28,7 +28,7 @@ timestamp: 2026-11-13T00:00:00Z
 ## 링크와 숨김
 
 - [ ] 버전 경로 없는 절대 링크(`/<docs 경로>/<route>`)는 항상 최신 버전으로 갑니다. 새 버전에서 없애거나 draft로 숨긴 라우트를 이전 버전 문서나 블로그 글이 이렇게 가리키면 404가 됩니다. 버전을 만들 때 새 버전에서 사라지는 라우트를 구해 이전 버전·블로그의 링크를 버전 경로나 새 대응 문서로 고칩니다.
-- [ ] `onBrokenLinks: 'log'`이면 깨진 링크가 빌드를 실패시키지 않고 로그에만 남으며, 빌드는 앵커를 검사하지 않습니다. 작업 전 기준 빌드의 깨진 링크 목록과 비교하고, 앵커는 대상 문서의 제목 목록과 대조합니다. 다른 문서가 원문 언어 제목의 자동 앵커로 링크하면 번역 제목에 원래 앵커를 명시 ID(`## Title {#원래-앵커}`)로 붙입니다.
+- [ ] `onBrokenLinks: 'log'`이면 깨진 링크가 빌드를 실패시키지 않고 로그에만 남으며, 빌드는 앵커를 검사하지 않습니다(앵커를 검사하는 `onBrokenAnchors`는 3.1에 추가됐습니다. [3.1 릴리스](https://docusaurus.io/blog/releases/3.1), 확인 2026-11-13). 작업 전 기준 빌드의 깨진 링크 목록과 비교하고, 앵커는 대상 문서의 제목 목록과 대조합니다. 다른 문서가 원문 언어 제목의 자동 앵커로 링크하면 번역 제목에 원래 앵커를 명시 ID(`## Title {#원래-앵커}`)로 붙입니다.
 - [ ] `draft: true`는 production 빌드에서 문서를 빼지만 개발 서버(`start`)에서는 그대로 보이므로 숨김은 production 빌드로 확인합니다. 모든 문서가 draft인 자동 생성 분류는 production 사이드바에서 사라집니다. `draft: "true"`처럼 따옴표 문자열도 숨기므로 draft 문서를 정규식으로 셀 때 따옴표 값을 포함합니다.
 
 ## 빌드

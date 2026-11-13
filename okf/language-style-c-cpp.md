@@ -1,10 +1,10 @@
 ---
 type: Rule
 title: C/C++ 전용 코딩 규칙
-description: C/C++ 코드 작성·리뷰 때 언어 공통 코딩 스타일과 함께 읽습니다. C/C++에만 적용하는 기본 표준·표기·switch·접근 순서, C 이름·상수, include·헤더 보호·정적 등록, Godot 확장 이름 선택입니다.
+description: C/C++에만 적용하는 기본 표준·표기·switch·접근 순서, C 이름·상수, include·헤더 보호·정적 등록, Godot 확장 이름 선택입니다. C/C++ 파일을 edit·write로 쓰면 자동 주입되므로, C/C++ 코드를 리뷰하거나 셸·스크립트로 만들 때 언어 공통 코딩 스타일과 함께 읽습니다.
 tags: [rule, c, cpp, coding-style, header, namespace, godot]
 apply_on_edit: ["*.c", "*.cc", "*.cpp", "*.cxx", "*.h", "*.hh", "*.hpp", "*.hxx", "*.inl", "*.ipp"]
-timestamp: 2026-10-21T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # C/C++ 전용 코딩 규칙

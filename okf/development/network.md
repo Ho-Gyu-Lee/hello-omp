@@ -3,7 +3,7 @@ type: Rule
 title: 네트워크 전달·I/O·시간 계측
 description: 송신 공정성·reliable 폐기·gRPC 재접속·Apple 연결 제약·macOS Go resolver와 DNS 실패 재현, IOCP 실패 완료·소켓 종료 수명, WSL localhost 중계 지연과 RTT 표본화·캡처 교란을 다룹니다.
 tags: [development, networking, transport, rpc, fairness, iocp, winsock, rtt, wsl, dns, go]
-timestamp: 2026-11-04T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # 네트워크 전달·I/O·시간 계측
@@ -30,7 +30,7 @@ timestamp: 2026-11-04T00:00:00Z
 
 ## RTT 계측과 관찰 사례
 
-- Windows 클라이언트가 `localhost`로 WSL2(NAT 모드)의 서버에 접속하면 WSL localhost 중계를 지나며, 중계 소스는 서버로 가는 TCP 소켓에 `TCP_NODELAY`를 설정하지 않습니다. 2.7.14·3.0.1·3.0.3·master 모두 설정이 없음을 2026-10-15에 확인했습니다([`localhost.cpp` 2.7.14](https://github.com/microsoft/WSL/blob/2.7.14/src/linux/init/localhost.cpp), [localhost 문서](https://github.com/microsoft/WSL/blob/2.7.14/doc/docs/technical-documentation/localhost.md)). WSL 2.7.14 실측(2026-10-11)에서 작은 상향 frame의 일부가 15~50ms 붙잡혔고 VM IP의 `TCP_NODELAY` 프록시로 중계를 우회하자 사라졌습니다. Nagle과 Linux 지연 ACK가 유력하지만 패킷 수준으로 확인하지는 않았습니다. 지연을 판단하기 전에 이 경로를 제외하거나 mirrored 모드·VM IP 직접 경로와 비교합니다.
+- Windows 클라이언트가 `localhost`로 WSL2(NAT 모드)의 서버에 접속하면 WSL localhost 중계를 지나며, 중계 소스는 서버로 가는 TCP 소켓에 `TCP_NODELAY`를 설정하지 않습니다. 2.7.14·3.0.1·3.0.3과 최신 릴리스 3.0.5 모두 설정이 없습니다(3.0.5는 2026-11-13, 나머지는 2026-10-15 확인. [`localhost.cpp` 2.7.14](https://github.com/microsoft/WSL/blob/2.7.14/src/linux/init/localhost.cpp), [3.0.5](https://github.com/microsoft/WSL/blob/3.0.5/src/linux/init/localhost.cpp), [localhost 문서](https://github.com/microsoft/WSL/blob/2.7.14/doc/docs/technical-documentation/localhost.md)). WSL 2.7.14 실측(2026-10-11)에서 작은 상향 frame의 일부가 15~50ms 붙잡혔고 VM IP의 `TCP_NODELAY` 프록시로 중계를 우회하자 사라졌습니다. Nagle과 Linux 지연 ACK가 유력하지만 패킷 수준으로 확인하지는 않았습니다. 지연을 판단하기 전에 이 경로를 제외하거나 mirrored 모드·VM IP 직접 경로와 비교합니다.
 - HUD Ping 분위수는 집계 단위부터 확인합니다. 주기 probe 한 번의 RTT를 다음 probe까지 표시하는 값을 짧은 간격으로 표본화하면 한 측정이 여러 번 세어져 표본 수가 독립 측정 수보다 부풀고 분포가 표시 시간으로 가중됩니다. 분위수와 함께 독립 probe 수를 보고합니다. 송수신 시각을 메인 스레드 pump에서 찍으면 RTT가 frame 간격의 정수배로 양자화됩니다.
 - 관측값·추정값·표시값을 구분합니다. 로컬 연결이라는 이유로 0을 대입하지 않고, 미측정·만료 표본은 유효한 0과 구분하며, 상관 ID·세대·echo 시각이 맞지 않는 응답으로 표본 나이를 갱신하지 않습니다.
 - 자동화 렌더 테스트의 화면 캡처(GPU readback·PNG 인코딩)는 메인 스레드를 멈춰 그동안 도착한 응답이 처리되지 않으므로 HUD RTT가 부풀려집니다. 네트워크 지연은 캡처 없는 관찰 실행으로 따로 측정하고 캡처 시점의 HUD 수치를 지연 근거로 쓰지 않습니다.

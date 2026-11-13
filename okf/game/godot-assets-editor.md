@@ -3,7 +3,7 @@ type: Concept
 title: Godot 에셋 팩·렌더 정밀도와 에디터 미리보기
 description: 표시·충돌·정렬 계약의 분리(y-sort와 z_index), 4.7.2 TileMapLayer 원점·정렬 Y, Compatibility 데이터 텍스처 정밀도와 텍스처 압축·메모리 집계, 렌더 직전 콜백 스레드, 비저장 미리보기 규칙입니다.
 tags: [game, godot, cpp, assets, tilemap, rendering, editor]
-timestamp: 2026-10-18T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # Godot 에셋 팩·렌더 정밀도와 에디터 미리보기
@@ -28,4 +28,4 @@ Y 정렬은 같은 `z_index`의 노드끼리만 적용되므로([CanvasItem](htt
 
 ## 비저장 미리보기
 
-저장되지 않는 표시는 실제 소비 경로(에디터 화면과 F5 실행 양쪽)에 적용하고 검증 러너에서만 적용하지 않습니다. [`editor` feature](https://docs.godotengine.org/en/4.7/tutorials/export/feature_tags.html)는 편집·게임 실행을 모두 포함하지만 `Engine.is_editor_hint()`는 편집 문맥만 뜻합니다. owner 없는 표시 자식은 PackedScene 저장에서 제외되므로 pack→instantiate로 원본 참조 보존과 임시 노드·이미지 부재를 확인하고, aspect-fit 이미지를 부모 텍스처 위에 덧그릴 때는 레터박스에 원래 그림이 비치지 않도록 비저장 불투명 배경을 둡니다.
+저장되지 않는 표시는 실제 소비 경로(에디터 화면과 F5 실행 양쪽)에 적용하고 검증 러너에서만 적용하지 않습니다. [`editor` feature](https://docs.godotengine.org/en/4.7/tutorials/export/feature_tags.html)는 편집·게임 실행을 모두 포함하지만 `Engine.is_editor_hint()`는 편집 문맥만 뜻합니다. owner 없는 표시 자식은 PackedScene 저장에서 제외되므로([소유권](/game/godot-runtime.md#소유권)) pack→instantiate로 원본 참조 보존과 임시 노드·이미지 부재를 확인하고, aspect-fit 이미지를 부모 텍스처 위에 덧그릴 때는 레터박스에 원래 그림이 비치지 않도록 비저장 불투명 배경을 둡니다.

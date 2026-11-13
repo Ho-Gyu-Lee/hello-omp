@@ -3,7 +3,7 @@ type: Concept
 title: Godot C++ Scene·물리·Resource 수명과 경계
 description: Godot 객체 소유권, 스레드 경계, 에디터 복제 flags·Resource 깊은 복제 범위·트리 밖 좌표 캐시·text Resource 숫자 정밀도·JSON 값의 컨테이너 비교·직렬화 크기의 버전 특정 계약입니다.
 tags: [game, godot, cpp, ownership, threading, resource, serialization]
-timestamp: 2026-10-23T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # Godot C++ Scene·물리·Resource 수명과 경계
@@ -12,8 +12,8 @@ timestamp: 2026-10-23T00:00:00Z
 
 ## 소유권
 
-- Godot 객체에 표준 스마트 포인터·`delete` 기본값을 대입하지 않습니다. `Node`는 `memnew`로 만들어 부모 아래에 두고 런타임 제거는 `queue_free()`, `RefCounted`·`Resource`는 `Ref<T>`로 소유하며 수동 파괴하지 않습니다. RAII는 비엔진 C++ 자원에 씁니다.
-- `memnew`는 매크로이므로 `memnew(MyNode)`로 쓰고 `godot::memnew(MyNode)`로 쓰지 않습니다. (godot-cpp 핀 [`memory.hpp`](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/include/godot_cpp/core/memory.hpp))
+- Godot 객체에는 표준 스마트 포인터·`delete`를 쓰지 않고 엔진 수명 규칙(`Node`는 부모 아래에 두고 `queue_free()`, `RefCounted`·`Resource`는 `Ref<T>`)을 따르며, RAII는 비엔진 C++ 자원에 씁니다.
+- `memnew`는 매크로이므로 `memnew(MyNode)`로 쓰고 `godot::memnew(MyNode)`로 쓰지 않습니다. v10 핀은 `api_version` 4.7에서 `RefCounted` 파생형의 `memnew(T)`가 `T *`가 아니라 `Ref<T>`를 반환하므로(4.6 이하 대상은 `T *`) 결과를 `Ref<T>`로 받으며, `T *`로 받던 이전 코드는 컴파일되지 않습니다. (godot-cpp 핀 [`memory.hpp`](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/include/godot_cpp/core/memory.hpp), [`ref.hpp`](https://github.com/godotengine/godot-cpp/blob/507ed9d840c01a3c5b2a39af8bb4000bfac30bf5/include/godot_cpp/classes/ref.hpp#L215-L227), 확인 2026-11-13)
 - 장기 비소유 Object 참조는 `ObjectID`로 저장해 사용 시 다시 확인합니다. ID 조회는 스레드 간 생존을 보장하는 잠금이 아니고 `call_deferred`도 대상 수명을 해결하지 않으므로, 워커 결과·deferred 결과는 메인 스레드에서 대상 생존과 현재 scene/session generation을 검증한 뒤 적용합니다.
 - 부모-자식 수명과 `Node.owner`(PackedScene 저장 범위)는 별개입니다. 에디터 도구가 만든 자식을 저장하려면 조상 owner가 필요하고, 분리·재부착하는 Undo/Redo에서는 분리된 subtree가 이전 owner를 유지할 수 있으므로 떼기 전에 비웁니다.
 

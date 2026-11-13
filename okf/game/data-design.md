@@ -1,9 +1,9 @@
 ---
 type: Rule
 title: 게임 정적·동적 데이터와 DB 설계
-description: 게임 데이터 설계의 사용자 기본값 — 정적·동적 구분, Excel/CSV 저작에서 서버 검증·대상별 배포(클라이언트 CDN·서버 DB)까지의 흐름, 정적 테이블의 메모리 멀티 키 맵과 구간 조회의 정렬 배열, 프로토타입 서버의 SQLite 우선, 논리 응집도와 접근 패턴, DB FK 미사용과 앱 코드 트랜잭션 우선, 적용 경계. 게임 데이터나 DB 스키마를 설계·리뷰할 때 읽는다.
+description: 게임 데이터 설계의 사용자 기본값(정적·동적 구분, Excel/CSV 저작에서 검증·대상별 배포까지의 흐름, 정적 테이블의 메모리 조회 구조, 프로토타입 서버의 SQLite 우선, DB FK 미사용과 앱 코드 트랜잭션 우선, 적용 경계)으로, 게임 데이터나 DB 스키마를 설계·리뷰할 때 읽는다.
 tags: [game, data, database, static-data, foreign-key, stored-procedure, sqlite, preference]
-timestamp: 2026-11-04T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # 게임 정적·동적 데이터와 DB 설계
