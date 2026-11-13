@@ -1,9 +1,9 @@
 ---
 type: Concept
 title: AI 에셋 생성의 실패한 생산 경로와 모델 라이선스·로컬 런타임 사실
-description: 생성·장착·렌더의 실행 성공과 게임 품질 합격을 나누는 기준과 품질 판정을 통과하지 못한 AI 캐릭터 에셋 경로(원인 미확정), 다시점·재칠 편집의 모델 동작, 그리고 결과와 무관하게 확인된 사실(유료·로컬 경로 선택과 GPT Image 2.5·2.6 지정 경로, VARCO 3D 무료 등급의 다운로드 한도·옵션 차단, PixelLab 체험 등급의 동시 작업 제한, 가중치 라이선스 예외, Apple Silicon 통합 메모리와 mflux 캐시, seed 재현성, 중국 업계의 AI 사용 범위, LoRA 해상도 한계와 학습 설정, TRELLIS.2 Mac 포트 결함, 투명 스프라이트의 키 배경, Ollama(MLX) 유효 설정과 구조화 출력 결함, VLM 채점의 양성 대조)을 다룹니다. AI 에셋 경로를 제안·계획하기 전에 읽습니다.
+description: 생성·장착·렌더의 실행 성공과 게임 품질 합격을 나누는 기준과 품질 판정을 통과하지 못한 AI 캐릭터 에셋 경로(원인 미확정), 다시점·재칠 편집의 모델 동작, 그리고 결과와 무관하게 확인된 사실(유료·로컬 경로 선택과 GPT Image 2.5·2.6 지정 경로, VARCO 3D MCP의 연결 조건과 무료 등급의 다운로드 한도·옵션 차단, PixelLab 체험 등급의 동시 작업 제한, 가중치 라이선스 예외, Apple Silicon 통합 메모리와 mflux 캐시, seed 재현성, 중국 업계의 AI 사용 범위, LoRA 해상도 한계와 학습 설정, TRELLIS.2 Mac 포트 결함, 투명 스프라이트의 키 배경, Ollama(MLX) 유효 설정과 구조화 출력 결함, VLM 채점의 양성 대조)을 다룹니다. AI 에셋 경로를 제안·계획하기 전에 읽습니다.
 tags: [development, assets, ai, image-generation, vlm, license, apple-silicon, mlx, lora, ollama, structured-output, sprite, transparency, varco-3d, pixellab]
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # AI 에셋 생성의 실패한 생산 경로와 모델 라이선스·로컬 런타임 사실
@@ -25,6 +25,7 @@ timestamp: 2026-11-09T00:00:00Z
 - 2.5는 품질 `xhigh`·`max`를 추가했지만 API 키 경로의 래퍼가 이를 막습니다. Codex 번들 `imagegen` 스킬의 fallback CLI(`scripts/image_gen.py`, main 2026-10-23)는 `--model gpt-image-2.5-*`를 받되 품질을 `low`·`medium`·`high`·`auto`로, 크기를 `1024x1024`·`1536x1024`·`1024x1536`·`auto`로 제한하고, OMP `generate_image`에는 품질 입력이 없습니다. 이 설정이 필요하면 Images API(`/v1/images/generations`)를 직접 호출합니다. OMP 설정은 [에이전트 가이드](/agents/guide.md)를 따릅니다.
 - VARCO 3D 무료(FREE) 등급에서는 3D 결과(Generate3D·Rig·Animate)의 다운로드가 형식(glb·fbx·obj·stl)과 무관하게 `Download limit reached or plan unavailable`(`url=null`)로 막힐 수 있습니다(MCP `get_output_downloads`와 웹 편집기, 2026-11-01). 같은 등급에서 2026-10-28에는 GLB를 받았으므로 다운로드 한도 소진으로 보이며, 한도 크기와 초기화 주기는 확인하지 못했습니다. `get_account_and_pricing`은 작업별 포인트와 차단만 보여 주고 다운로드 가능 여부는 보여 주지 않으므로(확인 2026-11-08), 3D 결과가 필요한 계획은 포인트를 쓰기 전에 기존 3D 결과의 `get_output_downloads`로 지금 받을 수 있는지 확인합니다.
   - 같은 등급에서 옵션 값 단위로 막힌 것(확인 2026-11-01): Generate3D `tPose=1`(`FREE_TIER_USE_TPOSE_EDIT_BLOCKED`), `license=PRIVATE`(`FREE_TIER_PRIVATE_LICENSE_BLOCKED`, 남는 값은 `CC_BY_4_0`), `usePbrTexture`, 이미지 모델 `gpt-image-2-medium`(`IMAGE_GENERATION_V2_PAID_MODEL_BLOCKED`, `gpt-image-1.5-medium`은 가능). Generate3D는 `polygonCount` 500000이어야 하고, 텍스처를 생성하면 `textureSize`도 4096이어야 합니다(확인 2026-10-28). 무료 등급 결과를 출하에 쓰려면 `CC_BY_4_0` 등록이 갖는 의미를 약관으로 먼저 확인합니다.
+- VARCO 3D MCP는 브라우저에 Flow 편집 탭이 하나만 열려 있어야 연결이 유지됐습니다(확인 2026-10-28). 첫 연결의 OAuth는 [MCP 정책](/tools/mcp.md#인증)을 따릅니다.
 - PixelLab 체험 등급(`get_balance`의 `subscription: trial`, Tier 0)은 동시 작업이 1개입니다. 앞 작업이 끝나기 전에 낸 다음 제출은 과금 없이 거절되고, 8방향 애니메이션도 한 호출로 요청할 수 없어 방향마다 하나씩 제출합니다(확인 2026-11-07). 체험 계획은 작업을 순서대로 내고 각 작업의 완료를 확인한 뒤 다음을 내는 것으로 세웁니다.
 
 ## 가중치 라이선스
