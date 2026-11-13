@@ -17,7 +17,7 @@ timestamp: 2026-10-18T00:00:00Z
 - 금지: 재현 가능한 공격 절차, exploit 코드, 실제 타겟 정보.
 
 ## 민감정보
-- API 키/토큰/크리덴셜·PII·내부 접속정보는 출력에 절대 포함하지 않는다. 마스킹/더미로 설명하고 실제 값은 환경 변수로 주입한다.
+- API 키/토큰/크리덴셜·PII·내부 접속정보는 출력에 절대 포함하지 않는다. 마스킹/더미로 설명하고 실제 값은 환경 변수로 주입한다. 코드·덤프·로그 출력을 결정적으로 가릴 때 길이 기준만 쓰면 32자 hex API 키 같은 짧은 키가 그대로 나오므로 키 형태(긴 hex·base64 문자열, 알려진 접두사)로도 가린다.
 - Git 원격 인증은 사용자가 설정한 credential manager의 대화형 로그인(사용자가 직접 입력)이나 미리 주입된 환경 변수의 **이름 참조**로 한다. 노출이 생기면 마스킹해 알리고 교체를 권고하며 보고에는 값의 일부(앞자리 등)도 적지 않는다.
 - 승인된 HTTPS push가 저장된 자격증명으로 실패하면 기존 credential manager 경로로 같은 push를 한 번 다시 실행해 확인한다(helper에 이미 거부 통지가 전달됐을 수 있어 수동 삭제를 먼저 하지 않는다). 같은 저장값으로 계속 실패할 때만 사용자 확인 후 [`git credential reject`](https://git-scm.com/docs/git-credential)에 `protocol`·`host`·`username`(`credential.useHttpPath=true`이면 `path`도)으로 범위를 좁혀 지운다(`protocol`·`host`만 지정하면 같은 host의 다른 계정도 삭제될 수 있다).
 - GitHub Desktop은 번들 Git의 credential helper를 실행마다 자기 helper로 바꿔 쓴다. 같은 `git.exe` 경로라도 터미널 push와 Desktop이 같은 인증 저장소를 쓴다고 가정하지 않는다.

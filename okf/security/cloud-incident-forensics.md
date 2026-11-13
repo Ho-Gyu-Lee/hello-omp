@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 클라우드 침해 조사의 로그 공백·신원 판별·노출 범위 (AWS·GCP)
-description: AWS·GCP 침해 조사에서 "기록 없음"이나 "탈취 사용"으로 판정하기 전에 확인할 비자명 계약 — 보존이 짧은 출처, CloudTrail의 리전·트레일 중지·이벤트 기록 한계와 요청 본문을 가리는 API, EKS 토큰 검증과 Lambda 환경 변수 복호화가 남기는 정상 흔적과 IAM 거부로 막히지 않는 EKS 인증, Lambda 실행 역할의 함수별 세션, 데이터 이벤트만 쓰는 자격 증명의 기준선, 데이터 이벤트 없이 SSE-KMS 객체 읽기를 드러내는 KMS 흔적, EventBridge 경보 규칙의 상태·패턴 상한, 접근 로그 읽기와 CloudFront 지연 전달 함정, 애플리케이션 로그의 교차 테넌트 신호, VPC 흐름 로그의 Lambda ENI 공유·NLB 집계 함정, 노출 범위(Terraform state·Lambda 관리형 정책·발행 버전에 고정된 실행 역할과 `LastModified` 해석·소스 함수 ARN 조건의 적용 범위), GCP 데이터 접근 로그 공백과 대체 근거, 키 교체 없이 출발지로 제한하는 수단의 한계를 다룬다.
+description: AWS·GCP 침해 조사에서 "기록 없음"이나 "탈취 사용"으로 판정하기 전에 확인할 비자명 계약 — 보존이 짧은 출처와 로그 수집기 배치가 만드는 공백, CloudTrail의 리전·트레일 중지·이벤트 기록 한계와 요청 본문을 가리는 API, EKS 토큰 검증과 Lambda 환경 변수 복호화가 남기는 정상 흔적과 IAM 거부로 막히지 않는 EKS 인증과 출발지 거부에 막히는 첫 비밀번호 변경, Lambda 실행 역할의 함수별 세션, 데이터 이벤트만 쓰는 자격 증명의 기준선, 데이터 이벤트 없이 SSE-KMS 객체 읽기를 드러내는 KMS 흔적, EventBridge 경보 규칙의 상태·패턴 상한, 접근 로그 읽기와 CloudFront 지연 전달 함정, 애플리케이션 로그의 교차 테넌트 신호와 로그에 남은 비밀번호의 사용 판정·로그인 계정 귀속, VPC 흐름 로그의 Lambda ENI 공유·NLB 집계 함정과 응답 크기 기준의 한계, 노출 범위(Terraform state·Lambda 관리형 정책·발행 버전에 고정된 실행 역할과 `LastModified` 해석·소스 함수 ARN 조건의 적용 범위), GCP 데이터 접근 로그 공백과 대체 근거, 키 교체 없이 출발지로 제한하는 수단의 한계를 다룬다.
 tags: [security, incident-response, forensics, aws, cloudtrail, gcp, terraform, logs]
-timestamp: 2026-11-11T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # 클라우드 침해 조사의 로그 공백·신원 판별·노출 범위
@@ -13,6 +13,7 @@ timestamp: 2026-11-11T00:00:00Z
 ## 보존과 수집 순서
 
 - [ ] 보존이 짧은 출처는 노출을 안 시점에 먼저 받아 둔다. SSM 명령 기록은 30일([Run Command](https://docs.aws.amazon.com/systems-manager/latest/userguide/running-commands.html)), CloudWatch 1분 지표는 15일, CloudTrail 이벤트 기록은 90일이고, GCP `_Default` 로그 버킷은 프로젝트마다 보존이 조정돼 있을 수 있어(관찰 2026-11-10: 2일·7일) 프로젝트별로 확인한다. 서버 로그가 순환됐으면 "기록 없음"으로 판정하기 전에 로드밸런서 접근 로그처럼 수명 주기 규칙 없이 남는 출처를 찾는다.
+- [ ] 쿠버네티스 파드의 로그가 로그 저장소에 없으면 "기록 없음"으로 판정하기 전에 수집기 DaemonSet이 그 파드의 노드에 뜨는지(nodeSelector·toleration)와 수집 대상 필터(네임스페이스·경로)를 본다. 수집되지 않는 노드의 stdout은 파드가 교체되면 사라지므로, 남는 근거는 서비스 메시 프록시·인그레스의 상태 코드 지표처럼 다른 경로로 모인 것뿐이다(관찰 2026-11-12).
 
 ## AWS CloudTrail
 
@@ -20,6 +21,7 @@ timestamp: 2026-11-11T00:00:00Z
 - [ ] 트레일이 꺼졌던 구간은 S3 전달 파일과 그것을 원본으로 한 Athena 테이블이 비어 있어 "0건"으로 나온다. 0건을 결론으로 쓰기 전에 `get-trail-status`(`IsLogging`·`StartLoggingTime`·`StopLoggingTime`)와 이벤트 선택기를 확인해 결과에 함께 적는다. 이벤트 기록은 트레일과 무관하게 최근 90일 관리 이벤트를 주지만 출발지 IP로 거를 수 없고 계정·리전당 초당 2건으로 제한되므로([LookupEvents](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html)) 이벤트 이름·키 ID·리소스 이름별로, 하루 단위로 나눠 조회한다. 트레일이 켜진 구간은 S3 전달 파일을 받아 로컬에서 거르는 쪽이 빠르고 IP로도 거를 수 있다. 전달 파일 이름의 시각은 파일을 쓴 시각이라 그 안의 이벤트는 모두 그보다 앞서므로, 구간 끝 뒤에 쓰인 파일까지 포함한다.
 - [ ] 일부 API는 CloudTrail에 요청 본문을 남기지 않는다. SSM `SendCommand`에는 명령 본문이 없고, Athena `StartQueryExecution`·`CreateNamedQuery`의 `queryString`은 `***OMITTED***`다([Athena CloudTrail](https://docs.aws.amazon.com/athena/latest/ug/monitor-with-cloudtrail.html)). 명령과 출력은 SSM 명령 기록(`list-commands`, `list-command-invocations --details`, 출력은 플러그인당 2,500자까지, [CommandPlugin](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CommandPlugin.html))에서, 쿼리 본문은 그 작업 그룹의 Athena 쿼리 기록에서 보며 각각의 조회 권한(`ssm:ListCommandInvocations`, `athena:GetQueryExecution`)을 따로 받아야 한다.
 - [ ] EKS의 `kubectl`·kubelet 인증 토큰은 미리 서명한 `sts:GetCallerIdentity` 요청이고 EKS 컨트롤 플레인이 그것을 실행해 신원을 확인한다. 그래서 CloudTrail에는 토큰 주인(IAM 사용자·노드 역할) 이름의 `GetCallerIdentity`가 계정 소유가 아닌 AWS 대역 IP에서 남는다([AWS re:Post](https://repost.aws/ko/articles/ARI6Fv-138Sr6Av-cW64gYNQ)). 관찰(2026-11-10)한 UA는 `Go-http-client/1.1`이었고, 같은 IP에서 노드·오토스케일러 역할의 같은 호출이 수천 건이면 그 클러스터의 엔드포인트다. 사용자 키의 "AWS 대역 출발지 `GetCallerIdentity`"를 개인 EC2나 탈취 사용으로 판정하기 전에 이 형태인지 본다. 이 호출은 명시적 거부로도 막히지 않으므로([GetCallerIdentity](https://docs.aws.amazon.com/STS/latest/APIReference/API_GetCallerIdentity.html), 확인 2026-11-11) 노출된 키를 IAM 사용자 정책의 `aws:SourceIp` 거부로 묶어도 EKS 인증은 막히지 않는다. 클러스터 접근은 EKS 접근 항목·`aws-auth` 매핑이나 엔드포인트 공개 CIDR에서 따로 끊는다.
+- [ ] IAM 사용자 정책의 출발지 거부(`Action: *`, `NotIpAddress aws:SourceIp`, `aws:ViaAWSService` false)는 콘솔 로그인 자체(`CheckMfa`·`ConsoleLogin`)를 막지 않지만, 로그인 프로필이 `PasswordResetRequired`인 사용자의 첫 비밀번호 변경은 로그인 출발지가 허용 목록 안이어도 막았다. 로그인 과정이 부르는 `iam:ChangePassword`는 CloudTrail(`us-east-1`)에 `sourceIPAddress`·UA `AWS Internal`로 남고, 로그인 출발지 IP를 미리 허용 목록에 넣어 두었는데도 "explicit deny in an identity-based policy"로 거부됐다. 그 사용자의 신원 기반 정책 중 Deny가 있는 것은 이 출발지 거부뿐이었다(관찰 2026-11-12, 1명). 이 호출의 `aws:SourceIp`가 사용자 IP가 아니거나 없다는 뜻이므로 허용 IP를 추가해도 풀리지 않는다. 사용자에게는 비밀번호·MFA는 통과했는데 로그인이 끝나지 않는 증상으로 보인다. 거부 문장을 `NotAction: [iam:ChangePassword, iam:GetAccountPasswordPolicy]`로 바꾸면 시뮬레이터에서 두 동작은 허용 목록 밖에서도 명시적 거부가 아니고 다른 동작은 계속 `explicitDeny`였지만, 실제 첫 비밀번호 변경이 통과하는지는 시험하지 않았다(2026-11-12). 거부 응답의 authorization ID로 `GetRequestAuthorizationDetails`(서비스 `iam-toolbox`, 미리 보기, 24시간 보존)를 불렀지만 이 호출에는 `requestContext`와 거부한 정책이 빠져 있고 로그인 과정의 인라인 Allow만 나왔다. 이 API는 AWS CLI v1(1.46.3)에 없고, botocore 저장소의 `iam-toolbox` 모델 파일을 `AWS_DATA_PATH`로 주면 v1에서도 호출된다.
 - [ ] Lambda `ListFunctions`·`GetFunction`·`GetFunctionConfiguration` 응답에는 환경 변수가 평문으로 담긴다. 탈취한 자격 증명으로 `ListFunctions`를 부르자 같은 세션 이름으로 `lambda.amazonaws.com`이 대신 호출한 KMS `Decrypt`가 대량으로 남았다(관찰 2026-11-09). 이 묶음은 함수 환경 변수가 응답으로 나갔다는 흔적이므로, 그 환경 변수에 든 비밀을 모두 노출로 본다.
 - [ ] Lambda 실행 역할의 CloudTrail 세션 이름은 함수 이름이다. 여러 함수가 한 실행 역할을 공유해도 `lookup-events`의 `Username`에 함수 이름을 넣으면 그 함수 자격 증명의 관리 이벤트만 나온다(관찰 2026-11-09). 데이터 이벤트는 이 조회에 없으므로 결과를 "그 함수의 모든 호출"로 쓰지 않는다.
 - [ ] 데이터 이벤트(S3 객체 읽기·쓰기 등)만 하는 서비스 자격 증명은 정상 상태의 관리 이벤트가 0건이다. 그런 사용자 이름으로 관리 이벤트가 한 건이라도 나오면 출발지·UA와 무관하게 의심으로 본다(`GetCallerIdentity`·`ListBuckets` 포함). 이 기준선은 IOC(IP·UA) 대조가 놓치는 재유출을 잡지만, 재유출된 키가 데이터 작업에만 쓰이면 S3 서버 접근 로그나 CloudTrail 데이터 이벤트가 켜져 있어야 보인다. `get-access-key-last-used`의 서비스·리전이 평소와 다른지도 함께 본다.
@@ -31,11 +33,13 @@ timestamp: 2026-11-11T00:00:00Z
 - [ ] ALB 접근 로그는 클라이언트 IP와 쿼리 문자열을 포함한 전체 URL을 남겨 인스턴스 로그가 순환된 구간을 복원하는 데 쓴다. 필드 수가 계속 늘어 왔으므로(관찰 2026-11: 30개 초과) 열 수를 적게 지정하고 DuckDB `read_csv(..., ignore_errors=true)`로 읽으면 최근 행이 오류 없이 빠진다. 열을 넉넉히 지정해 읽고 거부된 행 수(`store_rejects`의 `reject_errors`)가 0인지 확인한다. 0바이트 `.gz`가 섞여 있으면 gzip 오류로 읽기 전체가 멈추므로 크기가 0보다 큰 파일 목록만 넘긴다.
 - [ ] CloudFront 표준 로그(S3 전달)의 파일 이름 `<배포 ID>.YYYY-MM-DD-HH.<고유 ID>.gz`에 든 시각은 요청 시각이고 파일은 최대 24시간 늦게 도착한다(확인 2026-11-10). 주기 수집은 직전 나열 시각에서 24시간을 뺀 시간부터 시간별 접두사를 다시 나열하고, 처리한 객체 키를 기록해 한 번씩만 분석한다. 객체가 많은 버킷에서 `aws s3 cp --recursive --include`는 원본 전체를 나열한 뒤 거르므로 느리고, 부분 접두사(`s3://<버킷>/<배포 ID>.2026-11-09-17`)를 `cp --recursive`의 원본으로 주면 한 건도 받지 않았다(관찰 2026-11-10). `s3api list-objects-v2 --prefix`로 키를 얻어 객체마다 받는다.
 - [ ] 애플리케이션 로그로 교차 테넌트 시도를 찾을 때, 신원 헤더를 인증 성공 때만 덮어쓰는 미들웨어에서는 인증 전·거절 행의 신원 필드가 클라이언트가 보낸 값일 수 있다([코드 리뷰 보안 체크리스트](/security/review-checklist.md)의 신원 헤더 항목). 요청자는 서버가 값을 채운 성공 행에서 같은 토큰 해시로 붙이고 토큰 원문은 출력하지 않는다. 소유자 범위로 좁혀 조회하는 경로는 남의 ID에 오류 없이 빈 결과를 돌려 거절 신호가 남지 않으므로, 오류 로그가 없다고 시도가 없었다고 판정하지 않는다.
+- [ ] 요청 본문을 남기는 로그에서 비밀번호는 펼친 필드(`body_password` 등)가 아니라 원문 본문 문자열 안에 있을 수 있으므로, 비밀값 기록 여부를 필드 이름만으로 판정하지 않는다. 공격자 로그인이 맞는 비밀번호였는지(유출된 값의 사용인지 대입인지)는 값을 꺼내지 않고 조회 엔진 안에서 실행마다 새로 만든 salt와 함께 해시해, 시도와 그 계정의 이전 정상 성공 로그인이 같은 값인지만 받아 판정한다. salt 없는 해시를 출력하면 사전 대입으로 되돌릴 수 있는 사본이 된다. 로그인 행에 계정 ID가 없으면 같은 출발지 IP의 다른 행으로 계정을 붙이지 않는다(사무실·NAT IP는 여러 계정이 함께 쓴다). 성공 직후 같은 출발지에서 처음 나타난 토큰의, 서버가 채운 계정 ID로 붙인다(관찰 2026-11-12).
 
 ## VPC 흐름 로그와 로드밸런서 지표
 
 - [ ] Lambda는 같은 서브넷·보안 그룹 조합의 함수끼리 Hyperplane ENI를 공유하므로([Lambda VPC](https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html), 확인 2026-11-11) 흐름 로그의 ENI만으로 DB·캐시 접속을 특정 함수에 귀속하지 않는다. 새 연결(TCP 플래그 SYN)이 생긴 분과 함수별 분당 `Invocations`를 맞대 후보를 좁히되, 시간대 일치만으로 호출 주체를 확정하지 않는다(관찰 2026-11-11).
 - [ ] NLB 경로의 흐름 로그를 집계하기 전에 대상 그룹의 클라이언트 IP 보존 설정을 본다. 켜져 있으면 같은 클라이언트 흐름이 NLB ENI와 대상 ENI 양쪽에 남아 바이트를 합치면 두 배로 잡히므로 한 관측 지점만 쓴다. 꺼져 있으면 NLB가 대상 연결에 쓰는 임시 포트가 리스너 포트와 같아질 수 있어 대상의 응답이 NLB ENI에서 같은 `dstport`로 잡힌다. 클라이언트 유입은 `dstaddr`가 NLB 사설 IP인 ingress 행에서 대상 포트를 `srcport`로 가진 행을 빼고 센다(관찰 2026-11-11: 빼지 않자 유입이 수백 배로 잡힘).
+- [ ] 흐름 로그의 바이트로 무인증 조회 API의 반출을 판정할 때 응답 크기 기준은 대량 반출만 가른다. Prometheus `/api/v1/query`처럼 질의 하나에 작은 JSON을 돌려주는 API는 수 KB 응답으로도 원하는 값을 받아 갈 수 있으므로, 기준보다 작은 흐름을 "조회 없음"으로 쓰지 않고 미확정으로 적는다.
 - [ ] CloudWatch `AWS/NetworkELB`의 흐름 수·바이트 지표는 로드밸런서·AZ 차원뿐이라 리스너 포트별 사용량을 가르지 못한다(관찰 2026-11-11). 포트별 사용 여부는 흐름 로그나 대상 앞단 프록시의 entrypoint별 지표로 본다.
 
 ## 노출 범위
