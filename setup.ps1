@@ -88,14 +88,14 @@ if ((Test-Path $rulesMd) -and -not (Test-Path "$rulesMd.bak")) { Copy-Item $rule
 Copy-Item (Join-Path $ScriptDir 'rules\RULES.md') $rulesMd -Force
 Set-OkfPath $rulesMd
 # WATCHDOG.md: advisor-only guidance. PERSONALITY.md: replaces the default personality block of the main session (read from the agent dir).
-# TITLE_SYSTEM.md: prompt for automatic session titles, read from the generic config base (~/.omp/agent), which PI_CODING_AGENT_DIR does not move.
+# TITLE_SYSTEM.md: prompt for automatic session titles, read from the agent dir on OMP 18.18.8+; older versions read the generic config base (~/.omp/agent), which PI_CODING_AGENT_DIR does not move.
 foreach ($top in @('WATCHDOG.md', 'PERSONALITY.md', 'TITLE_SYSTEM.md')) {
   $topDst = Join-Path $ConfigDir $top
   if ((Test-Path $topDst) -and -not (Test-Path "$topDst.bak")) { Copy-Item $topDst "$topDst.bak" -Force }
   Copy-Item (Join-Path $ScriptDir "rules\$top") $topDst -Force
 }
 if ($env:PI_CODING_AGENT_DIR) {
-  Write-Warning "PI_CODING_AGENT_DIR is set; OMP looks up TITLE_SYSTEM.md in the generic config base, so the copy in $ConfigDir is not used for titles"
+  Write-Warning "PI_CODING_AGENT_DIR is set; OMP 18.18.7 and older look up TITLE_SYSTEM.md in the generic config base, so on those versions the copy in $ConfigDir is not used for titles"
 }
 # TTSR rules (reminders injected when the model's output or tool call matches) -> <configdir>/rules/, beside the okf-* rules deploy-okf generates
 $ttsrDir = Join-Path $ScriptDir 'ttsr'

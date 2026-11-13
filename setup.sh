@@ -92,7 +92,7 @@ fi
 cp "${SCRIPT_DIR}/rules/RULES.md" "${CONFIG_DIR}/RULES.md"
 sed -e "s|__OKF_DIR__|${OKF_ABS}|g" -e "s|__OKF_SOURCE_DIR__|${OKF_SOURCE_ABS}|g" "${CONFIG_DIR}/RULES.md" > "${CONFIG_DIR}/RULES.md.tmp" && mv "${CONFIG_DIR}/RULES.md.tmp" "${CONFIG_DIR}/RULES.md"
 # WATCHDOG.md: advisor-only guidance. PERSONALITY.md: replaces the default personality block of the main session (read from the agent dir).
-# TITLE_SYSTEM.md: prompt for automatic session titles, read from the generic config base (~/.omp/agent), which PI_CODING_AGENT_DIR does not move.
+# TITLE_SYSTEM.md: prompt for automatic session titles, read from the agent dir on OMP 18.18.8+; older versions read the generic config base (~/.omp/agent), which PI_CODING_AGENT_DIR does not move.
 for top in WATCHDOG.md PERSONALITY.md TITLE_SYSTEM.md; do
   if [ -f "${CONFIG_DIR}/${top}" ] && [ ! -f "${CONFIG_DIR}/${top}.bak" ]; then
     cp "${CONFIG_DIR}/${top}" "${CONFIG_DIR}/${top}.bak"
@@ -100,7 +100,7 @@ for top in WATCHDOG.md PERSONALITY.md TITLE_SYSTEM.md; do
   cp "${SCRIPT_DIR}/rules/${top}" "${CONFIG_DIR}/${top}"
 done
 if [ -n "${PI_CODING_AGENT_DIR:-}" ]; then
-  echo "  WARNING: PI_CODING_AGENT_DIR is set; OMP looks up TITLE_SYSTEM.md in the generic config base, so the copy in ${CONFIG_DIR} is not used for titles" >&2
+  echo "  WARNING: PI_CODING_AGENT_DIR is set; OMP 18.18.7 and older look up TITLE_SYSTEM.md in the generic config base, so on those versions the copy in ${CONFIG_DIR} is not used for titles" >&2
 fi
 # TTSR rules (reminders injected when the model's output or tool call matches) -> <configdir>/rules/, beside the okf-* rules deploy-okf generates
 n=0
