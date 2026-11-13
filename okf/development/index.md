@@ -4,8 +4,8 @@
 
 ## 실행·진단·서버 운영
 * [내장 Lua 스크립트의 실행 경계](/development/execution.md) - 내장 Lua 스크립트의 count hook·선점 한계를 다룹니다.
-* [런타임 진단·측정 범위·출하 진단](/development/runtime-diagnostics.md) - 측정·검증이 증명하는 범위, 교체 allocator 앱에 결합하는 정적 라이브러리의 할당/해제 도메인, Fluent Bit 라벨/심각도·로그 조회의 스캔 비용과 Logs Insights 결과 투영·CloudWatch Logs 적재 신선도·OpenObserve 알림 API·RDS 확장 모니터링 프로세스 목록으로 하는 DB 클라이언트 귀속·가변 이미지 태그의 반영 시점·끝나지 않은 요청의 CPU 점유 진단·Service 주소로 수집한 카운터와 Traefik gRPC 상태 레이블의 해석·연결 종료 진단·Docker pause 관측·Windows 덤프 API의 확인된 조건입니다.
-* [서버 프로토콜·메모리·큐 운영 기준](/development/server-checklist.md) - 비동기 완료의 상태 소유자 적용, 공유 상수·메시지 ID·codec 경계, 큐 소비 장벽의 처리율 상한, Mirror·Asio·OpenSSL·RabbitMQ의 버전별 함정을 다룹니다.
+* [런타임 진단·측정 범위·출하 진단](/development/runtime-diagnostics.md) - 측정·검증이 증명하는 범위, 교체 allocator 앱에 결합하는 정적 라이브러리의 할당/해제 도메인, Fluent Bit 라벨/심각도·로그 조회의 스캔 비용과 Logs Insights 결과 투영·CloudWatch Logs 적재 신선도·OpenObserve 알림 API·RDS 확장 모니터링 프로세스 목록으로 하는 DB 클라이언트 귀속·가변 이미지 태그의 반영 시점·끝나지 않은 요청의 CPU 점유 진단·Service 주소로 수집한 카운터와 Traefik gRPC 상태 레이블의 해석·연결 종료 진단·Docker Desktop pause 관측과 Windows 호스트·VM 로그의 짧은 보존·Windows 덤프 API의 확인된 조건입니다.
+* [서버 프로토콜·메모리·큐 운영 기준](/development/server-checklist.md) - 비동기 완료의 상태 소유자 적용, 공유 상수·메시지 ID·codec 경계, 큐 소비 장벽의 처리율 상한, 공유 고정 풀에 상시 예약을 더할 때의 기본값 재도출, Mirror·Asio·OpenSSL·RabbitMQ의 버전별 함정을 다룹니다.
 * [서비스 영속성·생존 감시·프로세스와 소유권 수명](/development/service-lifecycle.md) - 내구 확인·grpc-go 종료 계약, identity 결속 이전, 생존 감시와 장애 반응, pidfd·flock 잠금 파일·컨테이너·Windows 감독의 확인된 함정, 소유권 fencing의 기준과, 대규모 상태·부하 서비스 운영 설계의 참조 사례(DeepSeek 추론 배포 Q&A)입니다.
 
 ## 데이터·네트워크

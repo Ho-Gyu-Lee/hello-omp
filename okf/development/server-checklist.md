@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 서버 프로토콜·메모리·큐 운영 기준
-description: 비동기 완료의 상태 소유자 적용, 공유 상수·메시지 ID·codec 경계, 큐 소비 장벽의 처리율 상한, Mirror·Asio·OpenSSL·RabbitMQ의 버전별 함정을 다룹니다.
+description: 비동기 완료의 상태 소유자 적용, 공유 상수·메시지 ID·codec 경계, 큐 소비 장벽의 처리율 상한, 공유 고정 풀에 상시 예약을 더할 때의 기본값 재도출, Mirror·Asio·OpenSSL·RabbitMQ의 버전별 함정을 다룹니다.
 tags: [development, server, concurrency, memory, codec, queue]
-timestamp: 2026-10-29T00:00:00Z
+timestamp: 2026-11-13T00:00:00Z
 ---
 
 # 서버 프로토콜·메모리·큐 운영 기준
@@ -21,6 +21,7 @@ timestamp: 2026-10-29T00:00:00Z
 - [ ] RabbitMQ 4.3.0부터 Khepri가 유일한 메타데이터 저장소이고, transient non-exclusive 큐·`global_qos`·`x-queue-mode`(CQv1) 선언이 기본 거부된다. 4.4.x로의 롤링 업그레이드는 4.2.x·4.3.x에서만 지원되며 그 전에 모든 stable feature flag를 켜고, 업그레이드 뒤 새 flag를 `rabbitmqctl enable_feature_flag all`로 켠다. 4.4.0은 classic queue 메시지 저장 파일을 v2(`.sqs`)로 쓰기 시작하면 4.3 이하로 내릴 수 없으므로 롤백은 업그레이드 직전 데이터 디렉터리 사본으로만 한다. `definitions.local.path` 부트 가져오기는 기본값(`skip_if_unchanged=false`)에서 기동마다 실행되어 기존 사용자의 해시·태그·권한을 파일 내용으로 덮어쓴다([4.3.0](https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.0)·[4.4.0](https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.4.0) 릴리스 노트, [업그레이드 경로](https://www.rabbitmq.com/docs/upgrade), `rabbit_definitions.erl` v4.4.0, 확인 2026-10-29).
 
 ## 상시 운영 메모리와 계측
+- [ ] 공유 고정 풀에 세션·owner 수명 동안 점유하는 예약을 새로 더하면, 그 풀을 함께 쓰는 기존 최대 시나리오(예: 최대 인원 한 단위의 전체 저장)가 운영 기본값에서도 성립하는지 블록 크기 등급까지 따져 다시 도출하고 기본값을 그 산식으로 표기한다. 축소한 시험 풀이 새 예약 때문에 실패하면 시험 설정만 늘리지 않는다. 축소 시험이 운영 기본값의 같은 부족을 먼저 드러낸 것일 수 있다.
 - [ ] 무할당·총량 제한 주장은 초기화·접속/TLS 수립·정상 메시지·오류/종료 단계의 모든 소비 경로(queue node·문자열·JSON·codec parser 상태·비동기 operation·TLS 내부)를 계측한 결과로만 한다. 풀의 존재나 `reserve`는 증거가 아니다. 풀 고갈의 heap fallback과 반환 블록 보관량도 상한을 갖고, 저장소 수명은 callback 취소 요청이 아니라 마지막 사용과 deallocate까지 유지한다. 측정 범위는 [측정과 검증의 범위](/development/runtime-diagnostics.md#측정과-검증의-범위)를 따른다.
 - [ ] 완결된 단위(datagram, 길이로 잘린 frame) 안의 내부 길이가 남은 바이트를 넘거나 정수 변환에서 넘치면 "데이터 부족 대기"가 아니라 프로토콜 오류로 즉시 연결을 끊는다. 대기로 처리하면 그 연결의 수신 큐가 영구 정지하고 이후 batch가 무제한 쌓인다. 부족 대기는 stream 재조립 경계에만 상한과 함께 둔다. 컬렉션은 `개수 × 요소의 최소 wire 크기 ≤ 남은 바이트`와 메시지별 의미 상한을 할당 전에 판정한다. Mirror는 이 경우 큐를 비우고 예외로 끊도록 고쳤으므로 fork는 upstream 보안 수정 반영 여부를 대조하고, 고정 소스의 `AllocationLimit`은 요소 수 기준이다([`Unbatcher.cs`](https://github.com/MirrorNetworking/Mirror/blob/c4f3739966e151f405be1762d33502794fd034ff/Assets/Mirror/Core/Batching/Unbatcher.cs), 조회 2026-10-11).
 - [ ] `SSL_MODE_RELEASE_BUFFERS`는 유휴 TLS buffer 반납(반복 할당)과 연결별 상주 메모리의 교환이다. 전송 wrapper가 실제 설정하는 값을 확인한다([OpenSSL mode 문서](https://docs.openssl.org/4.0/man3/SSL_CTX_set_mode/), 확인 2026-10-15).
