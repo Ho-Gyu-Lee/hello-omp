@@ -3,7 +3,7 @@ type: Rule
 title: 사용자 개발 방향
 description: 모델 기본값 대신 따를 사용자의 선택 — 프로필, 코드 표기, 멀티스레드·MMORPG·MSA·단일 로직 스레드에 대한 관점, 설계와 작업 방식. 설계 판단이나 선택지가 여럿일 때 읽는다. 다른 문서는 이 방향을 재진술하지 않고 링크한다.
 tags: [direction, preference, profile, concurrency, architecture, style]
-timestamp: 2026-11-13T00:00:00Z
+timestamp: 2026-11-16T00:00:00Z
 ---
 
 # 사용자 개발 방향
@@ -21,6 +21,7 @@ timestamp: 2026-11-13T00:00:00Z
 - PascalCase 중심이다. 타입·함수·메서드 `PascalCase`, 필드 `mPascalCase`, 지역·인자 `camelCase`, 정적·내부 상태 `sPascalCase`, 외부 전역 `gPascalCase`, 상수·enum 값·플래그 `UPPER_SNAKE_CASE`. 새 snake_case 함수·변수를 도입하지 않는다.
 - 선언·시그니처·호출·체인을 폭 때문에 여러 줄로 접지 않는다. 반대로 여러 문장·블록을 한 줄로 몰아넣지도 않는다.
 - 관련 로직은 붙여 두고 독립 제어문과 논리 단락 사이를 빈 줄 하나로 구분한다. 장식용·연속 빈 줄은 넣지 않는다.
+- 코드에 주석을 쓰지 않는다. 주석은 코드와 함께 검증·강제되지 않아 낡거나 설명이 틀리기 쉬우므로 유지보수·인수인계에서도 코드를 이해하는 근거는 코드 자체다. 의도는 이름·타입·구조로 드러내고, 주석으로 당부하고 싶은 제약은 타입·assert·테스트처럼 코드로 강제할 수 있는지 먼저 본다.
 - 상세와 언어별 예외는 [언어 공통 코딩 스타일](/language-style.md), C/C++는 [C/C++ 전용 코딩 규칙](/language-style-c-cpp.md)이 정본이다.
 
 ## 동시성과 서버 구조
