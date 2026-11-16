@@ -3,7 +3,7 @@ type: Reference
 title: 서브에이전트 위임
 description: 직접 처리와 위임의 경계, 위임 계약(AGENTS.md 비상속·소유·수락 기준), 여러 안의 후보별 독립 생성, 격리·독립 clone, 번들 에이전트 도구 경계와 반환 결과 수락. task로 작업을 위임하거나 반환 결과를 수락하기 전에 읽는다.
 tags: [tools, subagents, task, parallel, ownership, verification, alternatives]
-timestamp: 2026-11-13T00:00:00Z
+timestamp: 2026-11-16T00:00:00Z
 ---
 
 # 서브에이전트 위임
@@ -14,6 +14,7 @@ timestamp: 2026-11-13T00:00:00Z
 
 ## 위임 계약
 - **task 서브에이전트는 `AGENTS.md`를 상속하지 않는다**(OMP 18.20.0 `omp://system-prompt-customization.md` 세션별 표: Task subagent — AGENTS.md Not inherited, 확인: 2026-11-13). 이 설정은 모든 에이전트 공통 지침을 `RULES.md`(always-apply 규칙)로 배포해 서브에이전트에도 적용하므로 위임 context에 그 공통 지침은 반복하지 않는다. context에는 작업 고유 제약·write-set 소유·수락 기준과, 메인 `AGENTS.md`나 프로젝트 `AGENTS.md`에만 있고 작업에 필요한 규칙·실행 금지·환경 제약을 필요한 만큼 명시한다. 이 문서들은 자식에게 가지 않는다.
+- 거르는 기준은 파일 이름이다. 같은 디렉터리에 `AGENTS.md`와 `CLAUDE.md`가 함께 있으면 OMP는 `AGENTS.md`만 로드하므로, 둘을 심볼릭 링크로 묶으면 메인은 지침을 받고 서브에이전트는 받지 못한다. Codex·Claude Code와 지침을 공유하는 저장소에서 서브에이전트까지 받게 하려면 정본을 `AGENTS.md`에 두고 `CLAUDE.md`는 `@AGENTS.md` 한 줄, 프로젝트 `.omp/config.yml`에 `disabledExtensions: [context-file:project:AGENTS.md]`를 둔다. 그러면 OMP는 `CLAUDE.md`를 로드하며 가져온 본문이 서브에이전트까지 간다(OMP 18.20.2 실측, 2026-11-16). 공유 저장소에서 `.omp/`를 다루는 방식은 [사용자 개발 방향](/direction.md)을 따른다. Codex는 프로젝트 `AGENTS.md` 묶음을 기본 32 KiB까지만 읽는다([Codex AGENTS.md](https://developers.openai.com/codex/guides/agents-md) `project_doc_max_bytes`, 확인 2026-11-16).
 - 지시가 금지된 실행을 유도하지 않는지 보내기 전에 대조한다. "예를 들어"로 든 도구도 작업자는 그대로 실행하고 '기능 확인만' 같은 단서는 금지를 풀지 않으므로 같은 목적은 허용된 검사로 지정한다.
 - fan-out 전에 공유 인터페이스·데이터 형식·완료 기준과 write-set 소유권을 고정하고 작업 루트·작업-ID는 [워크플로](/workflow.md)대로 전달한다. 의존성이 없고 write-set이 겹치지 않는 작업만 병렬로 돌리고 겹치면 한 소유자에게 합치거나 순차화한다. 수락 증거는 자식의 완료 보고가 아니라 부모가 직접 확인한 변경 파일·실행 증거이며 `reviewer`·advisor의 판단은 이를 대체하지 않는다.
 
