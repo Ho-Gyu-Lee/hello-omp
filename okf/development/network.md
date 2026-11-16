@@ -27,6 +27,7 @@ timestamp: 2026-11-13T00:00:00Z
 
 - IOCP의 `GetQueuedCompletionStatus`가 `FALSE`여도 `OVERLAPPED != nullptr`이면 실패한 연산의 완료 패킷을 꺼낸 것입니다. '큐가 비었음'으로 버리지 않습니다([GetQueuedCompletionStatus](https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-getqueuedcompletionstatus)).
 - `closesocket`·취소 요청의 반환은 미완료 연산의 완료 통지 소비가 아닙니다. 완료(중단 포함) 통지를 소비할 때까지 연산이 참조하는 컨텍스트·송신 버퍼를 유지하고 새 연결/accept에 재사용하지 않습니다. 동시에 진행 중인 연산마다 별도 `OVERLAPPED`·연산 종류·버퍼 수명을 두며 연결 객체의 mutable `state` 하나로 완료 종류를 추정하지 않습니다([closesocket](https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-closesocket), [WSASend](https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsasend)).
+- 연결형 UDP 소켓(`connect`한 소켓, Go `net.DialUDP`)은 상대 포트가 닫혀 돌아온 ICMP port unreachable을 다음 수신·송신의 `ECONNREFUSED`로 돌려줍니다([udp(7)](https://man7.org/linux/man-pages/man7/udp.7.html)). 상대가 재시작하는 동안의 일시 오류이므로, 수신 루프가 시간 초과 외의 모든 오류에서 끝나면 상대가 다시 열린 뒤에도 소켓만 남아 응답 경로가 끊깁니다. 수신 오류를 일시 오류와 소켓 종료로 나눠 처리하거나, 수신 루프가 끝날 때 그 소켓을 공유 참조에서 떼어 다음 송신이 새 소켓을 만들게 합니다(UDP 중계 서버의 Linux·macOS 재현, 2026-11-16).
 
 ## RTT 계측과 관찰 사례
 

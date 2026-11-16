@@ -21,6 +21,7 @@ timestamp: 2026-11-13T00:00:00Z
 - Git 원격 인증은 사용자가 설정한 credential manager의 대화형 로그인(사용자가 직접 입력)이나 미리 주입된 환경 변수의 **이름 참조**로 한다. 노출이 생기면 마스킹해 알리고 교체를 권고하며 보고에는 값의 일부(앞자리 등)도 적지 않는다.
 - 승인된 HTTPS push가 저장된 자격증명으로 실패하면 기존 credential manager 경로로 같은 push를 한 번 다시 실행해 확인한다(helper에 이미 거부 통지가 전달됐을 수 있어 수동 삭제를 먼저 하지 않는다). 같은 저장값으로 계속 실패할 때만 사용자 확인 후 [`git credential reject`](https://git-scm.com/docs/git-credential)에 `protocol`·`host`·`username`(`credential.useHttpPath=true`이면 `path`도)으로 범위를 좁혀 지운다(`protocol`·`host`만 지정하면 같은 host의 다른 계정도 삭제될 수 있다).
 - GitHub Desktop은 번들 Git의 credential helper를 실행마다 자기 helper로 바꿔 쓴다. 같은 `git.exe` 경로라도 터미널 push와 Desktop이 같은 인증 저장소를 쓴다고 가정하지 않는다.
+- Git 원격 실패를 자격 증명 문제로 단정하기 전에 호스트 쪽 변경을 확인한다. Bitbucket Cloud는 SSH Git을 `ssh.bitbucket.org`로 옮겼다(호스트 키 동일). 2026-11-12부터 평일 00·06·12·18시(UTC)에 `bitbucket.org` SSH를 15분~3시간 막는 brownout이 있고 2026-12-10에 완전히 끊긴다. 막힌 동안에는 SSH 키 인증은 통과한 뒤 "We have moved our SSH host to ssh.bitbucket.org"와 `Could not read from remote repository`로 실패한다(2026-11-16 실측). remote를 `git@ssh.bitbucket.org:`로 바꾸거나 `url."git@ssh.bitbucket.org:".insteadOf "git@bitbucket.org:"`로 옮긴다([Atlassian 안내](https://community.atlassian.com/forums/discussion/3234032/upcoming-change-to-bitbucket-cloud-ssh-access-move-from-bitbucket-org-to-ssh-bitbucket-org), 일정은 [정리 문서](https://lesstep.com/bitbucket-pull-requests/ssh-bitbucket-org/) 기준, 확인 2026-11-16).
 - 저장된 비밀값 조회·출력, 다른 host 항목·전역 helper 설정 변경, OS 자격증명 저장소 API로 비밀을 읽어 다른 helper·환경 변수로 넘기는 스크립트(이전 작업에서 만든 것의 재사용 포함)는 하지 않는다.
 
 ## 에이전트의 자료·실행 경계
