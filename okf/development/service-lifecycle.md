@@ -3,7 +3,7 @@ type: Checklist
 title: 서비스 영속성·생존 감시·프로세스와 소유권 수명
 description: 내구 확인·grpc-go 종료 계약, identity 결속 이전, 생존 감시와 장애 반응, pidfd·flock 잠금 파일·컨테이너·Windows 감독의 확인된 함정, 소유권 fencing의 기준과, 대규모 상태·부하 서비스 운영 설계의 참조 사례(DeepSeek 추론 배포 Q&A)입니다.
 tags: [development, server, persistence, heartbeat, process, pidfd, container, fencing, lifecycle]
-timestamp: 2026-10-28T00:00:00Z
+timestamp: 2026-11-14T00:00:00Z
 ---
 
 # 서비스 영속성·생존 감시·프로세스와 소유권 수명
@@ -38,6 +38,8 @@ timestamp: 2026-10-28T00:00:00Z
 - [ ] `MultipleInstances=IgnoreNew` 작업은 이전 인스턴스가 실행 중이면 새로 시작하지 않는다([TaskSettings.MultipleInstances](https://learn.microsoft.com/en-us/windows/win32/taskschd/tasksettings-multipleinstances)). 감독자를 정상 종료한 직후 다시 시작하는 요청은 조용히 무시되어 서비스가 내려간 채 남으므로 작업 상태가 `Ready`로 돌아온 뒤 시작한다.
 - [ ] Docker `on-failure`는 0 종료·수동 `docker stop`/`kill`·daemon 재시작 뒤에는 다시 띄우지 않으며 restart 정책과 호스트 프로세스 관리자를 함께 쓰면 충돌한다([restart policies](https://docs.docker.com/engine/containers/start-containers-automatically/), 확인 2026-10-15). 감독자는 정책이 다루지 않는 상태(없음·exited·dead)만 수렴시키고 restarting은 정책에 맡긴다.
 - [ ] Windows는 프로세스를 종료해도 자식을 종료하지 않아 `docker.exe`를 끝내도 `docker-compose.exe` plugin이 남을 수 있다([Terminating a Process](https://learn.microsoft.com/en-us/windows/win32/procthread/terminating-a-process)). 감독자는 PID·명령줄 이름으로 프로세스를 끝내지 않고(PID 재사용·다른 소유자의 compose와 경합) 직접 띄운 프로세스만 그 handle로 끝낸다. compose 대기는 `--wait-timeout`으로 제한하고 남은 compose 프로세스나 실패한 목록 조회는 충돌로 보아 잠금을 유지한다(fail closed).
+- [ ] 래퍼 배치 파일의 `>>` 리디렉션은 실행 내내 로그 파일을 쓰기 공유 없이 연다. 같은 파일로 리디렉션하는 두 번째 실행은 프로그램을 띄우기 전에 종료 코드 1("다른 프로세스가 파일을 사용 중")로 끝나고, 다른 프로세스의 추가 쓰기도 `EBUSY`로 실패한다(Windows 11 build 26300 실측, 확인 2026-11-14). 상시 감독 대상과 같은 래퍼의 일회성 실행이 로그를 공유하면 수동 실행이 감독 대상의 기동을 막거나 그 반대가 되므로, 모드별로 로그를 나누거나 프로그램이 공유 모드로 직접 쓴다.
+- [ ] "사용자의 로그온 여부에 관계없이 실행"(S4U) 작업이 띄운 프로세스는 같은 사용자의 대화형 세션에서도 `Win32_Process`의 `CommandLine`·`GetOwner`가 비어 보인다. 이름·`SessionId`(0)·`ParentProcessId`는 보인다(Windows 11 build 26300 실측, 확인 2026-11-14). 명령줄 대조로 하는 실행 확인·중복 실행 검사는 이 프로세스를 놓치므로, 작업이 띄웠는지는 부모 체인(세션 0의 `cmd.exe` → Schedule 서비스의 `svchost.exe` PID)과 프로세스가 직접 남긴 PID 파일로 판정한다.
 
 ## 소유권 펜싱과 장애 반응
 - [ ] 엔티티 샤딩에서 배치 관리자의 이중 소유 회피와 영속 쓰기의 펜싱은 따로 정한다([Shardcake](https://devsisters.github.io/shardcake/docs/architecture.html)는 엔티티 영속을 사용자에게 맡긴다). 옛 작성자의 늦은 쓰기는 배정마다 단조 증가 epoch를 발급하고 권위 저장소가 쓰기와 원자적으로 epoch를 검사해 막는다(예: 배정 행을 잠근 같은 DB 트랜잭션). 데이터 revision CAS는 버전 충돌만 잡을 뿐 쓰기 권한을 회수하지 않는다. 내구 로그 없이 DB에 바로 쓰는 구조라면 소유권 전이(현재 소유자·이전 영수증)도 확인 응답 전에 원자적으로 기록한다.
