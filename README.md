@@ -20,7 +20,7 @@ hello-omp/
   extensions/              런타임 확장 (dangerous-tool-guard)
   scripts/                 validate-okf, deploy-okf, deploy-skills, sync-managed
   AGENTS.md                이 레포에만 적용하는 프로젝트 지침
-  agents/                  사용자 정의 에이전트 design-reviewer (그 밖은 빌트인 + 역할별 모델)
+  agents/                  사용자 정의 에이전트 design-reviewer, design-drafter (그 밖은 빌트인 + 역할별 모델)
 ```
 
 ## 지식이 에이전트에 닿는 경로
@@ -71,7 +71,7 @@ sh setup.sh
 
 배포한 지침은 **새 세션**부터 적용된다. 이미 열린 세션은 이전 지침을 계속 쓰므로 `omp`를 다시 시작한다.
 
-역할별 모델·추론 강도·fallback은 `config/settings.conf`가 정본이다. 메인·계획·정밀 검토는 `xhigh`, 구현·디자인·화면 분석·advisor는 `high`, 탐색·커밋은 `medium`, 제목·메모리·작업 위젯은 `low`이며 각 chat 역할에 다른 provider의 fallback을 하나 둔다. `premium` 역할(Fable)은 task 호출의 `model` 지정을 Fable 하나에만 허용하려고 두며 fallback이 없다. 메인 세션은 추론 품질이 결과를 좌우하는 하위 작업을 묻지 않고 Fable에 맡기고, Anthropic 주간 한도나 Fable 주간 칸이 80% 이상이면 승인을 받는다(기준은 `rules/RULES.md`). 배정 이유는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다. 적용값은 `omp config list`로 확인한다. 현재 대화의 모델만 바꿀 때는 `/switch <provider/model:effort>`를 쓴다(`/model`은 선택기라 인자를 받지 않는다).
+역할별 모델·추론 강도·fallback은 `config/settings.conf`가 정본이다. 메인·계획·정밀 검토는 `xhigh`, 구현·디자인·화면 분석·advisor는 `high`, 탐색·커밋은 `medium`, 제목·메모리·작업 위젯은 `low`이며 각 chat 역할에 다른 provider의 fallback을 하나 둔다. `premium` 역할(Fable)은 task 호출의 `model` 지정을 Fable 하나에만 허용하고 `design-drafter`의 기본 모델로 쓰려고 두며, 역할 자체의 fallback은 없다(`design-drafter`는 정의 파일에서 Astra, 그다음 Opus를 fallback으로 둔다). 메인 세션은 추론 품질이 결과를 좌우하는 하위 작업을 묻지 않고 Fable에 맡기되 되돌리기 비싼 설계 선택이 남은 구현은 설계 검토로 설계를 확정한 뒤 맡기고(추론이 설계를 좌우하면 읽기 전용 `design-drafter`가 초안을 쓴다), `reviewer`·`design-reviewer`는 Astra를 쓸 수 없을 때만 Fable로 돌리며, Anthropic 주간 한도나 Fable 주간 칸이 80% 이상이면 승인을 받는다(기준은 `rules/RULES.md`). 배정 이유는 [에이전트 가이드](okf/agents/guide.md#현재-배정의-이유)를 본다. 적용값은 `omp config list`로 확인한다. 현재 대화의 모델만 바꿀 때는 `/switch <provider/model:effort>`를 쓴다(`/model`은 선택기라 인자를 받지 않는다).
 
 비동기 advisor는 작업 중 위험·과잉 절차 감시용으로 켜 둔다(`advisor.enabled=true`). 독립 검토를 대신하지 않는다([워크플로](okf/workflow.md#독립-검토-시점과-최종-응답)).
 
@@ -87,7 +87,7 @@ sh setup.sh
 | `/cleanup`, `/cleanup preview`, `/cleanup all` | 작업 산출물을 목록·승인 기반으로 정리한다. `all`은 탐색 확대일 뿐 전체 삭제 승인이 아니다. 정본은 [`commands/cleanup.md`](commands/cleanup.md). |
 | `/skill:knowledge-sync` | 원격에 푸시된 지식·설정을 로컬 작업과 로컬 지식을 지키며 병합하고 setup을 실행한다. push·rebase는 하지 않는다. |
 | `/skill:archify …` | 아키텍처·흐름을 인터랙티브 HTML 다이어그램으로 만든다. 일반 작업에서 HTML을 자동 생성하지 않는다. |
-| (자동) `goldfish-review` | 설계 선택이 결과를 좌우하는 작업([워크플로](okf/workflow.md#독립-검토-시점과-최종-응답): 여러 모듈 새 기능 통합, 버전 이식, 되돌리기 비싼 미결 대안)이면 에이전트가 지시 없이 사용한다. 짧은 설계 문서를 대화 맥락이 없는 `design-reviewer`가 검토하며 기본은 한 단계, 재검토는 1회까지다. 한 가지 목적의 스크립트·한 지점 수정에는 쓰지 않는다. 직접 부를 때는 `/skill:goldfish-review`(사용자가 요청하면 전체 경로). 출처는 [Elephant-Goldfish Model](skills/goldfish-review/UPSTREAM.md). |
+| (자동) `goldfish-review` | 설계 선택이 결과를 좌우하는 작업([워크플로](okf/workflow.md#독립-검토-시점과-최종-응답): 여러 모듈 새 기능 통합, 버전 이식, 되돌리기 비싼 미결 대안)이면 에이전트가 지시 없이 사용한다. 짧은 설계 문서를 대화 맥락이 없는 `design-reviewer`가 검토하며 기본은 한 단계, 재검토는 1회까지다. 한 가지 목적의 스크립트·한 지점 수정에는 쓰지 않지만, 되돌리기 비싼 설계 선택이 남으면 작업 형태와 무관하게 쓰고 Fable 지정이 이를 대신하지 않는다. 직접 부를 때는 `/skill:goldfish-review`(사용자가 요청하면 전체 경로). 출처는 [Elephant-Goldfish Model](skills/goldfish-review/UPSTREAM.md). |
 
 명령 파일은 세션 시작과 cwd 변경 때 발견된다. 실행 중인 세션에서는 `/reload-plugins`로 갱신한다. 작업 디렉터리의 `.omp/commands/`에 같은 이름이 있으면 그쪽이 우선한다.
 

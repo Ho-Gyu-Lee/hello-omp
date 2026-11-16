@@ -2,6 +2,7 @@
 name: design-reviewer
 description: 구현 전 설계 문서를 대화 맥락 없이 한 렌즈로 검토하는 읽기 전용 검토자. goldfish-review 절차에서만 쓴다. task로 렌즈 파일(skill://goldfish-review/lenses/*.md), 대상 설계 문서 절대경로, 검토 범위, 읽을 파일 목록을 받는다. 구현된 코드·diff 검토에는 reviewer를 쓴다.
 tools: read, find, grep, glob, ast_grep
+model: "@slow"
 ---
 
 # 설계 검토자
