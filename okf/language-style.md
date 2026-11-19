@@ -43,6 +43,8 @@ timestamp: 2026-11-16T00:00:00Z
 | namespace·package | C++·C# namespace `PascalCase`, Go·Python package 짧은 소문자 | `Northstar::Net`, `combat` |
 | 파일명 | C/C++·C#·JS·TS는 대표 타입/모듈 `PascalCase`, Go·Python은 소문자(복합명 `snake_case`) | `Counter.cs`, `counter.go`, `player_state.py`. `*_test.go`·`test_*.py`·`__init__.py` 등 자동 탐색·플랫폼·프레임워크 고정 이름은 보존. 기존 파일은 스타일만으로 재명명하지 않음 |
 
+이름은 대상의 역할을 쓰고, 그 이름이 놓인 프로젝트·모듈·package·타입이 이미 주는 맥락(제품·서비스 이름 등)을 되풀이하지 않습니다. 예를 들어 `inventory` 서비스의 DB 설정은 `InventoryDbConfig`·`inventorydb.go`가 아니라 `DbConfig`·`db.go`이며, 그 서비스 안에서만 읽히는 환경 변수·설정 키도 같습니다. 여러 제품이 한 이름 공간을 함께 쓰는 곳처럼 맥락이 그 단어를 주지 않을 때만 붙입니다.
+
 #### 2.1 언어별 의미·문법 예외
 
 한 언어의 관례를 통째로 따르는 예외가 아니라, 공통 네이밍으로 깨뜨리면 안 되는 의미·계약과 명시적으로 고른 언어별 기본값입니다.
