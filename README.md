@@ -51,13 +51,13 @@ flowchart LR
 | `ttsr/` → `<configdir>/rules/` | 메인 세션 전용 TTSR 알림의 배포 경로. 현재 규칙은 없다. 예전 `design-review-reminder`는 첫 편집마다 출력을 끊고 설계 검토를 다시 묻게 해 과잉 절차를 부추겨 지웠고, setup의 관리 항목 정리가 배포본을 옮겨 둔다 | 규칙이 생기면 세션당 1회 |
 | 프로젝트 레포 | 그 프로젝트의 현행 지침(`AGENTS.md`)·결정 기록·용어집 | 작업 이력·검증 기록은 쓰지 않음 |
 
-OMP 18.20.0에서 task 서브에이전트는 `AGENTS.md`를 상속하지 않고 rule(`RULES.md`·`rules/*` 포함)은 받는다(`omp://system-prompt-customization.md`, `omp://rulebook-matching-pipeline.md`, 확인 2026-11-13). 그래서 서브에이전트에도 필요한 방향은 `RULES.md`에 두고, OKF 개념은 `okf-*` 규칙으로 서브에이전트에도 보인다.
+OMP 19.0.1에서 task 서브에이전트는 `AGENTS.md`를 상속하지 않고 rule(`RULES.md`·`rules/*` 포함)은 받는다(`omp://system-prompt-customization.md`, `omp://rulebook-matching-pipeline.md`, 확인 2026-11-20). 그래서 서브에이전트에도 필요한 방향은 `RULES.md`에 두고, OKF 개념은 `okf-*` 규칙으로 서브에이전트에도 보인다.
 
 기록 기준은 [OKF 학습 축적](okf/learning/accumulation.md)이 정본이다. 후보마다 "이 문장이 없으면 모델이 다르게 행동하는가 / 다시 쓰이는가 / 기존 원리로 설명되지 않는가"를 묻고 셋 다 통과한 사용자 방향과 비자명 사실만 기록한다. 실수는 사건이 아니라 위반한 원리로 기록한다. 개념의 frontmatter `description`이 `index.md` 항목 설명의 정본이며, 고친 뒤 `bun scripts/validate-okf.ts --fix okf`가 항목 문구를 맞춘다.
 
 ## 사용
 
-전제: **OMP 18.14.2 이상**, **Bun 1.2.21 이상**(`validate-okf.ts`가 `Bun.YAML` 사용)이 PATH에 있어야 한다. setup은 자동 업그레이드하지 않는다. 교차 provider fallback을 쓰려면 두 provider의 유효 인증이 필요하다([구독과 인증의 경계](okf/agents/guide.md#구독과-인증의-경계)).
+전제: **OMP 19.0.1 이상**(이 설정의 역할·모델·도구 계약을 확인한 버전이며, setup이 강제하는 최저선은 `task.perCallModel`을 지원하는 18.14.2다), **Bun 1.2.21 이상**(`validate-okf.ts`가 `Bun.YAML` 사용)이 PATH에 있어야 한다. setup은 자동 업그레이드하지 않는다. 교차 provider fallback을 쓰려면 두 provider의 유효 인증이 필요하다([구독과 인증의 경계](okf/agents/guide.md#구독과-인증의-경계)).
 
 ```sh
 # macOS / Linux
