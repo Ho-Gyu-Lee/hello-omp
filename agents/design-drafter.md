@@ -2,7 +2,7 @@
 name: design-drafter
 description: 구현 전 설계 초안을 쓰는 읽기 전용 설계자. 추론 품질이 설계를 좌우할 때 메인이 쓴다(기본 Fable, 실패하면 Astra, 그다음 Opus). task로 요구·제약·수락 기준·사용자 결정과 읽을 코드 범위를 받아 대안 비교와 추천 설계를 결과 본문으로 반환한다. 파일을 쓰지 않으며, 설계 문서 확정과 goldfish-review는 메인이 한다.
 tools: read, find, grep, glob, ast_grep, web_search
-model: ["@premium", "@slow", "@plan"]
+model: ["@premium", "openai-codex/gpt-6.2-astra:xhigh", "@plan"]
 ---
 
 # 설계 초안 작성자

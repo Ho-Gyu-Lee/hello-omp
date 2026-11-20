@@ -1,7 +1,7 @@
 ---
 type: Checklist
 title: 보안 검토 체크리스트 (환경·도구 특이 계약)
-description: 놓치기 쉬운 환경·도구 특이 보안 계약(프록시·게이트웨이 헤더와 출발지 IP 판정, 로드밸런서·보안 그룹·NACL·네트워크 정책·IMDS, IAM 정책 평가, NATS JetStream 권한, 비밀 노출, Git·Windows 실행 탐색, 신뢰하지 않는 .NET 어셈블리 검토)으로, 인증·차단·네트워크·IAM·메시지 브로커 권한 설정이나 그 코드, 외부 바이너리를 고치거나 검토할 때 읽으며 일반 보안 항목과 게임 항목은 다루지 않는다.
+description: 프록시 헤더·출발지 IP 판정, 로드밸런서·보안 그룹·IMDS, IAM 정책 평가, NATS JetStream 권한, Git·Windows 실행 탐색, 신뢰하지 않는 .NET 어셈블리처럼 놓치기 쉬운 환경·도구 특이 보안 계약을 다루며(일반·게임 보안 제외), 인증·차단·네트워크·권한 설정이나 외부 바이너리를 고치거나 검토할 때 읽는다.
 tags: [security, review, checklist, server, git, windows]
 timestamp: 2026-11-16T00:00:00Z
 ---

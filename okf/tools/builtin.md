@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: omp 기본 도구
-description: 내장 도구 우선과 비자명 계약(AST 기본값·브라우저·bash 서비스 셸·지속 셸의 옵션 잔존·Windows `/dev/null`·`omp` CLI 인자·`omp://` 문서 지연), 실행·관측 주체 구분, 실행 중 파일의 분할 편집 금지, 긴 작업의 실패 판정, 원본 보존, TypeScript+Bun 작업 스크립트. 셸·eval·브라우저로 실행·관측하거나 작업 스크립트를 쓸 때 읽는다.
+description: OMP 내장 도구의 비자명 계약(AST 기본값, 브라우저, bash 서비스 셸, Windows `/dev/null`, `omp` CLI 인자)과 실행·관측 주체 구분, 긴 작업의 실패 판정, TypeScript+Bun 작업 스크립트를 다루며, 셸·eval·브라우저로 실행·관측하거나 작업 스크립트를 쓸 때 읽는다.
 tags: [tools, builtin, lsp, ast, browser, background, typescript, bun]
 timestamp: 2026-11-20T00:00:00Z
 ---

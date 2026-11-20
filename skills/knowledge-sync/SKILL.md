@@ -64,6 +64,8 @@ description: hello-omp 설정 레포의 원격 변경(공유 지식·OMP 설정�
 
 `--ff`는 가능하면 fast-forward하고 아니면 merge 커밋을 만듭니다. 사용자 설정 `merge.ff`와 `pull.rebase`에 영향받지 않습니다. `--no-overwrite-ignore`는 fast-forward에서만 무시 파일을 지키므로, 무시 파일 보호는 1단계 항목 8의 충돌 검사가 맡습니다.
 
+사용자가 원격 적용을 직접 요청한 실행이 아니고 승격·공개 반영 전 확인으로 시작한 실행이면, fast-forward가 안 될 때(`git -C R merge-base --is-ancestor HEAD U`가 실패) 병합 전에 로컬 merge 커밋을 만들어도 되는지 사용자 승인을 받습니다. 커밋은 사용자의 명시적 요청으로만 한다는 공통 지침 때문입니다. 승인하지 않으면 2단계에서 보관한 작업을 4단계로 복원하고 끝냅니다.
+
 결과별 처리:
 
 - **성공:** 종료 코드 0이고 `git -C R merge-base --is-ancestor U HEAD`가 성공하면 4단계로 갑니다.
