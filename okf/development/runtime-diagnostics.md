@@ -43,6 +43,7 @@ timestamp: 2026-11-13T00:00:00Z
 - [ ] 복제본이 여럿인 워크로드를 `kubectl logs deployment/<이름>`으로 보면 그중 파드 하나의 로그만 나오므로, 그 파드에 줄이 없다고 요청·작업이 처리되지 않았다고 판정하지 않습니다. 모든 파드는 `--all-pods=true`(파드 접두사 자동)나 라벨 선택자 `-l`로 봅니다. 선택자를 쓰면 `--tail` 기본값이 전체가 아니라 파드마다 10줄이므로 `--tail=-1`이나 `--since`를 함께 주고, `-f`로 따라갈 때는 동시 수가 `--max-log-requests`(기본 5)를 넘지 않게 합니다(kubectl v1.32.0 `kubectl logs --help`, 확인 2026-11-19).
 - [ ] Docker Desktop(Engine 29.8.2)에서 pause한 컨테이너의 게시 포트는 TCP 연결을 받고 TLS handshake가 timeout으로 끝났습니다(2026-10-16 관측). 정지한 백엔드를 연결 거절로 판별한다고 가정하지 않습니다.
 - [ ] Windows Docker Desktop의 호스트·VM 로그(`%LOCALAPPDATA%\Docker\log\host\`의 `com.docker.backend.exe.log`·`monitor.log`, `%LOCALAPPDATA%\Docker\log\vm\init.log`)는 약 1MiB마다 시각 접미사를 붙여 회전했고, 회전 속도가 다른 세 로그 모두 회전본이 9개씩만 남아 있었습니다(Docker Desktop 4.99.0, 관찰 2026-11-13. 보존 상한은 문서로 확인하지 않았습니다). 컨테이너를 상시 실행하는 호스트에서 `init.log`·`monitor.log`는 하루 남짓만 남았으므로, engine 도달 실패·게시 포트 끊김 같은 호스트 측 사건은 직후에 이 파일들을 작업 디렉터리로 복사하고 보존 기간이 지난 사건에서 로그가 없다는 사실을 사건이 없었다는 근거로 쓰지 않습니다.
+- [ ] Windows Docker Desktop에서 `docker desktop status`가 running을 보고하는데 엔진을 돌리는 WSL 배포판 `docker-desktop`은 `Stopped`이고 모든 API 호출(`/version`·`/containers/json`)이 500을 내는 상태가 있었고, `docker desktop restart`로 회복했습니다(Docker Desktop CLI 4.100.0·Engine 29.9.3, 2026-11-21 관찰. 같은 WSL VM의 메모리 압박과 겹친 것은 가설). 엔진 도달 여부는 status 대신 `wsl -l -v`의 `docker-desktop` 상태와 실제 API 호출로 판정하고, 엔진이 이미 멈춰 모든 컨테이너가 내려간 상태인지 확인한 뒤 재시작합니다.
 
 ## 연결 종료·크래시 진단
 
