@@ -3,7 +3,7 @@ type: Reference
 title: omp 기본 도구
 description: OMP 내장 도구의 비자명 계약(AST 기본값, 브라우저, bash 서비스 셸, Windows `/dev/null`, `omp` CLI 인자)과 실행·관측 주체 구분, 긴 작업의 실패 판정, TypeScript+Bun 작업 스크립트를 다루며, 셸·eval·브라우저로 실행·관측하거나 작업 스크립트를 쓸 때 읽는다.
 tags: [tools, builtin, lsp, ast, browser, background, typescript, bun]
-timestamp: 2026-11-20T00:00:00Z
+timestamp: 2026-11-21T00:00:00Z
 ---
 
 # omp 기본 도구
@@ -23,6 +23,7 @@ omp는 배터리 포함이다. 기본으로 되는 일에 MCP를 두지 않으�
 - OMP 18.18.2 이하의 Windows에서 bash 도구의 일반 호출은 `/dev/null`을 열지 못한다. `cmd 2>/dev/null`이 `cmd`를 실행하지 않은 채 상태 1로 끝나 `x=$(cmd 2>/dev/null)`이 빈 값이 되고 "일치 없음" 같은 거짓 음성 판정을 만든다(18.18.2 Windows 실측: 2026-11-09). 18.18.3에서 고쳐졌으므로([변경 내역](https://github.com/can1357/oh-my-pi/blob/main/packages/coding-agent/CHANGELOG.md), 확인: 2026-11-13, Windows 재실측은 하지 않음) 이 증상이 보이면 `omp --version`을 확인하고, 그 미만 버전에서는 버릴 출력을 `2>NUL`로 보내거나 작업 디렉터리의 로그 파일에 남긴다.
 - bash 도구의 일반 호출은 한 세션의 지속 셸에서 돌아 작업 디렉터리는 턴마다 되돌아가도 `set -e`·`set -o pipefail`·`set -u` 같은 셸 옵션은 이후 호출에 남는다(OMP 18.20.0 macOS 실측: 2026-11-14, OMP 18.20.2·19.0.1 Windows 실측: 2026-11-15·2026-11-20). errexit가 남으면 뒤 호출에서 0이 아닌 상태로 끝난 명령(차이를 찾은 `diff`, 일치 없는 `grep`, `false`) 뒤의 명령줄이 오류 표시 없이 실행되지 않아, 반복문·비교 결과가 빠진 출력을 "차이 없음"이나 도구 결함으로 잘못 읽게 된다. 셸 옵션은 `( set -e; … )` 서브셸 안에서만 켜고, 이미 현재 셸에서 켰다면 `set +e +u +o pipefail`로 되돌린다. 출력이 예상보다 짧으면 `echo $-`로 옵션을 확인한다(Windows 실측에서 한 호출의 `set -e;` 뒤 `$-`에 `e`가 남음).
 - bash 도구의 일반 호출에서는 `exec 3<>/dev/tcp/<host>/<port>` 같은 `/dev/tcp` 리디렉션이 동작하지 않는다. 서브셸과 `bash -c`는 `No such file or directory`로 실패하고, `/bin/bash -c`도 연결 결과를 출력하지 않는다(OMP 19.0.1 macOS 실측: 2026-11-20). 이 방식으로 짠 포트 프로브는 대상 상태와 무관하게 모두 실패로 기록되므로, 연결 시험에는 `nc -z`나 `curl`을 쓴다. 변경 중 연속성을 재는 프로브는 변경 전 기준선에서 성공하는지 먼저 확인한다. 컨테이너 안 bash는 해당하지 않는다.
+- Windows의 bash 도구 일반 호출에는 `/dev/urandom`이 없다(`test -e /dev/urandom` 실패, OMP 19.0.1 Windows 실측: 2026-11-21). `x=$(od -An -N2 -tx1 /dev/urandom | tr -d ' ')` 같은 난수 생성은 오류 한 줄만 내고 빈 값을 돌려, 뒤 명령이 접미사 없는 경로를 만든다. 난수 접미사는 `printf '%04x' $((RANDOM % 65536))`나 `eval` JS의 `crypto.randomUUID()`로 만들고, 경로에 쓰기 전에 값이 비지 않았는지 확인한다.
 - 신호로 종료된 `Bun.Subprocess`는 `exited`를 기다린 뒤에도 `exitCode`가 `null`이고 `signalCode`가 채워질 수 있다. `exitCode === null`만으로 실행 중이라 판정하지 않고 강제 종료를 정상 exit 0으로 바꾸지 않는다([Bun](https://bun.com/docs/runtime/child-process#exit-handling), 확인: 2026-10-18).
 - Bun Shell(`$` 템플릿)은 `cmd > ${log} 2>&1`을 "expected a command or assignment but got: Redirect"로 거부하므로 표준 출력·오류를 한 파일로 모을 때는 `cmd &> ${log}`를 쓴다. 인수 배열은 `` $`${tool} ${args}` ``처럼 넘기면 원소마다 따로 인용된다. `.nothrow()`를 쓰면 이런 실패가 종료 코드로만 드러나므로 로그 파일이 실제로 채워지는지 함께 본다(Bun 1.4.3 확인: 2026-10-18).
 - 하위 프로세스의 로그와 종료 코드는 실패를 그대로 드러내지 않을 수 있다. `Bun.spawn`의 `stdout`·`stderr`에 `Bun.file(path)`를 주면 기존 파일을 비우지 않고 앞에서부터 덮어써, 더 짧은 실행 뒤에 이전 로그의 꼬리가 남는다. 실행 전에 `await Bun.write(path, "")`로 비운다(Bun 1.4.3 macOS 실측: 2026-10-23). Blender `-b -P script.py`는 스크립트가 예외로 끝나도 종료 코드 0을 내므로 실패를 종료 코드로 잡으려면 `-P` 앞에 `--python-exit-code 1`을 둔다(Blender 5.2.2 `--help`와 실측: 2026-10-23).
