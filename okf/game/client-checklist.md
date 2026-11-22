@@ -1,8 +1,8 @@
 ---
 type: Checklist
 title: 게임 클라이언트 기능/성능 체크리스트
-description: 게임 클라이언트의 정상 종료 로그아웃, 수신 처리율과 Unreal Engine 모바일의 게임 스레드 정지 조건(iOS 일시 비활성·UE 5.3 설정 판정·Android pause), Unity Android 의존성 관리자(EDM4U→Unity EDM)의 버전 특정 계약.
-tags: [game, client, networking, checklist, unity, unreal, ios, android, edm4u, unity-edm]
+description: 게임 클라이언트의 정상 종료 로그아웃, 수신 처리율과 Unreal Engine 모바일의 게임 스레드 정지 조건(iOS 일시 비활성·UE 5.3 설정 판정·Android pause), Unity Android 의존성 관리자(EDM4U→Unity EDM)와 Unity IAP 5.4.4 에디터 오류의 버전 특정 계약.
+tags: [game, client, networking, checklist, unity, unreal, ios, android, edm4u, unity-edm, unity-iap]
 timestamp: 2026-11-13T00:00:00Z
 ---
 
@@ -24,3 +24,7 @@ timestamp: 2026-11-13T00:00:00Z
 - [ ] AAR 호환성은 POM이 아니라 `AndroidManifest.xml`의 `minSdk`와 `aar-metadata.properties`의 `minCompileSdk`·`minCompileSdkExtension`·`minAndroidGradlePluginVersion`(DSL 속성명은 `minAgpVersion`)으로 확인하고, 다른 의존성이 더 높은 버전을 선택할 수 있으므로 resolved 버전도 확인한다([AarMetadata DSL](https://developer.android.com/reference/tools/gradle-api/9.0/com/android/build/api/dsl/AarMetadata)).
 - [ ] 배포한 XML은 소비 프로젝트의 관리자가 읽는 경로를 직접 실행해 검증한다. XML 좌표를 따로 읽어 만든 Gradle 소비 APK는 DEX 포함 검증일 뿐 관리자의 XML 탐색·템플릿 주입 검증이 아니며, Resolver는 의존성이 없어도 성공을 반환할 수 있으므로 종료 코드로 포함을 판정하지 않는다.
 - [ ] `ResolveSync(true)`는 EDM4U 1.2.188의 API다(Unity 2022.3.62f3의 Custom Main Gradle Template 경로에서 확인, [README](https://github.com/googlesamples/unity-jar-resolver/blob/v1.2.188/README.md)). Unity EDM 2.1.1의 `Google.JarResolver.dll`에 같은 이름의 심볼 문자열이 있으나 호출 동작은 확인하지 않았고 AAR 복사 모드 확인은 EDM4U에 한정될 수 있으므로 설치본으로 다시 확인한다.
+
+## Unity IAP 에디터 오류
+
+- [ ] `com.unity.purchasing` 5.4.4는 `com.unity.services.deployment`(1.7.2)를 의존성으로 끌어온다(5.4.4 changelog). 그 `DeploymentItemSyncWithRemote`는 도메인 리로드 때 Purchasing 제공자의 Sync with Remote를 실행하고, `.ucat`·`.catalog.csv` 항목이 하나도 없어도 Services Gateway 토큰을 먼저 요청한다(패키지 소스). 토큰 교환이 실패하면 `[InAppPurchasing]: RequestFailedException`이 찍히고 Play 모드 진입 때는 인게임 로그 콘솔에도 잡힌다. 실측 환경은 Unity 2022.3.62f3, 클라우드 프로젝트 미연결, 에디터 계정 로그인 상태였고 토큰 교환이 401을 받았다(2026-11-20). 프로젝트 연결이나 재로그인으로 사라지는지는 확인하지 않았다. 예외를 던지는 코드는 Editor 어셈블리에 있으므로 게임 런타임 결함으로 쫓지 않고, 5.4.4에는 `FailedOrder.Info`·StoreKit 2 중복 보고 같은 런타임 수정이 함께 있어 이 오류만으로 버전을 내리지 않는다.
