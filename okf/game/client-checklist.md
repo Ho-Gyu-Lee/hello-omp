@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 게임 클라이언트 기능/성능 체크리스트
-description: 게임 클라이언트의 정상 종료 로그아웃, 수신 처리율과 Unreal Engine 모바일의 게임 스레드 정지 조건(iOS 일시 비활성·UE 5.3 설정 판정·Android pause), Unity Android 의존성 관리자(EDM4U→Unity EDM)와 Unity IAP 5.4.4 에디터 오류의 버전 특정 계약.
-tags: [game, client, networking, checklist, unity, unreal, ios, android, edm4u, unity-edm, unity-iap]
-timestamp: 2026-11-13T00:00:00Z
+description: 게임 클라이언트의 정상 종료 로그아웃, 수신 처리율과 Unreal Engine 모바일의 게임 스레드 정지 조건, Unity Android 의존성 관리자(EDM4U→Unity EDM)·Unity IAP 5.4.4 에디터 오류·Unity 빌드 자동화(모듈 설치 CLI·BuildReport 수명·저장 대화상자)·비활성 컴포넌트의 애니메이션 이벤트 수신의 버전 특정 계약.
+tags: [game, client, networking, checklist, unity, unreal, ios, android, edm4u, unity-edm, unity-iap, unity-build]
+timestamp: 2026-11-23T00:00:00Z
 ---
 
 # 게임 클라이언트 기능/성능 체크리스트
@@ -28,3 +28,13 @@ timestamp: 2026-11-13T00:00:00Z
 ## Unity IAP 에디터 오류
 
 - [ ] `com.unity.purchasing` 5.4.4는 `com.unity.services.deployment`(1.7.2)를 의존성으로 끌어온다(5.4.4 changelog). 그 `DeploymentItemSyncWithRemote`는 도메인 리로드 때 Purchasing 제공자의 Sync with Remote를 실행하고, `.ucat`·`.catalog.csv` 항목이 하나도 없어도 Services Gateway 토큰을 먼저 요청한다(패키지 소스). 토큰 교환이 실패하면 `[InAppPurchasing]: RequestFailedException`이 찍히고 Play 모드 진입 때는 인게임 로그 콘솔에도 잡힌다. 실측 환경은 Unity 2022.3.62f3, 클라우드 프로젝트 미연결, 에디터 계정 로그인 상태였고 토큰 교환이 401을 받았다(2026-11-20). 프로젝트 연결이나 재로그인으로 사라지는지는 확인하지 않았다. 예외를 던지는 코드는 Editor 어셈블리에 있으므로 게임 런타임 결함으로 쫓지 않고, 5.4.4에는 `FailedOrder.Info`·StoreKit 2 중복 보고 같은 런타임 수정이 함께 있어 이 오류만으로 버전을 내리지 않는다.
+
+## Unity 빌드 자동화
+
+- [ ] Unity Hub 4.0.1(Microsoft Store 배포본)은 `Unity Hub.exe -- --headless install-modules`를 더 이상 실행하지 않고 독립 Unity CLI로 안내만 출력한다. 설치되어 있으면 `%LOCALAPPDATA%\Unity\bin\unity.exe`(1.0.0)를 쓴다: `unity install-modules --editor-version <버전> --list`로 모듈 ID를 확인하고 `-m <ID> --accept-eula`로 설치하며, Program Files의 에디터에는 관리자 권한 요청이 뜬다. Windows Dedicated Server 모듈 ID는 `windows-server`이고, 설치 여부는 `Editor/Data/PlaybackEngines/windowsstandalonesupport/Variations`의 `win64_server_*` 폴더로 확인한다(2022.3.62f3 실측, 2026-11-23). CLI가 없으면 원격 설치 스크립트를 실행하기 전에 사용자 승인을 받는다.
+- [ ] 한 메서드에서 `BuildPipeline.BuildPlayer`를 subtarget(Player·Server)을 바꿔 연달아 호출하면 앞 호출의 `BuildReport`가 파괴되어 나중에 `summary`를 읽을 때 `MissingReferenceException`이 난다. 결과는 각 빌드 직후 값으로 복사한다. `SwitchActiveBuildTarget` 뒤에도 같다(2022.3.62f3 실측).
+- [ ] 열린 에디터에서 `BuildPipeline.BuildPlayer`를 부를 때 열린 씬이 수정 상태면 "Scene(s) Have Been Modified" 모달이 떠 에디터 갱신 루프가 멈추고, 같은 에디터를 쓰는 자동화(예: Unity MCP의 ping)가 응답을 잃는다. 자동화에서는 빌드 전에 씬을 명시적으로 저장하거나 에디터를 닫고 `-batchmode -quit -executeMethod`로 빌드한다(2022.3.62f3 실측).
+
+## Unity 애니메이션 이벤트
+
+- [ ] 애니메이션 이벤트는 같은 GameObject의 비활성(`enabled = false`) MonoBehaviour에도 전달된다. 원격 플레이어처럼 로컬 컨트롤러를 끄는 개체에서, `Start`에서 참조를 잡는 컨트롤러(예: StarterAssets `ThirdPersonController`의 `OnFootstep`)를 `Start`가 돌기 전에 끄면 발소리 이벤트마다 `NullReferenceException`이 난다. 다른 컴포넌트의 `Update`에서 끄는 방식은 그 컨트롤러의 `Start`보다 먼저 실행될 수 있다(2022.3.62f3 실측). 스폰 콜백(`OnStartClient` 등)에서 컨트롤러를 제거하고, 수신자가 없다는 오류가 나지 않도록 이벤트 함수는 다른 컴포넌트에 둔다.
