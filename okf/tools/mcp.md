@@ -1,9 +1,9 @@
 ---
 type: Reference
 title: MCP 정책
-description: 내장으로 안 되는 외부 연결만 MCP로 쓰는 기준, 겹치는 MCP 기능의 대체와 검색 MCP의 수직 검색 선별, gateway 간접 실행 도구의 보호 범위, 실행 경로별 backend 버전, 사양 revision과 OMP 클라이언트 호환, OAuth 서버 첫 연결. MCP 도구를 쓰거나 MCP 서버를 추가·설정할 때 읽는다.
+description: 내장으로 안 되는 외부 연결만 MCP로 쓰는 기준과 프로젝트 전용 서버의 설정 위치, 겹치는 MCP 기능의 대체와 검색 MCP의 수직 검색 선별, gateway 간접 실행 도구의 보호 범위, 실행 경로별 backend 버전, 사양 revision과 OMP 클라이언트 호환, OAuth 서버 첫 연결. MCP 도구를 쓰거나 MCP 서버를 추가·설정할 때 읽는다.
 tags: [tools, mcp, security]
-timestamp: 2026-11-20T00:00:00Z
+timestamp: 2026-11-25T00:00:00Z
 ---
 
 # MCP 정책
@@ -11,6 +11,7 @@ timestamp: 2026-11-20T00:00:00Z
 ## 우선순위
 - 내장 도구로 되는 일에는 MCP를 두지 않는다([omp 기본 도구](/tools/builtin.md)). MCP는 내장에 없는 외부 연결(외부 SaaS, 사내 시스템, 전용 데이터 소스, 뉴스·영상·이미지·장소 수직 검색)에만 쓴다.
 - 한 서버가 겹치는 도구와 고유 도구를 함께 노출하면 고유 도구만 쓰고 겹치는 도구는 노출돼 있어도 호출하지 않는다. 외부 서버의 설치·기동 전 검토는 [스킬 사용](/tools/skills.md), 승인 정책과 격리의 구분은 [보안 개요](/security/overview.md)를 따른다.
+- 특정 프로젝트에서만 쓰는 MCP 서버와 그 전용 스킬(예: Unity 에디터에 붙는 Unity MCP와 `unity-mcp-orchestrator` 스킬)은 사용자 수준(`<configdir>/mcp.json`·`<configdir>/skills/`)에 두지 않고 필요한 프로젝트의 `.omp/mcp.json`·`.omp/skills/`에 둔다(사용자 결정 2026-11-25). 사용자 수준 설정은 그 프로필의 모든 세션에 실린다(`omp://mcp-config.md`·`omp://config-usage.md`, OMP 19.1.1).
 
 ## 내장으로 대체하는 MCP 기능
 - 웹 검색 MCP(brave-search 등)의 일반 검색·요약·본문 추출 → `web_search`, 개별 URL → `read`. `web_search`에는 뉴스·영상·이미지·장소 수직 검색 모드가 없으므로 그때만 검색 MCP를 쓴다.
