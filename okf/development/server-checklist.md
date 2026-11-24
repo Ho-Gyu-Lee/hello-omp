@@ -1,9 +1,9 @@
 ---
 type: Checklist
 title: 서버 프로토콜·메모리·큐 운영 기준
-description: 비동기 완료의 상태 소유자 적용, 공유 상수·메시지 ID·codec 경계, 큐 소비 장벽의 처리율 상한, 공유 고정 풀에 상시 예약을 더할 때의 기본값 재도출, Mirror·Asio·OpenSSL·RabbitMQ의 버전별 함정을 다룹니다.
+description: 비동기 완료의 상태 소유자 적용, 공유 상수·메시지 ID·codec 경계, 큐 소비 장벽의 처리율 상한, 공유 고정 풀에 상시 예약을 더할 때의 기본값 재도출, Mirror·Asio·OpenSSL·RabbitMQ의 버전별 함정과 Go 서버 의존성(Fiber·go-grpc-middleware·client-go) 갱신의 동작 차이를 다룹니다.
 tags: [development, server, concurrency, memory, codec, queue]
-timestamp: 2026-11-13T00:00:00Z
+timestamp: 2026-11-24T00:00:00Z
 ---
 
 # 서버 프로토콜·메모리·큐 운영 기준
@@ -27,3 +27,9 @@ timestamp: 2026-11-13T00:00:00Z
 - [ ] `SSL_MODE_RELEASE_BUFFERS`는 유휴 TLS buffer 반납(반복 할당)과 연결별 상주 메모리의 교환이다. 전송 wrapper가 실제 설정하는 값을 확인한다([OpenSSL mode 문서](https://docs.openssl.org/4.0/man3/SSL_CTX_set_mode/), 확인 2026-10-15).
 - [ ] Asio의 [associated allocator](https://think-async.com/Asio/asio-1.38.2/doc/asio/overview/core/allocation.html)가 [즉시 완료](https://think-async.com/Asio/asio-1.38.2/doc/asio/overview/composition/immediate_completion.html)·composed operation·executor 전달에서도 보존되는지 고정 소스로 확인한다. type erasure가 모든 allocator property를 전달한다고 가정하지 않는다(1.38.2 문서, 확인 2026-10-15).
 - [ ] `operator new`만 세면 `malloc`·`aligned_alloc`·TLS C 할당을 놓친다. Asio 1.32/Linux에서 캐시를 끄면 `ASIO_DISABLE_STD_ALIGNED_ALLOC`까지 적용해야 기본 경로가 계측한 `operator new`로 이어지며, 캐시 비활성 분기의 [upstream 수정](https://github.com/chriskohlhoff/asio/commit/57bf938c7dc1f6ea1e224fb74e274e397edebcd1)은 1.32.0 태그에는 없고 1.34.0 태그부터 포함된다(확인 2026-10-12). 낮은 버전은 재현 가능한 의존성 패치로 관리하고 설치 헤더를 직접 고치지 않는다.
+
+## Go 서버 의존성 갱신
+
+- [ ] Fiber v2(v2.52.16)는 v3로 대체되어 deprecated다. v3(v3.7.0)의 `c.Context()`는 v2처럼 서버 종료 때 취소되는 `*fasthttp.RequestCtx`가 아니라 `SetContext`를 부르지 않으면 `context.Background()`이므로, 종료 취소를 유지하려면 `c.RequestCtx()`를 넘긴다. `c.Bind().Body()`는 `application/json`과 `+json` vendor 타입만 JSON으로 읽어, v2 `BodyParser`가 받던 `json`으로 끝나는 다른 타입(`text/json` 등)은 `ErrUnprocessableEntity`가 된다(두 버전 소스 대조, 확인 2026-11-24).
+- [ ] go-grpc-middleware v1 recovery는 panic을 `codes.Internal`과 `"%v"` 메시지로 바꿨지만, v2(v2.3.4) `interceptors/recovery`의 기본 처리기는 status가 아닌 `PanicError`를 반환해 클라이언트가 `codes.Unknown`과 스택 트레이스가 든 메시지를 받는다. 기존 응답·로그 계약을 지키려면 `WithRecoveryHandler`로 `status.Errorf(codes.Internal, "%v", p)`를 돌려준다. v1 `ChainUnaryServer`는 grpc의 `ChainUnaryInterceptor`·`ChainStreamInterceptor`가 같은 순서(첫 항목이 가장 바깥)로 대신한다(두 버전 소스 대조, 처리기를 넣은 v2의 panic 응답이 `Internal`인 것은 시험으로 확인, 2026-11-24).
+- [ ] `k8s.io/client-go`를 쓰는 모듈에서 `go get -u ./...`는 `k8s.io/kube-openapi`를 k8s 릴리스가 고정한 것보다 새 버전으로 올려 `sigs.k8s.io/structured-merge-diff/v7`을 끌어오고, v6 타입을 기대하는 `k8s.io/apimachinery` v0.37.2의 컴파일이 깨졌다(관찰 2026-11-24). k8s 계열 간접 의존성은 `go get -u ./... k8s.io/kube-openapi@<그 k8s 릴리스가 요구하는 버전>`처럼 같은 릴리스의 버전에 묶고 갱신 뒤 빌드로 확인한다.
