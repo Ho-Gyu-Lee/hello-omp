@@ -1,9 +1,9 @@
 ---
 type: Rule
 title: 네트워크 전달·I/O·시간 계측
-description: 송신 공정성·reliable 폐기·gRPC 재접속·Apple 연결 제약·macOS Go resolver와 DNS 실패 재현, IOCP 실패 완료·소켓 종료 수명, WSL localhost 중계 지연과 RTT 표본화·캡처 교란을 다룹니다.
-tags: [development, networking, transport, rpc, fairness, iocp, winsock, rtt, wsl, dns, go]
-timestamp: 2026-11-13T00:00:00Z
+description: 송신 공정성·reliable 폐기·gRPC 재접속·Apple 연결 제약·macOS Go resolver와 DNS 실패 재현, IOCP 실패 완료·소켓 종료 수명, Unity TLS 읽기 예외의 의미와 asio SSL 스트림 동시성, WSL localhost 중계 지연과 RTT 표본화·캡처 교란을 다룹니다.
+tags: [development, networking, transport, rpc, fairness, iocp, winsock, rtt, wsl, dns, go, tls, unity, asio]
+timestamp: 2026-11-25T00:00:00Z
 ---
 
 # 네트워크 전달·I/O·시간 계측
@@ -28,6 +28,8 @@ timestamp: 2026-11-13T00:00:00Z
 - IOCP의 `GetQueuedCompletionStatus`가 `FALSE`여도 `OVERLAPPED != nullptr`이면 실패한 연산의 완료 패킷을 꺼낸 것입니다. '큐가 비었음'으로 버리지 않습니다([GetQueuedCompletionStatus](https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-getqueuedcompletionstatus)).
 - `closesocket`·취소 요청의 반환은 미완료 연산의 완료 통지 소비가 아닙니다. 완료(중단 포함) 통지를 소비할 때까지 연산이 참조하는 컨텍스트·송신 버퍼를 유지하고 새 연결/accept에 재사용하지 않습니다. 동시에 진행 중인 연산마다 별도 `OVERLAPPED`·연산 종류·버퍼 수명을 두며 연결 객체의 mutable `state` 하나로 완료 종류를 추정하지 않습니다([closesocket](https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-closesocket), [WSASend](https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsasend)).
 - 연결형 UDP 소켓(`connect`한 소켓, Go `net.DialUDP`)은 상대 포트가 닫혀 돌아온 ICMP port unreachable을 다음 수신·송신의 `ECONNREFUSED`로 돌려줍니다([udp(7)](https://man7.org/linux/man-pages/man7/udp.7.html)). 상대가 재시작하는 동안의 일시 오류이므로, 수신 루프가 시간 초과 외의 모든 오류에서 끝나면 상대가 다시 열린 뒤에도 소켓만 남아 응답 경로가 끊깁니다. 수신 오류를 일시 오류와 소켓 종료로 나눠 처리하거나, 수신 루프가 끝날 때 그 소켓을 공유 참조에서 떼어 다음 송신이 새 소켓을 만들게 합니다(UDP 중계 서버의 Linux·macOS 재현, 2026-11-16).
+- Unity `SslStream`(Mono `Mono.UnityTls`)에서 상대의 TCP FIN은 예외 없는 0바이트 읽기로, RST 같은 소켓 오류는 하위 스트림의 `IOException`으로 올라옵니다. `TlsException: Failed to read data to TLS context - error code: UNITYTLS_INTERNAL_ERROR`는 TLS 엔진이 받은 바이트를 거부했을 때(깨진 레코드·MAC 불일치·상대의 치명적 경고)만 나므로, 연결 끊김이나 서버 종료가 아니라 수신한 TLS 바이트 흐름의 손상부터 봅니다([`UnityTlsContext.cs`](https://github.com/Unity-Technologies/mono/blob/unity-main/mcs/class/System/Mono.UnityTls/UnityTlsContext.cs), [`AsyncProtocolRequest.cs`](https://github.com/Unity-Technologies/mono/blob/unity-main/mcs/class/System/Mono.Net.Security/AsyncProtocolRequest.cs), 확인 2026-11-25).
+- boost.asio `ssl::stream`은 평문 소켓과 달리 읽기 하나와 쓰기 하나를 동시에 거는 것도 같은 strand 안에서만 허용합니다. 읽기 작업도 엔진 출력이 늘면 직접 소켓에 쓰는데, 그 "쓰기 중" 검사(`pending_write_`)와 출력 버퍼(`output_buffer_`)는 스레드 간 보호가 없어 다른 스레드의 쓰기와 같은 소켓에 겹칠 수 있습니다(boost 1.65 [`stream.hpp`](https://github.com/boostorg/asio/blob/boost-1.65.0/include/boost/asio/ssl/stream.hpp)·[`engine.ipp`](https://github.com/boostorg/asio/blob/boost-1.65.0/include/boost/asio/ssl/detail/impl/engine.ipp)·[`io.hpp`](https://github.com/boostorg/asio/blob/boost-1.65.0/include/boost/asio/ssl/detail/io.hpp), 확인 2026-11-25). 송신 큐를 다른 스레드에서 비우는 서버는 세션별 strand로 송신 시작을 넘깁니다.
 
 ## RTT 계측과 관찰 사례
 
