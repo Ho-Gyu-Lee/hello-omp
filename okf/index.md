@@ -23,7 +23,7 @@
 * [데이터베이스 목차](/database/index.md) - MySQL·SQLite·DynamoDB 제품별 계약.
 
 ## 게임
-* [게임 목차](/game/index.md) - 게임 권위·네트워크·서버 운영·영속화와 Godot/godot-cpp의 버전 특정 계약.
+* [게임 목차](/game/index.md) - 게임 권위·네트워크·서버 운영·영속화, 아트 규칙과 Godot/godot-cpp의 버전 특정 계약.
 
 ## 도구와 에이전트
 * [도구 목차](/tools/index.md) - omp 기본 도구, MCP, 스킬, 서브에이전트 위임.

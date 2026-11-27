@@ -8,7 +8,7 @@ timestamp: 2026-11-13T00:00:00Z
 
 # 에셋의 AI 사용 권리와 검수·조립 원리
 
-Godot TileMap/에디터·게임 판정/예측의 정본은 [Godot 에셋·에디터](/game/godot-assets-editor.md)에 유지합니다.
+Godot TileMap/에디터·게임 판정/예측의 정본은 [Godot 에셋·에디터](/game/godot-assets-editor.md)에 유지합니다. 게임 프로젝트에서 무엇에 맞춰 판정할지(프로젝트 아트 규칙)는 [게임 아트 디렉션](/game/art-direction.md)이 정본입니다.
 
 ## 에셋의 AI 사용 권리
 
