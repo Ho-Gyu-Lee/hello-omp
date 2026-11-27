@@ -28,7 +28,7 @@ timestamp: 2026-11-13T00:00:00Z
 - 프로젝트 루트는 Git 작업 트리 루트, 비 Git이면 확인된 작업 디렉터리다. 홈·파일시스템 루트·OMP 설정 루트를 작업 루트로 쓰지 않는다. 작업 파일만을 위해 `.omp/`를 만들지 않는다. 비어 있지 않은 가장 가까운 `.omp/`가 프로젝트 지침 탐색을 가로채기 때문이다(`omp://context-files.md`).
 - 작업-ID는 작업 단위로 고정한다. 재개·위임 때는 ignore를 적용하지 않는 탐색으로 기존 작업 디렉터리를 확인해 같은 작업이면 재사용하고, 새 작업만 목적명과 충돌 방지 식별자로 만든다. 위임할 때 작업 루트·작업-ID·파일 소유권을 전달한다.
 - 도구가 선택할 수 있는 출력 경로는 실행 전에 작업 디렉터리로 지정한다. 도구 제약으로 기본 위치를 쓸 수 없으면(예: Windows 경로 길이 한도로 vcpkg 빌드가 실패해 clone만 짧은 경로에 둠) 예외 위치와 이유를 보고한다. 전역 Git 설정을 바꾸는 우회는 쓰지 않는다.
-- 기존 산재 파일은 이 규칙만으로 옮기거나 지우지 않는다. 산출물 경로만 로컬 제외 파일(`git rev-parse --git-path info/exclude`)에 추가하고 공유 `.gitignore`는 요청이 있을 때만 바꾼다. Git 제외는 삭제 보호가 아니다. `git clean -x`/`-X`와 `git stash --all`은 무시된 파일도 지우므로 작업 루트를 그 대상에 넣지 않는다.
+- 기존 산재 파일은 이 규칙만으로 옮기거나 지우지 않는다. 산출물 경로만 로컬 제외 파일(`git rev-parse --git-path info/exclude`)에 추가하고 공유 `.gitignore`는 요청이 있을 때만 바꾼다. Git 제외는 삭제 보호가 아니다. `git clean -x`/`-X`와 `git stash --all`은 무시된 파일도 지우므로 작업 루트를 그 대상에 넣지 않는다. Git 제외는 패키지 제외도 아니다. npm은 `.npmignore`가 있으면 `.gitignore`를 읽지 않고([npm 문서](https://docs.npmjs.com/cli/v11/using-npm/developers#keeping-files-out-of-your-package)), 로컬 제외 파일에만 적힌 작업 루트를 `npm pack`·`npm publish`에 그대로 실었다(npm 12.2.3 dry-run 실측, 2026-11-26). 작업 루트가 있는 레포에서 패키지를 만들 때는 `files` 허용 목록이나 깨끗한 export를 쓰고, 배포 전에 `npm pack --dry-run`으로 포함 목록을 확인한다.
 
 ## 검증 산출물 보존과 정리
 
